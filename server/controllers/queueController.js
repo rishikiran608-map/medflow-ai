@@ -1,23 +1,29 @@
 const supabase = require("../config/supabase");
+const {
+  calculateWaitingTime,
+} = require("../services/queuePredictionService");
 
+// Get Queue
 const getQueue = async (req, res) => {
   const { data, error } = await supabase
     .from("queue")
     .select("*")
-    .order("token_number", { ascending: true });
+    .order("token_number");
 
   if (error) return res.status(500).json(error);
 
   res.json(data);
 };
 
+
+// Add Patient
 const addToQueue = async (req, res) => {
   const {
     patient_id,
     doctor_id,
-    appointment_id,
     token_number,
-    estimated_wait
+    estimated_wait,
+    status,
   } = req.body;
 
   const { data, error } = await supabase
@@ -26,10 +32,10 @@ const addToQueue = async (req, res) => {
       {
         patient_id,
         doctor_id,
-        appointment_id,
         token_number,
-        estimated_wait
-      }
+        estimated_wait,
+        status,
+      },
     ])
     .select();
 
@@ -37,8 +43,21 @@ const addToQueue = async (req, res) => {
 
   res.status(201).json(data);
 };
+const predictQueue = async (req, res) => {
+  try {
+    const result = await calculateWaitingTime(req.params.doctorId);
+
+    res.json({
+      success: true,
+      prediction: result,
+    });
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
 
 module.exports = {
   getQueue,
   addToQueue,
+  predictQueue,
 };
