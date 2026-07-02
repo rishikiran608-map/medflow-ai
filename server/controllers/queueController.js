@@ -18,14 +18,13 @@ const getQueue = async (req, res) => {
 
 // Add Patient
 const addToQueue = async (req, res) => {
-  const {
-    patient_id,
-    doctor_id,
-    token_number,
-    estimated_wait,
-    status,
-  } = req.body;
-
+ const {
+  patient_id,
+  doctor_id,
+  token_number,
+  estimated_wait,
+  queue_status,
+} = req.body;
   const { data, error } = await supabase
     .from("queue")
     .insert([
@@ -34,7 +33,7 @@ const addToQueue = async (req, res) => {
         doctor_id,
         token_number,
         estimated_wait,
-        status,
+        queue_status,
       },
     ])
     .select();
