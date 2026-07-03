@@ -112,7 +112,9 @@ function LoginPage() {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Registration failed. Try again.");
+      const details = err.response?.data;
+      const errorMsg = details?.message || details?.error_description || details?.error || err.message || "Registration failed. Try again.";
+      setError(errorMsg);
     }
   };
 
