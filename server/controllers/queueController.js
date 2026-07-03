@@ -590,6 +590,148 @@ const seedDemoData = async (req, res) => {
   }
 };
 
+// 12. Register Walk-in Patient (Admins only, creates profile + places directly in queue as Checked In)
+const registerWalkIn = async (req, res) => {
+  if (req.user.role !== "Hospital Admin") {
+    return res.status(403).json({ success: false, message: "Access denied. Admins only." });
+  }
+
+  const { full_name, phone, email, doctor_id, reason } = req.body;
+
+  try {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const nowTime = new Date().toTimeString().split(" ")[0];
+
+    // 1. Find or create patient profile in patients table
+    let patientId;
+
+    // Try finding by phone or email
+    const { data: existingPat } = await supabaseAdmin
+      .from("patients")
+      .select("*")
+      .or(`phone.eq.${phone}${email ? `,email.eq.${email}` : ""}`)
+      .limit(1);
+
+    if (existingPat && existingPat.length > 0) {
+      patientId = existingPat[0].id;
+    } else {
+      // Create new offline patient
+      patientId = require("crypto").randomUUID();
+      const newEmail = email || `walkin_${Date.now()}@medflow.com`;
+      
+      const { error: patErr } = await supabaseAdmin
+        .from("patients")
+        .insert([
+          {
+            id: patientId,
+            full_name,
+            phone,
+            email: newEmail,
+            age: 30,
+            gender: "Male",
+            address: "Walk-in Registration"
+          }
+        ]);
+
+      if (patErr) throw patErr;
+    }
+
+    // 2. Create appointment for today
+    const { data: appt, error: apptErr } = await supabaseAdmin
+      .from("appointments")
+      .insert([
+        {
+          patient_id: patientId,
+          doctor_id,
+          appointment_date: todayStr,
+          appointment_time: nowTime,
+          status: "Checked In"
+        }
+      ])
+      .select()
+      .single();
+
+    if (apptErr) throw apptErr;
+
+    // 3. Find next token number for this doctor
+    const { data: activeQueue } = await supabaseAdmin
+      .from("queue")
+      .select("token_number")
+      .eq("doctor_id", doctor_id)
+      .order("token_number", { ascending: false })
+      .limit(1);
+
+    const nextToken = activeQueue && activeQueue.length > 0 ? activeQueue[0].token_number + 1 : 1;
+
+    // 4. Find count of currently waiting patients to calculate estimated wait
+    const { count } = await supabaseAdmin
+      .from("queue")
+      .select("*", { count: "exact", head: true })
+      .eq("doctor_id", doctor_id)
+      .in("queue_status", ["Waiting", "Arriving", "Checked In"]);
+
+    const estWait = (count || 0) * 12;
+
+    // 5. Place patient directly in queue as Checked In
+    const { data: qItem, error: qErr } = await supabaseAdmin
+      .from("queue")
+      .insert([
+        {
+          patient_id: patientId,
+          doctor_id,
+          appointment_id: appt.id,
+          token_number: nextToken,
+          queue_status: "Checked In",
+          estimated_wait: estWait
+        }
+      ])
+      .select()
+      .single();
+
+    if (qErr) throw qErr;
+
+    // 6. Save metadata
+    setMetadata(qItem.id, {
+      arrived_at: new Date().toISOString(),
+      medicalConditions: ["Allergy: Penicillin", "Hypertension", "Type-2 Diabetes"],
+      pastAppointments: 4
+    });
+
+    // 7. Recalculate wait times for all waiting/arriving/checked in patients
+    const { data: remainingQueue } = await supabaseAdmin
+      .from("queue")
+      .select("*")
+      .eq("doctor_id", doctor_id)
+      .in("queue_status", ["Waiting", "On The Way", "Arriving", "Checked In"])
+      .order("token_number");
+
+    if (remainingQueue && remainingQueue.length > 0) {
+      for (let i = 0; i < remainingQueue.length; i++) {
+        const item = remainingQueue[i];
+        const newWait = i * 12;
+        await supabaseAdmin
+          .from("queue")
+          .update({ estimated_wait: newWait })
+          .eq("id", item.id);
+      }
+    }
+
+    // 8. Dispatch simulated SMS
+    const msg = `Welcome to the clinic, ${full_name}! You have been registered as a walk-in patient. Your Token is #${nextToken}. Est. Wait: ${estWait} mins. Please wait in the lounge.`;
+    sendWhatsAppNotification(phone, msg);
+
+    res.status(201).json({
+      success: true,
+      message: "Walk-in patient registered and checked-in successfully!",
+      token_number: nextToken,
+      queue: qItem
+    });
+  } catch (err) {
+    console.error("registerWalkIn error:", err);
+    res.status(500).json({ success: false, message: "Internal server error", error: err.message });
+  }
+};
+
 module.exports = {
   getQueue,
   addToQueue,
@@ -602,4 +744,5 @@ module.exports = {
   cancelAppointment,
   getDoctorQueue,
   seedDemoData,
+  registerWalkIn,
 };

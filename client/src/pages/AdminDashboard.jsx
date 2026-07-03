@@ -87,6 +87,39 @@ function AdminDashboard() {
     }
   };
 
+  const [showWalkInModal, setShowWalkInModal] = useState(false);
+  const [walkInFormData, setWalkInFormData] = useState({
+    full_name: "",
+    phone: "",
+    email: "",
+    doctor_id: "",
+    reason: ""
+  });
+
+  const handleRegisterWalkIn = async (e) => {
+    e.preventDefault();
+    if (!walkInFormData.doctor_id) {
+      alert("⚠️ Please select a doctor for the walk-in patient.");
+      return;
+    }
+    try {
+      await api.post("/queue/walk-in", walkInFormData);
+      alert("✅ Walk-in patient registered and checked-in successfully!");
+      setShowWalkInModal(false);
+      setWalkInFormData({
+        full_name: "",
+        phone: "",
+        email: "",
+        doctor_id: "",
+        reason: ""
+      });
+      await loadData();
+    } catch (err) {
+      console.error("Walk-in error:", err);
+      alert("❌ Registration failed: " + (err.response?.data?.message || err.message));
+    }
+  };
+
   const loadData = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
@@ -275,10 +308,19 @@ function AdminDashboard() {
           {activeTab === "monitor" && (
             <div>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-slate-100 pb-6">
-                <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
-                  <BarChart3 className="text-blue-600" size={20} />
-                  Real-Time Queue Dispatcher
-                </h3>
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+                    <BarChart3 className="text-blue-600" size={20} />
+                    Real-Time Queue Dispatcher
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowWalkInModal(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[10px] transition shadow-md shadow-green-500/10 flex items-center gap-1.5 mt-2 animate-pulse"
+                  >
+                    ➕ Register Walk-in Patient
+                  </button>
+                </div>
                 
                 {/* QR Terminal Scanner Simulation Panel */}
                 <div className="flex items-center gap-2 w-full sm:w-auto bg-slate-50 p-2 rounded-2xl border border-slate-100/60">
@@ -632,6 +674,112 @@ function AdminDashboard() {
                       className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-6 py-3 rounded-xl text-xs transition shadow-md shadow-blue-500/10"
                     >
                       Complete Onboarding
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Register Walk-in Patient Modal */}
+        <AnimatePresence>
+          {showWalkInModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 20 }}
+                className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 text-left relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-green-500/10 to-transparent rounded-full blur-3xl -z-10"></div>
+                <h3 className="text-xl font-extrabold text-slate-800 mb-6 flex items-center gap-2">
+                  🏥 Register Physical Walk-in
+                </h3>
+
+                <form onSubmit={handleRegisterWalkIn} className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Patient Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Vijay Kumar"
+                      value={walkInFormData.full_name}
+                      onChange={(e) => setWalkInFormData({ ...walkInFormData, full_name: e.target.value })}
+                      className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Phone Number (Alert updates)</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="9988776655"
+                      value={walkInFormData.phone}
+                      onChange={(e) => setWalkInFormData({ ...walkInFormData, phone: e.target.value })}
+                      className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Email Address (Optional)</label>
+                    <input
+                      type="email"
+                      placeholder="vijay@example.com"
+                      value={walkInFormData.email}
+                      onChange={(e) => setWalkInFormData({ ...walkInFormData, email: e.target.value })}
+                      className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Assign Doctor</label>
+                    <select
+                      required
+                      value={walkInFormData.doctor_id}
+                      onChange={(e) => setWalkInFormData({ ...walkInFormData, doctor_id: e.target.value })}
+                      className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                    >
+                      <option value="">Select Doctor</option>
+                      {doctors.map(doc => (
+                        <option key={doc.id} value={doc.id}>
+                          {doc.full_name} • {doc.specialization}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase">Reason for Visit</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="High fever and severe headache"
+                      value={walkInFormData.reason}
+                      onChange={(e) => setWalkInFormData({ ...walkInFormData, reason: e.target.value })}
+                      className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex gap-4 pt-4 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowWalkInModal(false)}
+                      className="border border-slate-200 hover:bg-slate-50 text-slate-600 font-extrabold px-5 py-3 rounded-xl text-xs transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-green-600 hover:bg-green-700 text-white font-extrabold px-6 py-3 rounded-xl text-xs transition shadow-md shadow-green-500/10"
+                    >
+                      Register & Check-In
                     </button>
                   </div>
                 </form>

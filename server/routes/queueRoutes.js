@@ -14,6 +14,7 @@ const {
   cancelAppointment,
   getDoctorQueue,
   seedDemoData,
+  registerWalkIn,
 } = require("../controllers/queueController");
 
 // Public queue routes
@@ -29,6 +30,7 @@ router.put("/check-in", authMiddleware, checkInPatient);
 router.put("/call-next", authMiddleware, callNextPatient);
 router.put("/complete/:id", authMiddleware, completeConsultation);
 router.put("/cancel/:id", authMiddleware, cancelAppointment);
+router.post("/walk-in", authMiddleware, registerWalkIn);
 router.post("/", authMiddleware, addToQueue);
 
 module.exports = router;

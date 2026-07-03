@@ -42,8 +42,22 @@ const authMiddleware = async (req, res, next) => {
 
     // Attach user to request
     req.user = data.user;
+    
+    // Set custom app role from user_metadata or query users database table
+    if (data.user.user_metadata && data.user.user_metadata.role) {
+      req.user.role = data.user.user_metadata.role;
+    } else {
+      const { data: dbUser } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+      if (dbUser) {
+        req.user.role = dbUser.role;
+      }
+    }
 
-    console.log("✅ Authentication Successful. User ID:", req.user.id);
+    console.log("✅ Authentication Successful. User ID:", req.user.id, "Role:", req.user.role);
     console.log("=================================");
 
     next();
