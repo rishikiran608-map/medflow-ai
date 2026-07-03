@@ -1,8 +1,43 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 
 function Hero() {
+  const [showDemoModal, setShowDemoModal] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  const demoSlides = [
+    {
+      title: "1. Remote Booking & Live Join",
+      description: "Patients book an appointment today and join the live virtual queue from the safety of their homes, eliminating physical waiting rooms entirely.",
+      badge: "Step 1 • Patients",
+      icon: "📱",
+      image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600"
+    },
+    {
+      title: "2. Real-Time AI Predictions",
+      description: "Our proprietary machine learning engine calculates the exact waiting time (e.g., 24 ± 4 mins) along with a dynamic certainty probability score.",
+      badge: "Step 2 • Predictive AI",
+      icon: "🎯",
+      image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600"
+    },
+    {
+      title: "3. Live Commute Traffic Sync",
+      description: "Integrates simulated Google Maps traffic feeds. If heavy traffic blocks the route, the system updates travel ETAs and notifies the doctor.",
+      badge: "Step 3 • Commute Sync",
+      icon: "🗺️",
+      image: "https://images.unsplash.com/photo-1569003339405-ea396a5a8a90?w=600"
+    },
+    {
+      title: "4. Contactless QR Check-in",
+      description: "Upon arrival, patients scan their digital token QR code at the reception desk to instantly check in and alert the staff.",
+      badge: "Step 4 • Clinic Arrival",
+      icon: "🎫",
+      image: "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=600"
+    }
+  ];
+
   return (
     <section id ="home" 
     className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-100">
@@ -46,6 +81,10 @@ function Hero() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setActiveSlide(0);
+                setShowDemoModal(true);
+              }}
               className="border border-slate-300 text-slate-500 px-6 py-3 rounded-xl hover:bg-slate-50 hover:text-slate-700 transition font-semibold text-sm"
             >
               Watch Demo
@@ -72,6 +111,99 @@ function Hero() {
 />
           
         </motion.div>
+
+        {/* Watch Demo interactive slides modal */}
+        <AnimatePresence>
+          {showDemoModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 20 }}
+                className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-slate-100 text-left relative overflow-hidden"
+              >
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowDemoModal(false)}
+                  className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition font-bold"
+                >
+                  ✕
+                </button>
+
+                <span className="bg-blue-50 text-blue-700 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  {demoSlides[activeSlide].badge}
+                </span>
+
+                <div className="grid md:grid-cols-2 gap-6 mt-6 items-center">
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                      <span className="text-3xl">{demoSlides[activeSlide].icon}</span>
+                      {demoSlides[activeSlide].title}
+                    </h3>
+                    <p className="text-slate-500 text-sm mt-4 leading-relaxed font-semibold">
+                      {demoSlides[activeSlide].description}
+                    </p>
+                  </div>
+
+                  <div className="h-48 w-full bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+                    <img 
+                      src={demoSlides[activeSlide].image} 
+                      alt={demoSlides[activeSlide].title} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                {/* Footer / Controls */}
+                <div className="flex justify-between items-center mt-8 border-t pt-6">
+                  {/* Indicators */}
+                  <div className="flex gap-2">
+                    {demoSlides.map((_, i) => (
+                      <span 
+                        key={i}
+                        className={`h-2 rounded-full transition-all duration-300 ${activeSlide === i ? "w-6 bg-blue-600" : "w-2 bg-slate-200"}`}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      disabled={activeSlide === 0}
+                      onClick={() => setActiveSlide(prev => Math.max(0, prev - 1))}
+                      className="px-4 py-2 border rounded-xl font-bold text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition"
+                    >
+                      Previous
+                    </button>
+                    {activeSlide === demoSlides.length - 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowDemoModal(false)}
+                        className="px-5 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition"
+                      >
+                        Finish Walkthrough
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setActiveSlide(prev => Math.min(demoSlides.length - 1, prev + 1))}
+                        className="px-5 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition"
+                      >
+                        Next Step
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     </section>
