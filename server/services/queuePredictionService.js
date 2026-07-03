@@ -41,11 +41,13 @@ const calculateWaitingTime = async (doctor_id) => {
   });
 
   const margin = Math.max(2, Math.round(data.length * 1.5));
+  const probability = Math.max(65, 95 - (data.length * 3));
 
   return {
     patientsWaiting: data.length,
     estimatedWait: totalWait,
     margin,
+    probability,
     doctorWorkloadMinutes: totalWait,
     delayProbability: totalWait > 60 ? "High" : totalWait > 24 ? "Medium" : "Low",
   };

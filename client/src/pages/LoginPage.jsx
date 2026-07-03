@@ -24,7 +24,27 @@ function LoginPage() {
       [e.target.name]: e.target.value,
     });
   };
-
+  const handleQuickFill = (roleName) => {
+    if (roleName === "admin") {
+      setFormData({
+        ...formData,
+        email: "admin@medflow.com",
+        password: "admin123"
+      });
+    } else if (roleName === "doctor") {
+      setFormData({
+        ...formData,
+        email: "doctor@medflow.com",
+        password: "doctor123"
+      });
+    } else {
+      setFormData({
+        ...formData,
+        email: "patient@medflow.com",
+        password: "patient123"
+      });
+    }
+  };
   const handleLogin = async () => {
     setError("");
     setSuccess("");
@@ -46,6 +66,7 @@ function LoginPage() {
 
       if (data.user) {
         localStorage.setItem("userId", data.user.id);
+        localStorage.setItem("userEmail", formData.email);
         const name = data.user?.user_metadata?.full_name || "User";
         localStorage.setItem("userName", name);
       }
@@ -122,6 +143,36 @@ function LoginPage() {
               className="mt-8 space-y-5"
             >
 
+
+              {/* Hackathon Demo Account Widgets */}
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left mb-4">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2.5">
+                  ⚡ Hackathon Demo Accounts
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleQuickFill("admin")}
+                    className="bg-blue-50 border border-blue-100 text-blue-700 hover:bg-blue-100 font-extrabold py-2 px-1 rounded-xl text-[10px] transition"
+                  >
+                    Admin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickFill("doctor")}
+                    className="bg-green-50 border border-green-100 text-green-700 hover:bg-green-100 font-extrabold py-2 px-1 rounded-xl text-[10px] transition"
+                  >
+                    Doctor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickFill("patient")}
+                    className="bg-purple-50 border border-purple-100 text-purple-700 hover:bg-purple-100 font-extrabold py-2 px-1 rounded-xl text-[10px] transition"
+                  >
+                    Patient
+                  </button>
+                </div>
+              </div>
 
               <div>
                 <label className="font-semibold text-slate-700 text-sm">Email Address</label>

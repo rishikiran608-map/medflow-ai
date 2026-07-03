@@ -107,7 +107,27 @@ const login = async (req, res) => {
   });
 };
 
+// Verify Password (Re-authentication)
+const verifyPassword = async (req, res) => {
+  const { email, password } = req.body;
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    return res.status(401).json({ success: false, message: "Invalid credentials" });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Identity verified"
+  });
+};
+
 module.exports = {
   register,
   login,
+  verifyPassword,
 };

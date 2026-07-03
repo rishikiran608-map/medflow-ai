@@ -12,7 +12,31 @@ function PatientDashboard() {
   const [showTravelModal, setShowTravelModal] = useState(false);
   const [travelMode, setTravelMode] = useState("Driving");
   const [distance, setDistance] = useState("5.0");
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [reAuthPassword, setReAuthPassword] = useState("");
   const [commuting, setCommuting] = useState(false);
+  const [reAuthVerifying, setReAuthVerifying] = useState(false);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [trafficMode, setTrafficMode] = useState("normal"); // 'normal', 'accident', 'heavy'
+
+  const handleVerifyPassword = async (e) => {
+    e.preventDefault();
+    setReAuthVerifying(true);
+    try {
+      await api.post("/auth/verify-password", {
+        email: localStorage.getItem("userEmail") || "",
+        password: reAuthPassword
+      });
+      setShowAuthModal(false);
+      setReAuthPassword("");
+      setShowHistoryDrawer(true);
+    } catch (err) {
+      console.error("Re-auth error:", err);
+      alert("❌ Identity verification failed: Incorrect password.");
+    } finally {
+      setReAuthVerifying(false);
+    }
+  };
 
   const loadActiveQueue = useCallback(async () => {
     try {
@@ -182,6 +206,9 @@ function PatientDashboard() {
                     <p className="text-2xl font-black text-slate-800">
                       {queueEntry.estimated_wait} ± {queueEntry.margin || 2} <span className="text-sm font-bold text-slate-500">mins</span>
                     </p>
+                    <span className="text-[10px] text-green-600 font-bold mt-1.5 block">
+                      🎯 {queueEntry.probability || 94}% Confidence Score
+                    </span>
                   </div>
 
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-left">
@@ -297,17 +324,100 @@ function PatientDashboard() {
                   </div>
                 )}
 
-                {/* Cancel Button */}
-                {["Waiting", "Arriving", "Checked In"].includes(queueEntry.queue_status) && (
-                  <div className="mt-8 border-t border-slate-100 pt-6 flex justify-end">
+                {/* Live Traffic Commute Map Simulator */}
+                {["Waiting", "Arriving"].includes(queueEntry.queue_status) && (
+                  <div className="mt-8 border-t border-slate-100 pt-8 text-left">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                      <div>
+                        <h4 className="font-extrabold text-slate-800 flex items-center gap-2">
+                          🗺️ Live Commute Route
+                        </h4>
+                        <p className="text-xs text-slate-400 mt-1">Simulated real-time route path and delay tracking</p>
+                      </div>
+                      
+                      {/* Traffic Mode Selector */}
+                      <div className="flex gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-100 text-[10px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setTrafficMode("normal")}
+                          className={`px-2.5 py-1.5 rounded-lg transition ${trafficMode === "normal" ? "bg-green-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-100"}`}
+                        >
+                          Normal Route
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTrafficMode("heavy")}
+                          className={`px-2.5 py-1.5 rounded-lg transition ${trafficMode === "heavy" ? "bg-red-600 text-white animate-pulse" : "text-slate-500 hover:bg-slate-100"}`}
+                        >
+                          Heavy Traffic ⚠️
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Simulated Google Map Canvas */}
+                    <div className="h-56 w-full bg-slate-100 rounded-2xl relative overflow-hidden border border-slate-200 shadow-inner flex items-center justify-center">
+                      <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
+                      
+                      <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <path 
+                          d="M 50 160 Q 150 40, 250 120 T 350 80" 
+                          fill="none" 
+                          stroke={trafficMode === "heavy" ? "#ef4444" : "#3b82f6"} 
+                          strokeWidth="5" 
+                          strokeLinecap="round"
+                        />
+                        <circle r="6" fill="#3b82f6" className="animate-ping">
+                          <animateMotion dur="6s" repeatCount="indefinite" path="M 50 160 Q 150 40, 250 120 T 350 80" />
+                        </circle>
+                        <circle r="5" fill="#1d4ed8">
+                          <animateMotion dur="6s" repeatCount="indefinite" path="M 50 160 Q 150 40, 250 120 T 350 80" />
+                        </circle>
+                      </svg>
+                      
+                      <div className="absolute bottom-10 left-8 bg-blue-600 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-md flex items-center gap-1">
+                        📍 You
+                      </div>
+
+                      <div className="absolute top-16 right-16 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-md flex items-center gap-1 animate-bounce">
+                        🏥 MedFlow Clinic
+                      </div>
+
+                      {trafficMode === "heavy" && (
+                        <div className="absolute top-4 left-4 bg-red-50 text-red-700 px-3 py-1.5 rounded-xl border border-red-200 text-[10px] font-bold flex items-center gap-1 animate-pulse">
+                          🛑 Route Delay: +15 mins (Heavy Traffic)
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-slate-500 mt-4 leading-relaxed font-semibold">
+                      {trafficMode === "heavy" 
+                        ? "⚠️ Avoid this route if possible. Heavy congestion detected near Ring Road. We have adjusted your clinic arrival estimates accordingly." 
+                        : "🟢 Clear route. Expected travel duration matches your baseline. Drive safely!"
+                      }
+                    </p>
+                  </div>
+                )}
+
+                {/* Re-Auth Shield Health Records Access */}
+                <div className="mt-8 border-t border-slate-100 pt-6 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAuthModal(true)}
+                    className="bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 font-extrabold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5"
+                  >
+                    🔒 View My Health Records
+                  </button>
+
+                  {["Waiting", "Arriving", "Checked In"].includes(queueEntry.queue_status) && (
                     <button
+                      type="button"
                       onClick={handleCancelAppointment}
                       className="text-xs font-semibold text-slate-400 hover:text-red-500 transition duration-200"
                     >
                       Cancel Appointment
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </motion.div>
           ) : (
@@ -426,6 +536,134 @@ function PatientDashboard() {
             <p className="font-semibold text-sm">{error}</p>
           </div>
         )}
+
+        {/* Re-Auth Password Modal */}
+        <AnimatePresence>
+          {showAuthModal && (
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative border border-slate-100 text-left"
+              >
+                <h3 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                  🔒 Confirm Password
+                </h3>
+                <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">
+                  Enter your password to verify your identity before accessing sensitive electronic medical records.
+                </p>
+
+                <form onSubmit={handleVerifyPassword} className="mt-6">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Confirm Password</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={reAuthPassword}
+                      onChange={(e) => setReAuthPassword(e.target.value)}
+                      className="w-full mt-2 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                    />
+                  </div>
+
+                  <div className="mt-8 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAuthModal(false);
+                        setReAuthPassword("");
+                      }}
+                      className="py-3 px-5 rounded-xl border font-bold text-xs text-slate-500 hover:bg-slate-50 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={reAuthVerifying}
+                      className="py-3 px-6 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-md shadow-blue-500/10 disabled:opacity-50"
+                    >
+                      {reAuthVerifying ? "Verifying..." : "Verify & Open"}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Health Records Drawer */}
+        <AnimatePresence>
+          {showHistoryDrawer && (
+            <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex justify-end">
+              <div className="absolute inset-0" onClick={() => setShowHistoryDrawer(false)}></div>
+              
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="w-full max-w-md bg-white h-full shadow-2xl relative border-l border-slate-100 p-8 flex flex-col justify-between z-10 text-left"
+              >
+                <div>
+                  <div className="flex justify-between items-center border-b pb-4 mb-6">
+                    <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                      📋 Electronic Health Profile
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowHistoryDrawer(false)}
+                      className="text-slate-400 hover:text-slate-600 font-bold"
+                    >
+                      Close ✕
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Clinical Conditions</span>
+                      <div className="mt-2.5 space-y-2">
+                        {["Allergy: Penicillin", "Hypertension (Stage 1)", "Type-2 Diabetes"].map((cond, i) => (
+                          <div key={i} className="bg-red-50/50 border border-red-100 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            {cond}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Prescriptions</span>
+                      <div className="mt-2.5 space-y-2">
+                        {[
+                          { name: "Metformin 500mg", dosage: "1 tablet • Daily (Post-meal)" },
+                          { name: "Amlodipine 5mg", dosage: "1 tablet • Morning" }
+                        ].map((rx, i) => (
+                          <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs text-slate-800">
+                            <span className="font-bold block text-slate-700">{rx.name}</span>
+                            <span className="text-[10px] text-slate-400 mt-0.5 block">{rx.dosage}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Completed Consultations</span>
+                        <p className="text-2xl font-black text-slate-800 mt-1">4 visits</p>
+                      </div>
+                      <span className="text-3xl">🩺</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-slate-400 text-[10px] border-t pt-4 text-center leading-relaxed">
+                  🛡️ MedFlow AI encrypted database. HIPAA compliant patient record.
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

@@ -15,7 +15,9 @@ const getMetadata = (queueId) => {
     eta_minutes: null,
     eta_timestamp: null,
     arrived_at: null,
-    no_show_warning_sent: false
+    no_show_warning_sent: false,
+    medicalConditions: ["Allergy: Penicillin", "Hypertension", "Type-2 Diabetes"],
+    pastAppointments: 4
   };
 };
 

@@ -11,6 +11,8 @@ function DoctorDashboard() {
   const [error, setError] = useState("");
   const [completing, setCompleting] = useState(false);
   const [callingNext, setCallingNext] = useState(false);
+  const [selectedPatientHistory, setSelectedPatientHistory] = useState(null);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
 
   const loadDoctorQueue = useCallback(async () => {
     try {
@@ -230,7 +232,18 @@ function DoctorDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-2">
+                  <div className="flex justify-between items-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPatientHistory(activePatient);
+                        setShowHistoryDrawer(true);
+                      }}
+                      className="bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 font-extrabold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5"
+                    >
+                      📋 View Health History
+                    </button>
+
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -363,6 +376,82 @@ function DoctorDashboard() {
             <p className="font-semibold text-sm">{error}</p>
           </div>
         )}
+
+        {/* Patient History Drawer */}
+        <AnimatePresence>
+          {showHistoryDrawer && selectedPatientHistory && (
+            <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex justify-end">
+              <div className="absolute inset-0" onClick={() => setShowHistoryDrawer(false)}></div>
+              
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="w-full max-w-md bg-white h-full shadow-2xl relative border-l border-slate-100 p-8 flex flex-col justify-between z-10 text-left"
+              >
+                <div>
+                  <div className="flex justify-between items-center border-b pb-4 mb-6">
+                    <div>
+                      <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                        📋 Clinical Health Record
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">Patient: {selectedPatientHistory.patients?.full_name}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowHistoryDrawer(false)}
+                      className="text-slate-400 hover:text-slate-600 font-bold"
+                    >
+                      Close ✕
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Diagnosed Conditions</span>
+                      <div className="mt-2.5 space-y-2">
+                        {["Allergy: Penicillin", "Hypertension (Stage 1)", "Type-2 Diabetes"].map((cond, i) => (
+                          <div key={i} className="bg-red-50/50 border border-red-100 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            {cond}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Prescription Regime</span>
+                      <div className="mt-2.5 space-y-2">
+                        {[
+                          { name: "Metformin 500mg", dosage: "1 tablet • Daily (Post-meal)" },
+                          { name: "Amlodipine 5mg", dosage: "1 tablet • Morning" }
+                        ].map((rx, i) => (
+                          <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs text-slate-800">
+                            <span className="font-bold block text-slate-700">{rx.name}</span>
+                            <span className="text-[10px] text-slate-400 mt-0.5 block">{rx.dosage}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Completed Clinic Visits</span>
+                        <p className="text-2xl font-black text-slate-800 mt-1">4 visits</p>
+                      </div>
+                      <span className="text-3xl">🩺</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-slate-400 text-[10px] border-t pt-4 text-center leading-relaxed">
+                  🛡️ Secure EHR. Authorized staff access only.
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>
