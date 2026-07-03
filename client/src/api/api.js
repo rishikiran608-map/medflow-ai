@@ -4,12 +4,7 @@ const getBaseURL = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  const hostname = window.location.hostname;
-  // If accessing via local network IP (e.g., 10.10.11.154), point to the backend at the same IP
-  if (hostname && hostname !== "localhost" && hostname !== "127.0.0.1" && /^[0-9.]+$/.test(hostname)) {
-    return `http://${hostname}:5000/api`;
-  }
-  return "http://localhost:5000/api";
+  return "/api";
 };
 
 const api = axios.create({
