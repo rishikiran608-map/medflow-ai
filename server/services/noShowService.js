@@ -1,23 +1,23 @@
 /**
- * MedFlow AI - Background No-Show Detection Service
- * Scans active queue entries. If a patient is late and fails to check in,
- * it marks them No-Show, auto-recovers the queue, and updates wait times.
+ * MedFlow AI - Background No-Show & Auto-Notification Daemon
+ * Handles automated queue shifting, late patient skips, and 30-minute reminders.
  */
 const { supabaseAdmin: supabase } = require("../config/supabase");
-const { getMetadata, clearMetadata } = require("./queueMetadataStore");
+const { getMetadata, setMetadata, clearMetadata } = require("./queueMetadataStore");
 const { sendWhatsAppNotification } = require("./whatsappService");
 
 const startNoShowDetection = (checkIntervalMs = 25000, expirationThresholdMins = 3) => {
-  console.log(`⏱️ MedFlow AI: Background No-Show Detector started (Running every ${checkIntervalMs / 1000}s)...`);
+  console.log(`⏱️ MedFlow AI: Background No-Show & Notification Daemon started (Running every ${checkIntervalMs / 1000}s)...`);
   
   setInterval(async () => {
     try {
       const now = new Date();
-      
+      const todayStr = now.toISOString().split("T")[0];
+
       // Fetch active queue entries that are in 'Waiting' or 'Arriving' status
       const { data: activeEntries, error } = await supabase
         .from("queue")
-        .select("*, patients(full_name, phone)")
+        .select("*, patients(full_name, phone), appointments(appointment_date, appointment_time)")
         .in("queue_status", ["Waiting", "Arriving"]);
 
       if (error || !activeEntries) {
@@ -27,35 +27,61 @@ const startNoShowDetection = (checkIntervalMs = 25000, expirationThresholdMins =
 
       for (const entry of activeEntries) {
         const createdAt = new Date(entry.created_at);
-        // Calculate age of the queue entry in minutes
         const ageMins = (now - createdAt) / (1000 * 60);
+        const meta = getMetadata(entry.id);
 
-        // If the entry has been waiting longer than the threshold without checking in, mark as No-Show
+        // ============================================
+        // 1. AUTO 30-MINUTE REMINDERS
+        // ============================================
+        const apptDate = entry.appointments?.appointment_date;
+        const apptTime = entry.appointments?.appointment_time;
+
+        if (apptDate === todayStr && apptTime && !meta.reminder_30m_sent) {
+          const [hours, minutes] = apptTime.split(":").map(Number);
+          const apptDateTime = new Date();
+          apptDateTime.setHours(hours, minutes, 0, 0);
+
+          const timeDiffMins = (apptDateTime - now) / (1000 * 60);
+
+          // If the appointment starts within the next 30 minutes, send reminder
+          if (timeDiffMins > 0 && timeDiffMins <= 30) {
+            const patientName = entry.patients?.full_name || "Patient";
+            const patientPhone = entry.patients?.phone || "N/A";
+            const msg = `Hello ${patientName}, your appointment with MedFlow AI is starting in ${Math.round(timeDiffMins)} minutes (Token: #${entry.token_number}). Please select 'I'm On The Way' on your dashboard to calculate your ETA.`;
+            
+            sendWhatsAppNotification(patientPhone, msg);
+            setMetadata(entry.id, { reminder_30m_sent: true });
+          }
+        }
+
+        // ============================================
+        // 2. NO-SHOW DETECTORS
+        // ============================================
         if (ageMins >= expirationThresholdMins) {
-          console.log(`🚨 No-Show Alert: Token #${entry.token_number} (Patient ID: ${entry.patient_id}) exceeded grace period of ${expirationThresholdMins} mins.`);
+          console.log(`🚨 No-Show Alert: Token #${entry.token_number} (Patient ID: ${entry.patient_id}) exceeded grace period.`);
 
-          // 1. Update database status to No Show
+          // A. Update status to No Show
           const { error: updateErr } = await supabase
             .from("queue")
             .update({ queue_status: "No Show", estimated_wait: 0 })
             .eq("id", entry.id);
 
           if (updateErr) {
-            console.error(`No-Show Detector: Failed to update status for token #${entry.token_number}:`, updateErr.message);
+            console.error(`No-Show Detector: Failed to update status:`, updateErr.message);
             continue;
           }
 
-          // 2. Clear metadata cache
+          // B. Clear metadata cache
           clearMetadata(entry.id);
 
-          // 3. Dispatch simulated WhatsApp warning
+          // C. Dispatch simulated WhatsApp warning
           const patientName = entry.patients?.full_name || "Patient";
           const patientPhone = entry.patients?.phone || "N/A";
           const alertMsg = `Hello ${patientName}, you missed your consultation slot today. Your queue token #${entry.token_number} has been cancelled and marked as No-Show. Please consult the reception desk to reschedule.`;
           
           sendWhatsAppNotification(patientPhone, alertMsg);
 
-          // 4. Shift subsequent queue entries for this doctor
+          // D. Shift subsequent queue entries
           const { data: remainingQueue } = await supabase
             .from("queue")
             .select("*")
@@ -73,12 +99,11 @@ const startNoShowDetection = (checkIntervalMs = 25000, expirationThresholdMins =
                 .update({ estimated_wait: newWait })
                 .eq("id", item.id);
             }
-            console.log(`🔄 No-Show Detector: Shifted wait times for ${remainingQueue.length} subsequent patients.`);
           }
         }
       }
     } catch (err) {
-      console.error("No-Show Detector error:", err);
+      console.error("No-Show Daemon error:", err);
     }
   }, checkIntervalMs);
 };

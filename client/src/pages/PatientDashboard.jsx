@@ -175,12 +175,12 @@ function PatientDashboard() {
                 {/* Queue Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-left">
-                    <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 font-semibold text-sm mb-1.5">
-                      <Clock size={16} />
-                      <span>Estimated Wait</span>
+                    <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 font-bold text-xs uppercase tracking-wider mb-1.5">
+                      <Clock size={14} className="text-blue-600" />
+                      <span>AI Prediction</span>
                     </div>
-                    <p className="text-3xl font-extrabold text-slate-800">
-                      {queueEntry.estimated_wait} <span className="text-lg font-bold text-slate-500">mins</span>
+                    <p className="text-2xl font-black text-slate-800">
+                      {queueEntry.estimated_wait} ± {queueEntry.margin || 2} <span className="text-sm font-bold text-slate-500">mins</span>
                     </p>
                   </div>
 
@@ -261,6 +261,41 @@ function PatientDashboard() {
                     )}
                   </div>
                 </div>
+
+                {/* QR Check-In Ticket */}
+                {["Waiting", "Arriving", "Checked In"].includes(queueEntry.queue_status) && (
+                  <div className="mt-8 border-t border-slate-100 pt-8 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100/50">
+                    <div className="text-left">
+                      <h4 className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                        🎫 QR Digital Token
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-1 max-w-sm leading-relaxed">
+                        Scan this QR code at the reception desk scanner or receptionist tablet to check-in automatically upon arrival.
+                      </p>
+                      <div className="mt-3 font-mono text-[10px] text-slate-400">
+                        Token ID: <span className="font-bold text-slate-600">{queueEntry.id}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Simulated SVG QR Code */}
+                    <div className="w-24 h-24 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center">
+                      <svg width="80" height="80" viewBox="0 0 100 100" className="text-slate-800">
+                        {/* Outlines of QR code finder patterns */}
+                        <path d="M0 0h30v30H0zm40 0h20v20H40zm30 0h30v30H70zM0 40h20v20H0zm50 40h20v20H50zm30-40h20v20H80zM0 70h30v30H0zm80 40h20v20H80z" fill="currentColor" />
+                        <path d="M10 10h10v10H10zm70 0h10v10H80zM10 80h10v10H10z" fill="white" />
+                        <path d="M13 13h4v4h-4zm70 0h4v4h-4zm-70 70h4v4h-4z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                        {/* Mock data pixels */}
+                        <rect x="35" y="35" width="8" height="8" fill="currentColor" />
+                        <rect x="45" y="45" width="8" height="8" fill="currentColor" />
+                        <rect x="35" y="55" width="8" height="8" fill="currentColor" />
+                        <rect x="55" y="35" width="8" height="8" fill="currentColor" />
+                        <rect x="65" y="65" width="8" height="8" fill="currentColor" />
+                        <rect x="45" y="65" width="8" height="8" fill="currentColor" />
+                        <rect x="65" y="45" width="8" height="8" fill="currentColor" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
 
                 {/* Cancel Button */}
                 {["Waiting", "Arriving", "Checked In"].includes(queueEntry.queue_status) && (

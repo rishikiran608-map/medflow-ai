@@ -175,50 +175,66 @@ const updateOnTheWay = async (req, res) => {
   }
 };
 
-// 6. Check-in patient (Patient has arrived at clinic)
+// 6. Check-in patient (Patient has arrived at clinic, supports direct QR/queueId checks)
 const checkInPatient = async (req, res) => {
   const patient_id = req.user.id;
+  const { queueId } = req.body;
+
   try {
-    const { data: activeQueue, error: fetchErr } = await supabaseAdmin
-      .from("queue")
-      .select("id, token_number, doctor_id, estimated_wait")
-      .eq("patient_id", patient_id)
-      .in("queue_status", ["Waiting", "Arriving"])
-      .order("created_at", { ascending: false })
-      .limit(1);
+    let queueEntry;
 
-    if (fetchErr || !activeQueue || activeQueue.length === 0) {
-      return res.status(404).json({ success: false, message: "No active queue entry found to check-in" });
+    if (queueId) {
+      const { data, error } = await supabaseAdmin
+        .from("queue")
+        .select("id, token_number, doctor_id, estimated_wait, patient_id")
+        .eq("id", queueId)
+        .single();
+      
+      if (error || !data) {
+        return res.status(404).json({ success: false, message: "Queue token ID not found" });
+      }
+      queueEntry = data;
+    } else {
+      const { data: activeQueue, error: fetchErr } = await supabaseAdmin
+        .from("queue")
+        .select("id, token_number, doctor_id, estimated_wait, patient_id")
+        .eq("patient_id", patient_id)
+        .in("queue_status", ["Waiting", "Arriving"])
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (fetchErr || !activeQueue || activeQueue.length === 0) {
+        return res.status(404).json({ success: false, message: "No active queue entry found to check-in" });
+      }
+      queueEntry = activeQueue[0];
     }
-
-    const queueId = activeQueue[0].id;
 
     // Update status in db to Checked In
     const { error: updateErr } = await supabaseAdmin
       .from("queue")
       .update({ queue_status: "Checked In" })
-      .eq("id", queueId);
+      .eq("id", queueEntry.id);
 
     if (updateErr) return res.status(500).json(updateErr);
 
     // Save arrival timestamp in metadata
-    setMetadata(queueId, { arrived_at: new Date().toISOString() });
+    setMetadata(queueEntry.id, { arrived_at: new Date().toISOString() });
 
     // Send check-in SMS
-    const { data: patient } = await supabaseAdmin.from("patients").select("full_name").eq("id", patient_id).single();
+    const { data: patient } = await supabaseAdmin.from("patients").select("full_name, phone").eq("id", queueEntry.patient_id).single();
     if (patient) {
-      const msg = `Welcome to the clinic, ${patient.full_name}! You are now checked-in. Token #${activeQueue[0].token_number}. Est. Wait: ${activeQueue[0].estimated_wait} mins. Please wait in the lounge.`;
+      const msg = `Welcome to the clinic, ${patient.full_name}! You are now checked-in. Token #${queueEntry.token_number}. Est. Wait: ${queueEntry.estimated_wait} mins. Please wait in the lounge.`;
       sendWhatsAppNotification(patient.phone || "N/A", msg);
     }
 
-    res.json({ success: true, message: "Successfully checked in!" });
+    res.json({ success: true, message: "Successfully checked in patient!" });
   } catch (err) {
     console.error("checkInPatient error:", err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-// 7. Call Next Patient (Doctor calls the next checked-in patient)
+// 7. Call Next Patient (Doctor calls the next checked-in patient, skips late ones)
 const callNextPatient = async (req, res) => {
   const doctor_id = req.user.id;
   try {
@@ -236,10 +252,21 @@ const callNextPatient = async (req, res) => {
       return res.status(404).json({ success: false, message: "No waiting or checked-in patients in queue" });
     }
 
-    // Prioritize Checked In patients first, fallback to Waiting/Arriving
-    let targetPatient = queueList.find(item => item.queue_status === "Checked In");
-    if (!targetPatient) {
-      targetPatient = queueList[0]; // fallback to first waiting/arriving patient
+    // Smart Queue: If the first patient is not checked in, skip them for the next checked-in patient
+    const firstPatient = queueList[0];
+    let targetPatient = firstPatient;
+
+    if (firstPatient.queue_status !== "Checked In") {
+      const nextCheckedIn = queueList.find(item => item.queue_status === "Checked In");
+      if (nextCheckedIn) {
+        targetPatient = nextCheckedIn;
+        
+        // Notify skipped patient
+        const skippedName = firstPatient.patients?.full_name || "Patient";
+        const skippedPhone = firstPatient.patients?.phone || "N/A";
+        const skipMsg = `Hello ${skippedName}, you were not checked-in at the clinic for your turn. We have called the next checked-in patient (Token #${nextCheckedIn.token_number}). Your position will be adjusted once you check in.`;
+        sendWhatsAppNotification(skippedPhone, skipMsg);
+      }
     }
 
     // Update status to In Consultation
@@ -249,6 +276,26 @@ const callNextPatient = async (req, res) => {
       .eq("id", targetPatient.id);
 
     if (updateErr) return res.status(500).json(updateErr);
+
+    // Shift wait times for subsequent patients
+    const { data: remainingQueue } = await supabaseAdmin
+      .from("queue")
+      .select("*")
+      .eq("doctor_id", doctor_id)
+      .in("queue_status", ["Waiting", "On The Way", "Arriving", "Checked In"])
+      .order("token_number");
+
+    if (remainingQueue && remainingQueue.length > 0) {
+      const averageConsultationTime = 12;
+      for (let i = 0; i < remainingQueue.length; i++) {
+        const entry = remainingQueue[i];
+        const newWait = i * averageConsultationTime;
+        await supabaseAdmin
+          .from("queue")
+          .update({ estimated_wait: newWait })
+          .eq("id", entry.id);
+      }
+    }
 
     // Send Call Next alert
     const patientName = targetPatient.patients?.full_name || "Patient";

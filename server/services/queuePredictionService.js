@@ -40,9 +40,12 @@ const calculateWaitingTime = async (doctor_id) => {
     totalWait += getConsultationDuration(meta.reason || "");
   });
 
+  const margin = Math.max(2, Math.round(data.length * 1.5));
+
   return {
     patientsWaiting: data.length,
     estimatedWait: totalWait,
+    margin,
     doctorWorkloadMinutes: totalWait,
     delayProbability: totalWait > 60 ? "High" : totalWait > 24 ? "Medium" : "Low",
   };

@@ -16,6 +16,27 @@ function AdminDashboard() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("monitor"); // 'monitor', 'analytics', 'doctors', 'patients'
   const [seeding, setSeeding] = useState(false);
+  const [scanId, setScanId] = useState("");
+  const [scanning, setScanning] = useState(false);
+
+  const handleQRCheckIn = async () => {
+    if (!scanId) {
+      alert("⚠️ Please enter or paste a Patient Token ID to simulate QR scan.");
+      return;
+    }
+    setScanning(true);
+    try {
+      await api.put("/queue/check-in", { queueId: scanId });
+      alert("✅ QR Code Verified! Patient checked in successfully.");
+      setScanId("");
+      await loadData();
+    } catch (err) {
+      console.error("QR Check-in error:", err);
+      alert("❌ Check-in failed: " + (err.response?.data?.message || err.message));
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const loadData = useCallback(async () => {
     try {
@@ -204,10 +225,30 @@ function AdminDashboard() {
           {/* TAB 1: Live Queue Monitor */}
           {activeTab === "monitor" && (
             <div>
-              <h3 className="text-lg font-extrabold text-slate-800 mb-6 flex items-center gap-2">
-                <BarChart3 className="text-blue-600" size={20} />
-                Real-Time Queue Dispatcher
-              </h3>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-slate-100 pb-6">
+                <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+                  <BarChart3 className="text-blue-600" size={20} />
+                  Real-Time Queue Dispatcher
+                </h3>
+                
+                {/* QR Terminal Scanner Simulation Panel */}
+                <div className="flex items-center gap-2 w-full sm:w-auto bg-slate-50 p-2 rounded-2xl border border-slate-100/60">
+                  <input
+                    type="text"
+                    placeholder="Scan QR / Paste Token ID"
+                    value={scanId}
+                    onChange={(e) => setScanId(e.target.value)}
+                    className="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                  />
+                  <button
+                    onClick={handleQRCheckIn}
+                    disabled={scanning}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs transition shadow-md shadow-blue-500/5 disabled:opacity-50"
+                  >
+                    {scanning ? "Processing..." : "Simulate QR Scan"}
+                  </button>
+                </div>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -272,19 +313,19 @@ function AdminDashboard() {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Doctor Efficiency Score</span>
-                  <p className="text-3xl font-black text-slate-800 mt-2">94.8%</p>
-                  <p className="text-xs text-green-600 font-semibold mt-1">▲ 1.2% this week</p>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Patients Today</span>
+                  <p className="text-3xl font-black text-slate-800 mt-2">{patients.length || 24} patients</p>
+                  <p className="text-xs text-green-600 font-semibold mt-1">▲ 12.4% traffic compared to yesterday</p>
                 </div>
                 <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Average Patient Stay Duration</span>
-                  <p className="text-3xl font-black text-slate-800 mt-2">26.4 mins</p>
-                  <p className="text-xs text-green-600 font-semibold mt-1">▼ 3.8 mins optimized by AI</p>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Average Waiting Time</span>
+                  <p className="text-3xl font-black text-slate-800 mt-2">{averageWait} mins</p>
+                  <p className="text-xs text-green-600 font-semibold mt-1">▼ 3.8 mins optimized by AI routing</p>
                 </div>
                 <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">No-Show / Cancellation Rate</span>
-                  <p className="text-3xl font-black text-slate-800 mt-2">4.2%</p>
-                  <p className="text-xs text-green-600 font-semibold mt-1">▼ 8.1% reduced via auto-alerts</p>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Queue Efficiency Rating</span>
+                  <p className="text-3xl font-black text-slate-800 mt-2">92.4%</p>
+                  <p className="text-xs text-green-600 font-semibold mt-1">▼ 8.1% no-show skip auto-recovery</p>
                 </div>
               </div>
 
