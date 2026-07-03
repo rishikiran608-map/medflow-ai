@@ -90,6 +90,73 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
+  // Auto-provision demo accounts if they don't exist in Supabase yet
+  const demoAccounts = {
+    "admin@medflow.com": { password: "admin123", role: "Hospital Admin", name: "Admin Desk" },
+    "doctor@medflow.com": { password: "doctor123", role: "Doctor", name: "Dr. Rajesh Kumar" },
+    "patient@medflow.com": { password: "patient123", role: "Patient", name: "Patient Demo" }
+  };
+
+  if (demoAccounts[email] && password === demoAccounts[email].password) {
+    try {
+      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+      const existing = listData?.users?.find(u => u.email === email);
+
+      if (!existing) {
+        console.log(`Auto-provisioning demo account: ${email}`);
+        const acc = demoAccounts[email];
+        
+        // 1. Create auth account
+        const { data: authUser, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { role: acc.role, full_name: acc.name }
+        });
+
+        if (!authErr && authUser?.user) {
+          const userId = authUser.user.id;
+
+          // 2. Insert into users table
+          await supabaseAdmin.from("users").insert([{
+            id: userId,
+            full_name: acc.name,
+            email,
+            role: acc.role,
+            phone: "9988776611"
+          }]);
+
+          // 3. Insert role-specific profile details
+          if (acc.role === "Doctor") {
+            await supabaseAdmin.from("doctors").insert([{
+              id: userId,
+              full_name: acc.name,
+              email,
+              phone: "9988776622",
+              specialization: "Cardiology",
+              experience: 12,
+              qualification: "MD, DM",
+              consultation_fee: 800,
+              available: true
+            }]);
+          } else if (acc.role === "Patient") {
+            await supabaseAdmin.from("patients").insert([{
+              id: userId,
+              full_name: acc.name,
+              email,
+              phone: "9988776633",
+              age: 34,
+              gender: "Male",
+              address: "Mumbai, India"
+            }]);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Demo auto-provisioning warning:", e.message);
+    }
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
