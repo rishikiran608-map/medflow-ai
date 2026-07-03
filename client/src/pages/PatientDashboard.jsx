@@ -2,13 +2,17 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, LogOut, Clock, Calendar, AlertCircle, Compass, CheckCircle } from "lucide-react";
+import { User, Clock, Calendar, AlertCircle, Compass, CheckCircle, Navigation, MapPin, Car, X } from "lucide-react";
 
 function PatientDashboard() {
   const navigate = useNavigate();
   const [queueEntry, setQueueEntry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showTravelModal, setShowTravelModal] = useState(false);
+  const [travelMode, setTravelMode] = useState("Driving");
+  const [distance, setDistance] = useState("5.0");
+  const [commuting, setCommuting] = useState(false);
 
   const loadActiveQueue = useCallback(async () => {
     try {
@@ -19,7 +23,6 @@ function PatientDashboard() {
       }
 
       const res = await api.get("/queue/active");
-
       setQueueEntry(res.data);
       setError("");
     } catch (err) {
@@ -39,29 +42,51 @@ function PatientDashboard() {
       loadActiveQueue();
     }, 0);
 
-    // Auto-refresh queue entry every 10 seconds to keep live wait time updated
-    const interval = setInterval(loadActiveQueue, 10000);
+    const interval = setInterval(loadActiveQueue, 8000);
     return () => {
       clearTimeout(timer);
       clearInterval(interval);
     };
   }, [loadActiveQueue]);
 
-  const handleOnTheWay = async () => {
+  const handleStartCommute = async () => {
+    setCommuting(true);
     try {
-      await api.put("/queue/on-the-way");
-      // Refresh details
+      await api.put("/queue/on-the-way", {
+        travel_mode: travelMode,
+        distance: parseFloat(distance),
+      });
+      setShowTravelModal(false);
       loadActiveQueue();
     } catch (err) {
-      console.error("Failed to update status:", err);
-      alert("⚠️ Failed to update your status. Please try again.");
+      console.error("Failed to update travel status:", err);
+      alert("⚠️ Failed to update commute details. Try again.");
+    } finally {
+      setCommuting(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    navigate("/login");
+  const handleCheckIn = async () => {
+    try {
+      await api.put("/queue/check-in");
+      loadActiveQueue();
+    } catch (err) {
+      console.error("Check-in error:", err);
+      alert("⚠️ Check-in failed. Please verify at front desk.");
+    }
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!window.confirm("⚠️ Are you sure you want to cancel this appointment and release your queue token?")) {
+      return;
+    }
+    try {
+      await api.put(`/queue/cancel/${queueEntry.id}`);
+      loadActiveQueue();
+    } catch (err) {
+      console.error("Cancellation error:", err);
+      alert("⚠️ Cancellation failed. Try again.");
+    }
   };
 
   if (loading) {
@@ -76,35 +101,45 @@ function PatientDashboard() {
     );
   }
 
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case "Waiting":
+        return "bg-slate-100 text-slate-700 border border-slate-200";
+      case "Arriving":
+        return "bg-yellow-50 text-yellow-700 border border-yellow-200";
+      case "Checked In":
+        return "bg-green-50 text-green-700 border border-green-200";
+      case "In Consultation":
+        return "bg-blue-100 text-blue-800 border border-blue-200 animate-pulse";
+      default:
+        return "bg-slate-100 text-slate-700 border border-slate-200";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-100 py-10 px-6 font-sans">
       <div className="max-w-4xl mx-auto">
         
-        {/* Header */}
+        {/* Welcome Card */}
         <motion.div 
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center mb-10 bg-white/60 backdrop-blur-md px-8 py-5 rounded-3xl shadow-sm border border-white"
+          className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100/50 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-md shadow-blue-500/20">
-              M
-            </div>
-            <div>
-              <h1 className="text-2xl font-extrabold text-gray-800">MedFlow AI</h1>
-              <p className="text-xs font-semibold text-blue-600 tracking-wider uppercase">Patient Portal</p>
-            </div>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-full blur-2xl -z-10"></div>
+          <div>
+            <h2 className="text-3xl font-extrabold text-slate-800">
+              Welcome Back!
+            </h2>
+            <p className="text-slate-500 font-medium mt-1">
+              Track your live consulting status and commute time below.
+            </p>
           </div>
-
-          <div className="flex gap-4">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-red-50 text-red-600 px-5 py-3 rounded-2xl font-semibold hover:bg-red-100 transition duration-300"
-            >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
-          </div>
+          {queueEntry && (
+            <span className={`text-xs font-bold px-4 py-2 rounded-full tracking-wider uppercase ${getStatusBadgeClass(queueEntry.queue_status)}`}>
+              {queueEntry.queue_status}
+            </span>
+          )}
         </motion.div>
 
         {/* Dashboard Content */}
@@ -112,92 +147,132 @@ function PatientDashboard() {
           {queueEntry ? (
             <motion.div
               key="active-queue"
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -40 }}
-              transition={{ duration: 0.5 }}
+              exit={{ opacity: 0, y: -30 }}
               className="grid gap-8"
             >
-              {/* Main Ticket Card */}
+              {/* Live Ticket Card */}
               <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-blue-100 relative overflow-hidden">
-                {/* Background Accent Gradients */}
                 <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 rounded-full blur-3xl -z-10 translate-x-20 -translate-y-20"></div>
 
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 pb-6 mb-6 gap-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-6 mb-6 gap-4">
                   <div>
-                    <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
-                      {queueEntry.queue_status === "Waiting" ? "🔴 In Queue" : "🟢 On My Way"}
-                    </span>
-                    <h2 className="text-3xl font-extrabold text-gray-800 mt-3">
+                    <h3 className="text-2xl font-extrabold text-slate-800">
                       {queueEntry.doctors?.full_name}
-                    </h2>
-                    <p className="text-gray-500 font-medium mt-1">
+                    </h3>
+                    <p className="text-slate-500 font-semibold mt-1">
                       {queueEntry.doctors?.specialization}
                     </p>
                   </div>
 
-                  <div className="bg-blue-600 text-white px-8 py-4 rounded-3xl text-center shadow-lg shadow-blue-600/30">
-                    <p className="text-xs uppercase tracking-wider font-semibold opacity-80">Token Number</p>
-                    <p className="text-4xl font-black mt-1">#{queueEntry.token_number}</p>
+                  <div className="bg-blue-600 text-white px-8 py-4 rounded-3xl text-center shadow-lg shadow-blue-500/30">
+                    <p className="text-xs uppercase tracking-wider font-bold opacity-80">Token Number</p>
+                    <p className="text-4xl font-black mt-0.5">#{queueEntry.token_number}</p>
                   </div>
                 </div>
 
-                {/* Queue Stats Grid */}
-                <div className="grid grid-cols-2 gap-6 mb-8">
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                    <div className="flex items-center gap-2 text-slate-500 font-medium text-sm mb-2">
+                {/* Queue Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-left">
+                    <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 font-semibold text-sm mb-1.5">
                       <Clock size={16} />
                       <span>Estimated Wait</span>
                     </div>
                     <p className="text-3xl font-extrabold text-slate-800">
-                      {queueEntry.estimated_wait} <span className="text-lg font-bold">mins</span>
+                      {queueEntry.estimated_wait} <span className="text-lg font-bold text-slate-500">mins</span>
                     </p>
                   </div>
 
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                    <div className="flex items-center gap-2 text-slate-500 font-medium text-sm mb-2">
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-left">
+                    <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 font-semibold text-sm mb-1.5">
                       <User size={16} />
                       <span>Queue Position</span>
                     </div>
                     <p className="text-3xl font-extrabold text-slate-800">
                       {Math.max(0, Math.ceil(queueEntry.estimated_wait / 12))}{" "}
-                      <span className="text-lg font-bold">ahead</span>
+                      <span className="text-lg font-bold text-slate-500">ahead</span>
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-left">
+                    <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 font-semibold text-sm mb-1.5">
+                      <Navigation size={16} />
+                      <span>Commute Status</span>
+                    </div>
+                    <p className="text-lg font-bold text-slate-800 mt-1">
+                      {queueEntry.travel_mode ? (
+                        <span className="flex items-center justify-center md:justify-start gap-1 text-slate-700">
+                          {queueEntry.travel_mode === "Driving" ? "🚗" : queueEntry.travel_mode === "Transit" ? "🚌" : "🚶"}{" "}
+                          {queueEntry.eta_minutes} mins ETA
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-sm">Not commuting</span>
+                      )}
                     </p>
                   </div>
                 </div>
 
-                {/* Action Section */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-blue-50/50 rounded-2xl p-6 border border-blue-100/50">
-                  <div className="flex gap-3 items-start">
-                    <Compass className="text-blue-600 shrink-0 mt-1" />
+                {/* Actions Panel */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 bg-blue-50/50 rounded-2xl p-6 border border-blue-100/50 justify-between">
+                  <div className="flex gap-3 items-start text-left">
+                    <Compass className="text-blue-600 shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-bold text-slate-800">Check-in Status</h4>
-                      <p className="text-sm text-slate-600 mt-0.5">
-                        {queueEntry.queue_status === "Waiting"
-                          ? "Let the doctor know you are heading to the clinic."
-                          : "Doctor is notified. Please wait in the waiting room."}
+                      <h4 className="font-bold text-slate-800">Commute & Check-in</h4>
+                      <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                        {queueEntry.queue_status === "Waiting" && "Update your commute details so the doctor can monitor your arrival."}
+                        {queueEntry.queue_status === "Arriving" && "Click Check In once you have arrived at the clinic reception."}
+                        {queueEntry.queue_status === "Checked In" && "Arrived! Please sit in the lounge until your token is called."}
+                        {queueEntry.queue_status === "In Consultation" && "Consultation in progress. Enjoy your session!"}
                       </p>
                     </div>
                   </div>
 
-                  {queueEntry.queue_status === "Waiting" && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleOnTheWay}
-                      className="w-full sm:w-auto bg-blue-600 text-white font-bold px-8 py-4 rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/20"
-                    >
-                      I'm On The Way
-                    </motion.button>
-                  )}
+                  <div className="flex gap-3 w-full sm:w-auto shrink-0">
+                    {queueEntry.queue_status === "Waiting" && (
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setShowTravelModal(true)}
+                        className="w-full sm:w-auto bg-blue-600 text-white font-bold px-6 py-3.5 rounded-xl hover:bg-blue-700 transition shadow-md shadow-blue-500/10 flex items-center justify-center gap-2"
+                      >
+                        <Car size={16} />
+                        I'm On The Way
+                      </motion.button>
+                    )}
 
-                  {queueEntry.queue_status === "On The Way" && (
-                    <div className="flex items-center gap-2 text-green-600 font-bold bg-green-50 px-5 py-3 rounded-2xl border border-green-200">
-                      <CheckCircle size={18} />
-                      <span>On The Way Checked</span>
-                    </div>
-                  )}
+                    {queueEntry.queue_status === "Arriving" && (
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleCheckIn}
+                        className="w-full sm:w-auto bg-green-600 text-white font-bold px-6 py-3.5 rounded-xl hover:bg-green-700 transition shadow-md shadow-green-500/10 flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle size={16} />
+                        Check In
+                      </motion.button>
+                    )}
+
+                    {queueEntry.queue_status === "Checked In" && (
+                      <div className="flex items-center gap-1.5 text-green-600 font-bold bg-green-50 px-4 py-2.5 rounded-xl border border-green-200 text-sm">
+                        <CheckCircle size={16} />
+                        <span>Ready in Clinic</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Cancel Button */}
+                {["Waiting", "Arriving", "Checked In"].includes(queueEntry.queue_status) && (
+                  <div className="mt-8 border-t border-slate-100 pt-6 flex justify-end">
+                    <button
+                      onClick={handleCancelAppointment}
+                      className="text-xs font-semibold text-slate-400 hover:text-red-500 transition duration-200"
+                    >
+                      Cancel Appointment
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           ) : (
@@ -205,8 +280,7 @@ function PatientDashboard() {
               key="no-queue"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-10 text-center shadow-lg border border-slate-100 flex flex-col items-center justify-center"
+              className="bg-white rounded-3xl p-10 text-center shadow-lg border border-slate-100 flex flex-col items-center justify-center py-20"
             >
               <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-6">
                 <Calendar size={40} />
@@ -225,6 +299,89 @@ function PatientDashboard() {
                 </motion.button>
               </Link>
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Travel Modal */}
+        <AnimatePresence>
+          {showTravelModal && (
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative border border-slate-100 text-left"
+              >
+                <button 
+                  onClick={() => setShowTravelModal(false)}
+                  className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition"
+                >
+                  <X size={20} />
+                </button>
+
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <MapPin className="text-blue-600" size={22} />
+                  Commute Details
+                </h3>
+                <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">
+                  Provide your travel parameters. MedFlow AI will predict your ETA and keep the hospital updated.
+                </p>
+
+                {/* Travel Mode Selector */}
+                <div className="mt-6">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Mode of Transport</label>
+                  <div className="grid grid-cols-4 gap-3 mt-2.5">
+                    {[
+                      { mode: "Driving", label: "Car 🚗" },
+                      { mode: "Transit", label: "Transit 🚌" },
+                      { mode: "Bicycling", label: "Bike 🚲" },
+                      { mode: "Walking", label: "Walk 🚶" }
+                    ].map(item => (
+                      <button
+                        key={item.mode}
+                        onClick={() => setTravelMode(item.mode)}
+                        className={`py-3 px-1 rounded-xl border text-xs font-bold transition flex flex-col items-center justify-center gap-1.5 ${
+                          travelMode === item.mode 
+                            ? "border-blue-600 bg-blue-50 text-blue-600" 
+                            : "border-slate-100 text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Distance Input */}
+                <div className="mt-6">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Estimated Distance (km)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    value={distance}
+                    onChange={(e) => setDistance(e.target.value)}
+                    className="w-full mt-2.5 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                  />
+                </div>
+
+                <div className="mt-8 flex justify-end gap-3">
+                  <button
+                    onClick={() => setShowTravelModal(false)}
+                    className="py-3 px-5 rounded-xl border font-bold text-xs text-slate-500 hover:bg-slate-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleStartCommute}
+                    disabled={commuting}
+                    className="py-3 px-6 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-md shadow-blue-500/10 disabled:opacity-50"
+                  >
+                    {commuting ? "Calculating..." : "Start Commute"}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
 

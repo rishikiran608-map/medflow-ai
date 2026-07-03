@@ -1,15 +1,18 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Navbar from "./components/Navbar";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import PatientDashboard from "./pages/PatientDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import BookAppointment from "./pages/BookAppointment";
+import PaymentPage from "./pages/PaymentPage";
 
 function App() {
   return (
     <BrowserRouter>
+      <Navbar />
       <Routes>
         <Route path="/" element={<LandingPage />} />
 
@@ -33,6 +36,11 @@ function App() {
         <Route
           path="/book-appointment"
           element={<BookAppointment />}
+        />
+
+        <Route
+          path="/payment/:id"
+          element={<PaymentPage />}
         />
       </Routes>
     </BrowserRouter>

@@ -46,9 +46,12 @@ function LoginPage() {
 
       if (data.user) {
         localStorage.setItem("userId", data.user.id);
+        const name = data.user?.user_metadata?.full_name || "User";
+        localStorage.setItem("userName", name);
       }
 
       const role = data.user?.user_metadata?.role || formData.role;
+      localStorage.setItem("userRole", role);
 
       if (role === "Patient") {
         navigate("/book-appointment");
@@ -118,21 +121,7 @@ function LoginPage() {
               transition={{ duration: 0.3 }}
               className="mt-8 space-y-5"
             >
-              <div>
-                <label className="font-semibold text-slate-700 text-sm">Role</label>
-                <div className="relative mt-2">
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-xl p-3 bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                  >
-                    <option value="Patient">Patient</option>
-                    <option value="Doctor">Doctor</option>
-                    <option value="Hospital Admin">Hospital Admin</option>
-                  </select>
-                </div>
-              </div>
+
 
               <div>
                 <label className="font-semibold text-slate-700 text-sm">Email Address</label>
@@ -213,20 +202,7 @@ function LoginPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 text-sm">Register As</label>
-                <div className="relative mt-2">
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-xl p-3 bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                  >
-                    <option value="Patient">Patient</option>
-                    <option value="Doctor">Doctor</option>
-                  </select>
-                </div>
-              </div>
+
 
               <div>
                 <label className="font-semibold text-slate-700 text-sm">Email Address</label>

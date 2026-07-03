@@ -1,43 +1,139 @@
+import { Link, useNavigate } from "react-router-dom";
+import { LogOut, User, Menu, X } from "lucide-react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+
 function Navbar() {
-return (
-  <motion.nav
-    initial={{ y: -80, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    transition={{ duration: 0.8 }}
-    className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg shadow-md"
-  >
-    <div className="max-w-7xl mx-auto px-6 md:px-12 py-5 flex justify-between items-center">
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("userRole");
+  const userName = localStorage.getItem("userName") || "User";
 
-      <motion.h1
-        whileHover={{ scale: 1.1, rotate: -2 }}
-        className="text-3xl font-bold text-blue-600"
-      >
-        MedFlow AI
-      </motion.h1>
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
 
-      <div className="hidden md:flex items-center gap-8">
-        <a href="#home">Home</a>
-        <a href="#features">Features</a>
-        <a href="#dashboard">Dashboard</a>
-        <a href="#">About</a>
-        <a href="#">Contact</a>
+  const getDashboardLink = () => {
+    if (!token) return "/login";
+    if (role === "Patient") return "/patient-dashboard";
+    if (role === "Doctor") return "/doctor-dashboard";
+    return "/admin-dashboard";
+  };
+
+  return (
+    <nav className="bg-white/90 backdrop-blur-md sticky top-0 z-50 px-8 py-4 border-b border-slate-100/50 shadow-sm font-sans">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        
+        {/* Brand Link */}
+        <Link 
+          to={token ? getDashboardLink() : "/"} 
+          className="text-2xl font-black text-blue-600 tracking-tight"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          MedFlow AI
+        </Link>
+
+        {/* Desktop Navigation Links */}
+        <div className="hidden md:flex items-center gap-8">
+          <Link to="/" className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Home</Link>
+          <a href="#features" className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Features</a>
+          <Link to={getDashboardLink()} className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Dashboard</Link>
+          <a href="#about" className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">About</a>
+          <a href="#contact" className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Contact</a>
+        </div>
+
+        {/* Right side: Login button or User Menu */}
+        <div className="hidden md:flex items-center gap-4">
+          {token ? (
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col text-right">
+                <span className="text-xs font-bold text-slate-800">{userName}</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{role}</span>
+              </div>
+              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600" title={`${userName} (${role})`}>
+                <User size={16} />
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition"
+                title="Sign Out"
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
+          ) : (
+            <Link 
+              to="/login" 
+              className="bg-blue-600 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-md shadow-blue-500/10 text-sm"
+            >
+              Login
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile Toggle */}
+        <button 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 text-slate-600 hover:text-slate-800 transition"
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+
       </div>
 
-      <Link to="/login">
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
-  >
-    Login
-  </motion.button>
-</Link>
+      {/* Mobile Menu Panel */}
+      {mobileMenuOpen && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="md:hidden mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3 text-left"
+        >
+          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Home</Link>
+          <a href="#features" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Features</a>
+          <Link to={getDashboardLink()} onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Dashboard</Link>
+          <a href="#about" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">About</a>
+          <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Contact</a>
+          
+          <div className="border-t border-slate-100 my-1"></div>
+          {token ? (
+            <div className="px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
+                  <User size={16} />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-800 block">{userName}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{role}</span>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          ) : (
+            <Link 
+              to="/login" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="mx-4 bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700 transition text-center text-sm shadow-md"
+            >
+              Login
+            </Link>
+          )}
+        </motion.div>
+      )}
 
-    </div>
-  </motion.nav>
-);
+    </nav>
+  );
 }
 
 export default Navbar;

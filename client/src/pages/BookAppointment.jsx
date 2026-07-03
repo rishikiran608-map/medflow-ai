@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getDoctors } from "../services/doctorService";
 import { bookAppointment } from "../services/appointmentService";
 
 function BookAppointment() {
+  const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -56,22 +58,24 @@ function BookAppointment() {
 
       console.log("Booking result:", result);
 
-      if (result.success && result.queue) {
+      if (result.success && result.appointment) {
         alert(
-          `✅ Appointment Booked Successfully!\n\n` +
-          `🟢 Your Queue Token: #${result.queue.token_number}\n` +
-          `⏱️ Estimated Wait Time: ${result.estimated_wait} mins`
+          `✅ Appointment Created! Platform: Pending Payment.\n\n` +
+          `🟢 Proceeding to secure checkout payment to activate your token.`
         );
+        
+        setFormData({
+          doctor: "",
+          date: "",
+          time: "",
+          reason: "",
+        });
+
+        navigate(`/payment/${result.appointment.id}`);
       } else {
         alert("✅ Appointment Booked Successfully!");
+        navigate("/patient-dashboard");
       }
-
-      setFormData({
-        doctor: "",
-        date: "",
-        time: "",
-        reason: "",
-      });
 
     } catch (error) {
       console.error(error);

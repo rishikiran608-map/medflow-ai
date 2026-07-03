@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 
 function Hero() {
@@ -32,22 +33,23 @@ function Hero() {
             and helps hospitals reduce overcrowding.
           </p>
 
-          <div className="mt-8 flex gap-4">
-            <motion.button
-  whileHover={{ scale: 1.05 }}
-  whileTap={{ scale: 0.95 }}
-  className="bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transition font-semibold shadow-lg shadow-blue-500/20"
->
-  Get Started
-</motion.button>
+          <div className="mt-8 flex items-center gap-6">
+            <Link to="/login">
+              <motion.button
+                whileHover={{ x: 2 }}
+                className="text-slate-700 hover:text-blue-600 transition font-bold text-sm tracking-tight"
+              >
+                Get Started
+              </motion.button>
+            </Link>
 
-        <motion.button
-  whileHover={{ scale: 1.05 }}
-  whileTap={{ scale: 0.95 }}
-  className="border border-blue-600 text-blue-600 px-8 py-4 rounded-xl hover:bg-blue-50 transition"
->
-  Watch Demo
-</motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="border border-slate-300 text-slate-500 px-6 py-3 rounded-xl hover:bg-slate-50 hover:text-slate-700 transition font-semibold text-sm"
+            >
+              Watch Demo
+            </motion.button>
           </div>
         </motion.div>
 

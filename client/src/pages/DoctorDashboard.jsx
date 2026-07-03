@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, Users, Clipboard, RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Users, Clipboard, RefreshCw, AlertCircle, Clock, Play, CheckSquare, Smile, Phone, Activity } from "lucide-react";
 
 function DoctorDashboard() {
   const navigate = useNavigate();
@@ -10,6 +10,7 @@ function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [completing, setCompleting] = useState(false);
+  const [callingNext, setCallingNext] = useState(false);
 
   const loadDoctorQueue = useCallback(async () => {
     try {
@@ -20,7 +21,6 @@ function DoctorDashboard() {
       }
 
       const res = await api.get("/queue/doctor");
-
       setQueue(res.data);
       setError("");
     } catch (err) {
@@ -36,19 +36,32 @@ function DoctorDashboard() {
       loadDoctorQueue();
     }, 0);
 
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(loadDoctorQueue, 10000);
+    const interval = setInterval(loadDoctorQueue, 8000);
     return () => {
       clearTimeout(timer);
       clearInterval(interval);
     };
   }, [loadDoctorQueue]);
 
+  const handleCallNext = async () => {
+    setCallingNext(true);
+    try {
+      const res = await api.put("/queue/call-next");
+      if (res.data.success) {
+        await loadDoctorQueue();
+      }
+    } catch (err) {
+      console.error("Failed to call next patient:", err);
+      alert(err.response?.data?.message || "⚠️ No patient checked-in or ready to call.");
+    } finally {
+      setCallingNext(false);
+    }
+  };
+
   const handleComplete = async (queueId) => {
     setCompleting(true);
     try {
       await api.put(`/queue/complete/${queueId}`);
-      // Reload queue
       await loadDoctorQueue();
     } catch (err) {
       console.error("Failed to complete consultation:", err);
@@ -58,14 +71,14 @@ function DoctorDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    navigate("/login");
-  };
+  const activePatient = queue.find(item => item.queue_status === "In Consultation");
+  
+  // The rest of the queue (Waiting, Arriving, Checked In)
+  const waitingQueue = queue.filter(item => item.queue_status !== "In Consultation");
 
-  const currentPatient = queue[0];
-  const upcomingPatients = queue.slice(1);
+  // Calculate wait stats
+  const totalWaiting = waitingQueue.length;
+  const avgWaitTime = totalWaiting * 12;
 
   if (loading) {
     return (
@@ -83,119 +96,126 @@ function DoctorDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-100 py-10 px-6 font-sans">
       <div className="max-w-6xl mx-auto">
         
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center mb-10 bg-white/60 backdrop-blur-md px-8 py-5 rounded-3xl shadow-sm border border-white"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-md shadow-blue-500/20">
-              🩺
+        {/* Sub-Header / Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-3xl border border-blue-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
+            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
+              <Users size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-gray-800">MedFlow AI</h1>
-              <p className="text-xs font-semibold text-blue-600 tracking-wider uppercase">Doctor Panel</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Patients Waiting</p>
+              <h3 className="text-2xl font-black text-slate-800 mt-0.5">{totalWaiting}</h3>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={loadDoctorQueue}
-              className="p-3 bg-white hover:bg-slate-50 border rounded-2xl text-slate-600 transition"
-              title="Refresh Queue"
-            >
-              <RefreshCw size={18} />
-            </motion.button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-red-50 text-red-600 px-5 py-3 rounded-2xl font-semibold hover:bg-red-100 transition duration-300"
-            >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
+          <div className="bg-white p-6 rounded-3xl border border-blue-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
+            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center">
+              <Clock size={24} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Est. Backlog Wait</p>
+              <h3 className="text-2xl font-black text-slate-800 mt-0.5">{avgWaitTime} mins</h3>
+            </div>
           </div>
-        </motion.div>
+
+          <div className="bg-white p-6 rounded-3xl border border-blue-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
+            <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center">
+              <Activity size={24} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Queue Flow Speed</p>
+              <h3 className="text-2xl font-black text-slate-800 mt-0.5">12 <span className="text-sm font-bold text-slate-500">mins/p</span></h3>
+            </div>
+          </div>
+        </div>
 
         {/* Dashboard Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
           
           {/* Active Consultation Panel */}
           <div className="lg:col-span-2 space-y-8">
-            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <Clipboard className="text-blue-600" size={20} />
-              Active Consultation
-            </h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Clipboard className="text-blue-600" size={20} />
+                Active Session
+              </h3>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={loadDoctorQueue}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border rounded-xl text-slate-600 text-xs font-bold shadow-sm hover:bg-slate-50 transition"
+              >
+                <RefreshCw size={12} />
+                Sync List
+              </motion.button>
+            </div>
 
+            {/* Active Patient Card */}
             <AnimatePresence mode="wait">
-              {currentPatient ? (
+              {activePatient ? (
                 <motion.div
-                  key={currentPatient.id}
+                  key={activePatient.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ duration: 0.3 }}
                   className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100 relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-60 h-60 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-full blur-3xl -z-10 translate-x-20 -translate-y-20"></div>
 
-                  <div className="flex justify-between items-start border-b border-gray-100 pb-6 mb-6">
+                  <div className="flex justify-between items-start border-b border-slate-100 pb-6 mb-6">
                     <div>
-                      <span className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider ${
-                        currentPatient.queue_status === "On The Way" 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}>
-                        {currentPatient.queue_status === "On The Way" ? "🟢 On The Way" : "⏱️ Waiting"}
+                      <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse">
+                        ⚡ Consultation In Progress
                       </span>
                       <h2 className="text-3xl font-extrabold text-slate-800 mt-3">
-                        {currentPatient.patients?.full_name}
+                        {activePatient.patients?.full_name}
                       </h2>
-                      <p className="text-slate-500 font-medium mt-1">
-                        Patient Profile details
+                      <p className="text-slate-500 font-semibold text-sm mt-1">
+                        Age: {activePatient.patients?.age || 25} yrs • Gender: {activePatient.patients?.gender || "Male"}
                       </p>
                     </div>
 
-                    <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-center shadow-lg shadow-blue-600/20">
-                      <span className="text-xs uppercase tracking-wider font-semibold opacity-80 block">Token</span>
-                      <span className="text-3xl font-black">#{currentPatient.token_number}</span>
+                    <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-center shadow-lg shadow-blue-500/20">
+                      <span className="text-xs uppercase tracking-wider font-bold opacity-80 block">Token</span>
+                      <span className="text-3xl font-black">#{activePatient.token_number}</span>
                     </div>
                   </div>
 
                   {/* Patient Info Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Age</span>
-                      <p className="text-xl font-bold text-slate-800 mt-1">{currentPatient.patients?.age || 25} yrs</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 text-left">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Phone Number</span>
+                      <p className="text-sm font-bold text-slate-700 mt-1 flex items-center gap-1.5">
+                        <Phone size={14} className="text-slate-400" />
+                        {activePatient.patients?.phone || "N/A"}
+                      </p>
                     </div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Gender</span>
-                      <p className="text-xl font-bold text-slate-800 mt-1">{currentPatient.patients?.gender || "Male"}</p>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Patient Email</span>
+                      <p className="text-sm font-bold text-slate-700 mt-1 truncate">{activePatient.patients?.email}</p>
                     </div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Phone</span>
-                      <p className="text-sm font-bold text-slate-800 mt-2">{currentPatient.patients?.phone || "N/A"}</p>
-                    </div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Wait Time</span>
-                      <p className="text-xl font-bold text-slate-800 mt-1">{currentPatient.estimated_wait} mins</p>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Arrived At</span>
+                      <p className="text-sm font-bold text-slate-700 mt-1">
+                        {activePatient.arrived_at 
+                          ? new Date(activePatient.arrived_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                          : "N/A"}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Consultation Actions */}
-                  <div className="flex justify-end gap-4 border-t border-gray-100 pt-6">
+                  <div className="flex justify-end pt-2">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => handleComplete(currentPatient.id)}
+                      onClick={() => handleComplete(activePatient.id)}
                       disabled={completing}
-                      className="bg-blue-600 text-white font-extrabold px-8 py-4 rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 disabled:opacity-50 flex items-center gap-2"
+                      className="bg-green-600 text-white font-extrabold px-8 py-4 rounded-2xl hover:bg-green-700 transition shadow-lg shadow-green-500/10 disabled:opacity-50 flex items-center gap-2"
                     >
-                      {completing ? "Updating..." : "Complete Consultation"}
+                      <CheckSquare size={18} />
+                      {completing ? "Completing..." : "Complete Consultation"}
                     </motion.button>
                   </div>
-
                 </motion.div>
               ) : (
                 <motion.div
@@ -205,12 +225,23 @@ function DoctorDashboard() {
                   className="bg-white rounded-3xl p-10 text-center shadow-lg border border-slate-100 flex flex-col items-center justify-center py-20"
                 >
                   <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-6">
-                    <CheckCircle2 size={40} />
+                    <Smile size={40} />
                   </div>
-                  <h2 className="text-3xl font-extrabold text-slate-800">Queue is Empty</h2>
-                  <p className="text-slate-500 max-w-md mt-2 leading-7">
-                    Excellent! All patient appointments for today have been completed. Enjoy your break!
+                  <h2 className="text-3xl font-extrabold text-slate-800">No Active Session</h2>
+                  <p className="text-slate-500 max-w-md mt-2 leading-7 mb-8">
+                    You aren't consulting anyone right now. Click the button below to call the next checked-in patient.
                   </p>
+
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleCallNext}
+                    disabled={callingNext || waitingQueue.length === 0}
+                    className="bg-blue-600 text-white font-extrabold px-8 py-4 rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 disabled:opacity-40 flex items-center gap-2"
+                  >
+                    <Play size={18} />
+                    {callingNext ? "Calling..." : "Call Next Patient"}
+                  </motion.button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -220,44 +251,56 @@ function DoctorDashboard() {
           <div className="space-y-8">
             <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <Users className="text-blue-600" size={20} />
-              Upcoming Patients ({upcomingPatients.length})
+              Upcoming Queue ({waitingQueue.length})
             </h3>
 
             <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
               <AnimatePresence>
-                {upcomingPatients.length === 0 ? (
-                  <div className="text-center text-slate-400 py-10 bg-slate-50/50 rounded-2xl border border-dashed">
+                {waitingQueue.length === 0 ? (
+                  <div className="text-center text-slate-400 py-10 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
                     No upcoming patients
                   </div>
                 ) : (
-                  upcomingPatients.map((patient, index) => (
+                  waitingQueue.map((patient, index) => (
                     <motion.div
                       key={patient.id}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: index * 0.05 }}
                       className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition flex justify-between items-center"
                     >
-                      <div className="flex gap-3 items-center">
+                      <div className="flex gap-3 items-center text-left">
                         <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-600">
                           #{patient.token_number}
                         </div>
                         <div>
-                          <h4 className="font-extrabold text-slate-800">{patient.patients?.full_name}</h4>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 mt-1 inline-block rounded-full uppercase tracking-wider ${
-                            patient.queue_status === "On The Way" 
+                          <h4 className="font-extrabold text-slate-800 leading-tight">{patient.patients?.full_name}</h4>
+                          <span className={`text-[9px] font-bold px-2 py-0.5 mt-1.5 inline-block rounded-full uppercase tracking-wider ${
+                            patient.queue_status === "Checked In" 
                               ? "bg-green-50 text-green-600 border border-green-200" 
-                              : "bg-slate-50 text-slate-500 border border-slate-200"
+                              : patient.queue_status === "Arriving"
+                              ? "bg-yellow-50 text-yellow-600 border border-yellow-200"
+                              : "bg-slate-50 text-slate-400 border border-slate-200"
                           }`}>
-                            {patient.queue_status === "On The Way" ? "On The Way" : "Waiting"}
+                            {patient.queue_status}
+                            {patient.travel_mode && ` (${patient.travel_mode})`}
                           </span>
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <span className="text-xs text-slate-400 block font-semibold">Wait Time</span>
-                        <span className="font-bold text-slate-700">{patient.estimated_wait} mins</span>
+                      <div className="text-right shrink-0">
+                        {patient.queue_status === "Arriving" && patient.eta_minutes ? (
+                          <>
+                            <span className="text-[10px] text-yellow-600 block font-bold">ETA Arrival</span>
+                            <span className="font-bold text-yellow-700 text-sm">{patient.eta_minutes} mins</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-[10px] text-slate-400 block font-semibold">Wait Time</span>
+                            <span className="font-bold text-slate-700 text-sm">{patient.estimated_wait} mins</span>
+                          </>
+                        )}
                       </div>
                     </motion.div>
                   ))
