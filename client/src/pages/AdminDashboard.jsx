@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Users, Award, UsersRound, Timer, ShieldAlert, BarChart3, Activity } from "lucide-react";
 import { getPatients } from "../services/patientService";
 import { getDoctors } from "../services/doctorService";
@@ -35,6 +35,55 @@ function AdminDashboard() {
       alert("❌ Check-in failed: " + (err.response?.data?.message || err.message));
     } finally {
       setScanning(false);
+    }
+  };
+
+  const [showDoctorModal, setShowDoctorModal] = useState(false);
+  const [docFormData, setDocFormData] = useState({
+    full_name: "",
+    email: "",
+    password: "",
+    phone: "",
+    specialization: "General Physician",
+    experience: "",
+    qualification: "MBBS",
+    consultation_fee: ""
+  });
+
+  const handleOnboardDoctor = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post("/doctors", docFormData);
+      alert("✅ Doctor onboarded successfully!");
+      setShowDoctorModal(false);
+      setDocFormData({
+        full_name: "",
+        email: "",
+        password: "",
+        phone: "",
+        specialization: "General Physician",
+        experience: "",
+        qualification: "MBBS",
+        consultation_fee: ""
+      });
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Onboarding failed: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleRemoveDoctor = async (doctorId) => {
+    if (!window.confirm("⚠️ Are you sure you want to offboard/remove this doctor? All active appointments and queue slots for them will also be cleared.")) {
+      return;
+    }
+    try {
+      await api.delete(`/doctors/${doctorId}`);
+      alert("✅ Doctor offboarded successfully.");
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Offboarding failed: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -352,10 +401,18 @@ function AdminDashboard() {
           {/* TAB 3: Doctors Directory */}
           {activeTab === "doctors" && (
             <div>
-              <h3 className="text-lg font-extrabold text-slate-800 mb-6 flex items-center gap-2">
-                <Award className="text-blue-600" size={20} />
-                Exposed Medical Staff Directory
-              </h3>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+                <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+                  <Award className="text-blue-600" size={20} />
+                  Exposed Medical Staff Directory
+                </h3>
+                <button
+                  onClick={() => setShowDoctorModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs transition shadow-md shadow-blue-500/10 flex items-center gap-1.5"
+                >
+                  ➕ Onboard Doctor
+                </button>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -365,6 +422,7 @@ function AdminDashboard() {
                       <th className="pb-4">Qualification</th>
                       <th className="pb-4">Consultation Fee</th>
                       <th className="pb-4">Status</th>
+                      <th className="pb-4 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -380,6 +438,14 @@ function AdminDashboard() {
                           }`}>
                             {doctor.available ? "Available" : "On Leave"}
                           </span>
+                        </td>
+                        <td className="py-4 text-center">
+                          <button
+                            onClick={() => handleRemoveDoctor(doctor.id)}
+                            className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 font-extrabold px-3 py-1 rounded-xl text-xs transition"
+                          >
+                            Remove
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -431,6 +497,148 @@ function AdminDashboard() {
             <p className="font-semibold text-sm">{error}</p>
           </div>
         )}
+
+        {/* Onboard Doctor Modal */}
+        <AnimatePresence>
+          {showDoctorModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 20 }}
+                className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-slate-100 text-left relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full blur-3xl -z-10"></div>
+                <h3 className="text-xl font-extrabold text-slate-800 mb-6 flex items-center gap-2">
+                  🩺 Onboard New Medical Staff
+                </h3>
+
+                <form onSubmit={handleOnboardDoctor} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Dr. Rajesh Kumar"
+                        value={docFormData.full_name}
+                        onChange={(e) => setDocFormData({ ...docFormData, full_name: e.target.value })}
+                        className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Specialization</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Pediatrician"
+                        value={docFormData.specialization}
+                        onChange={(e) => setDocFormData({ ...docFormData, specialization: e.target.value })}
+                        className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="rajesh@medflow.com"
+                        value={docFormData.email}
+                        onChange={(e) => setDocFormData({ ...docFormData, email: e.target.value })}
+                        className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Password</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={docFormData.password}
+                        onChange={(e) => setDocFormData({ ...docFormData, password: e.target.value })}
+                        className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Qualification</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="MD, MBBS"
+                        value={docFormData.qualification}
+                        onChange={(e) => setDocFormData({ ...docFormData, qualification: e.target.value })}
+                        className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Experience (Years)</label>
+                      <input
+                        type="number"
+                        required
+                        placeholder="8"
+                        value={docFormData.experience}
+                        onChange={(e) => setDocFormData({ ...docFormData, experience: e.target.value })}
+                        className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Consult Fee (₹)</label>
+                      <input
+                        type="number"
+                        required
+                        placeholder="600"
+                        value={docFormData.consultation_fee}
+                        onChange={(e) => setDocFormData({ ...docFormData, consultation_fee: e.target.value })}
+                        className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase">Phone Number</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="9988776655"
+                        value={docFormData.phone}
+                        onChange={(e) => setDocFormData({ ...docFormData, phone: e.target.value })}
+                        className="w-full mt-1.5 border border-slate-200 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowDoctorModal(false)}
+                      className="border border-slate-200 hover:bg-slate-50 text-slate-600 font-extrabold px-5 py-3 rounded-xl text-xs transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-6 py-3 rounded-xl text-xs transition shadow-md shadow-blue-500/10"
+                    >
+                      Complete Onboarding
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

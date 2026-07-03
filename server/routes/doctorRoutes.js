@@ -5,13 +5,15 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const {
   getDoctors,
-  addDoctor,
+  createDoctor,
+  deleteDoctor,
 } = require("../controllers/doctorController");
 
 // Public: anyone can view doctors
 router.get("/", getDoctors);
 
-// Protected: only authenticated users can add doctors
-router.post("/", authMiddleware, addDoctor);
+// Protected (Admin only checked inside controller):
+router.post("/", authMiddleware, createDoctor);
+router.delete("/:id", authMiddleware, deleteDoctor);
 
 module.exports = router;

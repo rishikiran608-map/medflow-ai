@@ -9,7 +9,7 @@ function BookAppointment() {
 
   const [formData, setFormData] = useState({
     doctor: "",
-    date: "",
+    date: new Date().toISOString().split("T")[0],
     time: "",
     reason: "",
   });
@@ -20,7 +20,8 @@ function BookAppointment() {
       try {
         const data = await getDoctors();
         if (isMounted) {
-          setDoctors(data);
+          // Filter: only display doctors who are currently available today
+          setDoctors(data.filter(doc => doc.available));
         }
       } catch (err) {
         console.error("Error loading doctors:", err);
@@ -40,8 +41,8 @@ function BookAppointment() {
   };
 
   const handleBook = async () => {
-    if (!formData.doctor || !formData.date || !formData.time) {
-      alert("⚠️ Please select Doctor, Date, and Time.");
+    if (!formData.doctor || !formData.time) {
+      alert("⚠️ Please select Doctor and Time.");
       return;
     }
 
@@ -66,7 +67,7 @@ function BookAppointment() {
         
         setFormData({
           doctor: "",
-          date: "",
+          date: new Date().toISOString().split("T")[0],
           time: "",
           reason: "",
         });
@@ -120,17 +121,15 @@ function BookAppointment() {
           </div>
 
           <div>
-            <label className="font-semibold">
+            <label className="font-semibold text-slate-700">
               Appointment Date
             </label>
-
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className="w-full mt-2 border rounded-xl p-3"
-            />
+            <div className="w-full mt-2 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl p-3 font-bold text-sm flex items-center justify-between">
+              <span>Today (Immediate Walk-In Queue)</span>
+              <span className="bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full text-xs font-black">
+                {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </span>
+            </div>
           </div>
 
           <div>
