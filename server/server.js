@@ -69,4 +69,8 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  
+  // Start the background No-Show Detection Service (Runs every 25s, expires in 3 mins for demo/showcase)
+  const { startNoShowDetection } = require("./services/noShowService");
+  startNoShowDetection(25000, 3);
 });

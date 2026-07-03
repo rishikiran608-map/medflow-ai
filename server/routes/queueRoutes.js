@@ -1,19 +1,34 @@
 const express = require("express");
 const router = express.Router();
+const authMiddleware = require("../middleware/authMiddleware");
 
 const {
   getQueue,
   addToQueue,
   predictQueue,
+  getActiveQueue,
+  updateOnTheWay,
+  checkInPatient,
+  callNextPatient,
+  completeConsultation,
+  cancelAppointment,
+  getDoctorQueue,
+  seedDemoData,
 } = require("../controllers/queueController");
 
-// Get all queue entries
+// Public queue routes
 router.get("/", getQueue);
-
-// Add patient to queue
-router.post("/", addToQueue);
-
-// AI Queue Prediction
 router.get("/predict/:doctorId", predictQueue);
+router.post("/seed-demo", seedDemoData);
+
+// Protected queue routes
+router.get("/active", authMiddleware, getActiveQueue);
+router.get("/doctor", authMiddleware, getDoctorQueue);
+router.put("/on-the-way", authMiddleware, updateOnTheWay);
+router.put("/check-in", authMiddleware, checkInPatient);
+router.put("/call-next", authMiddleware, callNextPatient);
+router.put("/complete/:id", authMiddleware, completeConsultation);
+router.put("/cancel/:id", authMiddleware, cancelAppointment);
+router.post("/", authMiddleware, addToQueue);
 
 module.exports = router;
