@@ -4,7 +4,10 @@ const getBaseURL = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  return "/api";
+  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    return "/api";
+  }
+  return "https://medflow-ai.onrender.com/api";
 };
 
 const api = axios.create({
