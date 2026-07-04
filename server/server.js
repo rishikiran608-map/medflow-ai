@@ -9,6 +9,7 @@ const doctorRoutes = require("./routes/doctorRoutes");
 const appointmentRoutes = require("./routes/appointmentRoutes");
 const queueRoutes = require("./routes/queueRoutes");
 const authRoutes = require("./routes/authRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 
 
 
@@ -23,6 +24,7 @@ app.use("/api/doctors", doctorRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/queue", queueRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/chat", chatRoutes);
 // Temporary testing routes
 app.get("/supabase-test", async (req, res) => {
   const { data, error } = await supabase

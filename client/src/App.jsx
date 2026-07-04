@@ -8,6 +8,7 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import BookAppointment from "./pages/BookAppointment";
 import PaymentPage from "./pages/PaymentPage";
+import ChatWidget from "./components/ChatWidget";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
           element={<PaymentPage />}
         />
       </Routes>
+      <ChatWidget />
     </BrowserRouter>
   );
 }
