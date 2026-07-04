@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Award, UsersRound, Timer, ShieldAlert, BarChart3, Activity } from "lucide-react";
+import { Users, Award, UsersRound, Timer, ShieldAlert, BarChart3, Activity, PlusCircle, Zap } from "lucide-react";
 import { getPatients } from "../services/patientService";
 import { getDoctors } from "../services/doctorService";
 import { getQueue } from "../services/queueService";
 import api from "../api/api";
+import { toast } from "sonner";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -21,18 +22,18 @@ function AdminDashboard() {
 
   const handleQRCheckIn = async () => {
     if (!scanId) {
-      alert("⚠️ Please enter or paste a Patient Token ID to simulate QR scan.");
+      toast.warning("Please enter or paste a Patient Token ID to simulate QR scan.");
       return;
     }
     setScanning(true);
     try {
       await api.put("/queue/check-in", { queueId: scanId });
-      alert("✅ QR Code Verified! Patient checked in successfully.");
+      toast.success("QR Code Verified! Patient checked in successfully.");
       setScanId("");
       await loadData();
     } catch (err) {
       console.error("QR Check-in error:", err);
-      alert("❌ Check-in failed: " + (err.response?.data?.message || err.message));
+      toast.error("Check-in failed: " + (err.response?.data?.message || err.message));
     } finally {
       setScanning(false);
     }
@@ -54,7 +55,7 @@ function AdminDashboard() {
     e.preventDefault();
     try {
       await api.post("/doctors", docFormData);
-      alert("✅ Doctor onboarded successfully!");
+      toast.success("Doctor onboarded successfully!");
       setShowDoctorModal(false);
       setDocFormData({
         full_name: "",
@@ -69,22 +70,29 @@ function AdminDashboard() {
       await loadData();
     } catch (err) {
       console.error(err);
-      alert("❌ Onboarding failed: " + (err.response?.data?.message || err.message));
+      toast.error("Onboarding failed: " + (err.response?.data?.message || err.message));
     }
   };
 
-  const handleRemoveDoctor = async (doctorId) => {
-    if (!window.confirm("⚠️ Are you sure you want to offboard/remove this doctor? All active appointments and queue slots for them will also be cleared.")) {
-      return;
-    }
+  const executeRemoveDoctor = async (doctorId) => {
     try {
       await api.delete(`/doctors/${doctorId}`);
-      alert("✅ Doctor offboarded successfully.");
+      toast.success("Doctor offboarded successfully.");
       await loadData();
     } catch (err) {
       console.error(err);
-      alert("❌ Offboarding failed: " + (err.response?.data?.message || err.message));
+      toast.error("Offboarding failed: " + (err.response?.data?.message || err.message));
     }
+  };
+
+  const handleRemoveDoctor = (doctorId) => {
+    toast.warning("Are you sure you want to offboard this doctor? All active appointments will be cleared.", {
+      action: {
+        label: "Remove",
+        onClick: () => executeRemoveDoctor(doctorId)
+      },
+      duration: 8000,
+    });
   };
 
   const [showWalkInModal, setShowWalkInModal] = useState(false);
@@ -99,12 +107,12 @@ function AdminDashboard() {
   const handleRegisterWalkIn = async (e) => {
     e.preventDefault();
     if (!walkInFormData.doctor_id) {
-      alert("⚠️ Please select a doctor for the walk-in patient.");
+      toast.warning("Please select a doctor for the walk-in patient.");
       return;
     }
     try {
       await api.post("/queue/walk-in", walkInFormData);
-      alert("✅ Walk-in patient registered and checked-in successfully!");
+      toast.success("Walk-in patient registered and checked-in successfully!");
       setShowWalkInModal(false);
       setWalkInFormData({
         full_name: "",
@@ -116,7 +124,7 @@ function AdminDashboard() {
       await loadData();
     } catch (err) {
       console.error("Walk-in error:", err);
-      alert("❌ Registration failed: " + (err.response?.data?.message || err.message));
+      toast.error("Registration failed: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -148,11 +156,11 @@ function AdminDashboard() {
     setSeeding(true);
     try {
       await api.post("/queue/seed-demo");
-      alert("⚡ Live showcase demo data seeded successfully!");
+      toast.success("Live showcase demo data seeded successfully!");
       await loadData();
     } catch (err) {
       console.error("Failed to seed demo data:", err);
-      alert("⚠️ Seeding failed: " + (err.response?.data?.message || err.message));
+      toast.error("Seeding failed: " + (err.response?.data?.message || err.message));
     } finally {
       setSeeding(false);
     }
@@ -226,7 +234,7 @@ function AdminDashboard() {
             disabled={seeding}
             className="w-full sm:w-auto bg-blue-600 text-white font-extrabold px-5 py-3 rounded-xl hover:bg-blue-700 transition shadow-md shadow-blue-500/10 text-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
           >
-            ⚡ {seeding ? "Seeding..." : "Seed Showcase Data"}
+            <Zap size={14} className={seeding ? "animate-spin" : ""} /> {seeding ? "Seeding..." : "Seed Showcase Data"}
           </motion.button>
         </div>
 
@@ -318,7 +326,7 @@ function AdminDashboard() {
                     onClick={() => setShowWalkInModal(true)}
                     className="bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[10px] transition shadow-md shadow-green-500/10 flex items-center gap-1.5 mt-2 animate-pulse"
                   >
-                    ➕ Register Walk-in Patient
+                    <PlusCircle size={12} /> Register Walk-in Patient
                   </button>
                 </div>
                 
@@ -345,8 +353,8 @@ function AdminDashboard() {
                   <thead>
                     <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
                       <th className="pb-4">Token</th>
-                      <th className="pb-4">Patient ID</th>
-                      <th className="pb-4">Doctor ID</th>
+                      <th className="pb-4">Patient Name</th>
+                      <th className="pb-4">Doctor Name</th>
                       <th className="pb-4">Est. Wait</th>
                       <th className="pb-4">Commute Mode</th>
                       <th className="pb-4">Status</th>
@@ -367,8 +375,8 @@ function AdminDashboard() {
                               #{item.token_number}
                             </span>
                           </td>
-                          <td className="py-4 font-mono text-xs text-slate-400">{item.patient_id.substring(0, 8)}...</td>
-                          <td className="py-4 font-mono text-xs text-slate-400">{item.doctor_id.substring(0, 8)}...</td>
+                          <td className="py-4 text-slate-800">{item.patients?.full_name || "Guest Patient"}</td>
+                          <td className="py-4 text-slate-600">Dr. {item.doctors?.full_name || "General Doctor"}</td>
                           <td className="py-4">{item.estimated_wait} mins</td>
                           <td className="py-4 text-slate-500">
                             {item.travel_mode ? (

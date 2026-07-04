@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import api from "../api/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Clock, Calendar, AlertCircle, Compass, CheckCircle, Navigation, MapPin, Car, X } from "lucide-react";
+import { toast } from "sonner";
 
 function PatientDashboard() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ function PatientDashboard() {
       setShowHistoryDrawer(true);
     } catch (err) {
       console.error("Re-auth error:", err);
-      alert("❌ Identity verification failed: Incorrect password.");
+      toast.error("Identity verification failed: Incorrect password.");
     } finally {
       setReAuthVerifying(false);
     }
@@ -82,9 +83,10 @@ function PatientDashboard() {
       });
       setShowTravelModal(false);
       loadActiveQueue();
+      toast.success("Travel status set to: On the way!");
     } catch (err) {
       console.error("Failed to update travel status:", err);
-      alert("⚠️ Failed to update commute details. Try again.");
+      toast.error("Failed to update commute details. Try again.");
     } finally {
       setCommuting(false);
     }
@@ -94,32 +96,41 @@ function PatientDashboard() {
     try {
       await api.put("/queue/check-in");
       loadActiveQueue();
+      toast.success("Successfully checked in at the clinic!");
     } catch (err) {
       console.error("Check-in error:", err);
-      alert("⚠️ Check-in failed. Please verify at front desk.");
+      toast.error("Check-in failed. Please verify at front desk.");
     }
   };
 
-  const handleCancelAppointment = async () => {
-    if (!window.confirm("⚠️ Are you sure you want to cancel this appointment and release your queue token?")) {
-      return;
-    }
+  const executeCancelAppointment = async () => {
     try {
       await api.put(`/queue/cancel/${queueEntry.id}`);
       loadActiveQueue();
+      toast.success("Appointment cancelled successfully.");
     } catch (err) {
       console.error("Cancellation error:", err);
-      alert("⚠️ Cancellation failed. Try again.");
+      toast.error("Cancellation failed. Try again.");
     }
+  };
+
+  const handleCancelAppointment = () => {
+    toast.warning("Confirm cancellation of your appointment and release of your queue token?", {
+      action: {
+        label: "Cancel Appointment",
+        onClick: () => executeCancelAppointment()
+      },
+      duration: 8000
+    });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-violet-50 flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"
+          className="w-12 h-12 border-4 border-violet-600 border-t-transparent rounded-full"
         />
       </div>
     );
@@ -134,23 +145,23 @@ function PatientDashboard() {
       case "Checked In":
         return "bg-green-50 text-green-700 border border-green-200";
       case "In Consultation":
-        return "bg-blue-100 text-blue-800 border border-blue-200 animate-pulse";
+        return "bg-violet-100 text-violet-800 border border-blue-200 animate-pulse";
       default:
         return "bg-slate-100 text-slate-700 border border-slate-200";
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-100 py-10 px-6 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-violet-100 py-10 px-6 font-sans">
       <div className="max-w-4xl mx-auto">
         
         {/* Welcome Card */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100/50 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden"
+          className="bg-white rounded-3xl p-8 shadow-xl border border-violet-100/50 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-full blur-2xl -z-10"></div>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-violet-500/5 to-violet-500/5 rounded-full blur-2xl -z-10"></div>
           <div>
             <h2 className="text-3xl font-extrabold text-slate-800">
               Welcome Back!
@@ -177,8 +188,8 @@ function PatientDashboard() {
               className="grid gap-8"
             >
               {/* Live Ticket Card */}
-              <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-blue-100 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 rounded-full blur-3xl -z-10 translate-x-20 -translate-y-20"></div>
+              <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-violet-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-violet-500/10 to-violet-500/5 rounded-full blur-3xl -z-10 translate-x-20 -translate-y-20"></div>
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-6 mb-6 gap-4">
                   <div>
@@ -190,7 +201,7 @@ function PatientDashboard() {
                     </p>
                   </div>
 
-                  <div className="bg-blue-600 text-white px-8 py-4 rounded-3xl text-center shadow-lg shadow-blue-500/30">
+                  <div className="bg-violet-600 text-white px-8 py-4 rounded-3xl text-center shadow-lg shadow-violet-500/30">
                     <p className="text-xs uppercase tracking-wider font-bold opacity-80">Token Number</p>
                     <p className="text-4xl font-black mt-0.5">#{queueEntry.token_number}</p>
                   </div>
@@ -200,7 +211,7 @@ function PatientDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-left">
                     <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 font-bold text-xs uppercase tracking-wider mb-1.5">
-                      <Clock size={14} className="text-blue-600" />
+                      <Clock size={14} className="text-violet-600" />
                       <span>AI Prediction</span>
                     </div>
                     <p className="text-2xl font-black text-slate-800">
@@ -241,9 +252,9 @@ function PatientDashboard() {
                 </div>
 
                 {/* Actions Panel */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 bg-blue-50/50 rounded-2xl p-6 border border-blue-100/50 justify-between">
+                <div className="flex flex-col sm:flex-row items-center gap-4 bg-violet-50/50 rounded-2xl p-6 border border-violet-100/50 justify-between">
                   <div className="flex gap-3 items-start text-left">
-                    <Compass className="text-blue-600 shrink-0 mt-0.5" />
+                    <Compass className="text-violet-600 shrink-0 mt-0.5" />
                     <div>
                       <h4 className="font-bold text-slate-800">Commute & Check-in</h4>
                       <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
@@ -261,7 +272,7 @@ function PatientDashboard() {
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={() => setShowTravelModal(true)}
-                        className="w-full sm:w-auto bg-blue-600 text-white font-bold px-6 py-3.5 rounded-xl hover:bg-blue-700 transition shadow-md shadow-blue-500/10 flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto bg-violet-600 text-white font-bold px-6 py-3.5 rounded-xl hover:bg-violet-700 transition shadow-md shadow-violet-500/10 flex items-center justify-center gap-2"
                       >
                         <Car size={16} />
                         I'm On The Way
@@ -374,7 +385,7 @@ function PatientDashboard() {
                         </circle>
                       </svg>
                       
-                      <div className="absolute bottom-10 left-8 bg-blue-600 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-md flex items-center gap-1">
+                      <div className="absolute bottom-10 left-8 bg-violet-600 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-md flex items-center gap-1">
                         📍 You
                       </div>
 
@@ -403,7 +414,7 @@ function PatientDashboard() {
                   <button
                     type="button"
                     onClick={() => setShowAuthModal(true)}
-                    className="bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 font-extrabold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5"
+                    className="bg-violet-50 text-violet-700 border border-violet-100 hover:bg-violet-100 font-extrabold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5"
                   >
                     🔒 View My Health Records
                   </button>
@@ -427,7 +438,7 @@ function PatientDashboard() {
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white rounded-3xl p-10 text-center shadow-lg border border-slate-100 flex flex-col items-center justify-center py-20"
             >
-              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-6">
+              <div className="w-20 h-20 bg-violet-50 rounded-full flex items-center justify-center text-violet-600 mb-6">
                 <Calendar size={40} />
               </div>
               <h2 className="text-3xl font-extrabold text-slate-800">No Active Bookings</h2>
@@ -438,7 +449,7 @@ function PatientDashboard() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-blue-600 text-white font-extrabold px-8 py-4 rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/20"
+                  className="bg-violet-600 text-white font-extrabold px-8 py-4 rounded-2xl hover:bg-violet-700 transition shadow-lg shadow-violet-500/20"
                 >
                   Book Appointment
                 </motion.button>
@@ -465,7 +476,7 @@ function PatientDashboard() {
                 </button>
 
                 <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <MapPin className="text-blue-600" size={22} />
+                  <MapPin className="text-violet-600" size={22} />
                   Commute Details
                 </h3>
                 <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">
@@ -487,7 +498,7 @@ function PatientDashboard() {
                         onClick={() => setTravelMode(item.mode)}
                         className={`py-3 px-1 rounded-xl border text-xs font-bold transition flex flex-col items-center justify-center gap-1.5 ${
                           travelMode === item.mode 
-                            ? "border-blue-600 bg-blue-50 text-blue-600" 
+                            ? "border-violet-600 bg-violet-50 text-violet-600" 
                             : "border-slate-100 text-slate-600 hover:bg-slate-50"
                         }`}
                       >
@@ -506,7 +517,7 @@ function PatientDashboard() {
                     min="0.1"
                     value={distance}
                     onChange={(e) => setDistance(e.target.value)}
-                    className="w-full mt-2.5 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                    className="w-full mt-2.5 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition"
                   />
                 </div>
 
@@ -520,7 +531,7 @@ function PatientDashboard() {
                   <button
                     onClick={handleStartCommute}
                     disabled={commuting}
-                    className="py-3 px-6 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-md shadow-blue-500/10 disabled:opacity-50"
+                    className="py-3 px-6 rounded-xl bg-violet-600 text-white font-bold text-xs hover:bg-violet-700 transition shadow-md shadow-violet-500/10 disabled:opacity-50"
                   >
                     {commuting ? "Calculating..." : "Start Commute"}
                   </button>
@@ -563,7 +574,7 @@ function PatientDashboard() {
                       placeholder="••••••••"
                       value={reAuthPassword}
                       onChange={(e) => setReAuthPassword(e.target.value)}
-                      className="w-full mt-2 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                      className="w-full mt-2 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition"
                     />
                   </div>
 
@@ -581,7 +592,7 @@ function PatientDashboard() {
                     <button
                       type="submit"
                       disabled={reAuthVerifying}
-                      className="py-3 px-6 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition shadow-md shadow-blue-500/10 disabled:opacity-50"
+                      className="py-3 px-6 rounded-xl bg-violet-600 text-white font-bold text-xs hover:bg-violet-700 transition shadow-md shadow-violet-500/10 disabled:opacity-50"
                     >
                       {reAuthVerifying ? "Verifying..." : "Verify & Open"}
                     </button>
@@ -647,9 +658,9 @@ function PatientDashboard() {
                       </div>
                     </div>
 
-                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center justify-between">
+                    <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4 flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Completed Consultations</span>
+                        <span className="text-[10px] font-bold text-violet-700 uppercase tracking-wider">Completed Consultations</span>
                         <p className="text-2xl font-black text-slate-800 mt-1">4 visits</p>
                       </div>
                       <span className="text-3xl">🩺</span>

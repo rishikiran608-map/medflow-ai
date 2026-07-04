@@ -9,10 +9,12 @@ import AdminDashboard from "./pages/AdminDashboard";
 import BookAppointment from "./pages/BookAppointment";
 import PaymentPage from "./pages/PaymentPage";
 import ChatWidget from "./components/ChatWidget";
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <BrowserRouter>
+      <Toaster richColors position="top-right" />
       <Navbar />
       <Routes>
         <Route path="/" element={<LandingPage />} />

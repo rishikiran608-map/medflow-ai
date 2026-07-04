@@ -17,7 +17,7 @@ const getQueue = async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
       .from("queue")
-      .select("*")
+      .select("*, patients(full_name), doctors(full_name)")
       .order("token_number");
 
     if (error) return res.status(500).json(error);

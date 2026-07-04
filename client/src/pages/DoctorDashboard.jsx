@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Clipboard, RefreshCw, AlertCircle, Clock, Play, CheckSquare, Smile, Phone, Activity } from "lucide-react";
+import { toast } from "sonner";
 
 function DoctorDashboard() {
   const navigate = useNavigate();
@@ -51,10 +52,11 @@ function DoctorDashboard() {
       const res = await api.put("/queue/call-next");
       if (res.data.success) {
         await loadDoctorQueue();
+        toast.success("Called next patient successfully!");
       }
     } catch (err) {
       console.error("Failed to call next patient:", err);
-      alert(err.response?.data?.message || "⚠️ No patient checked-in or ready to call.");
+      toast.warning(err.response?.data?.message || "No patient checked-in or ready to call.");
     } finally {
       setCallingNext(false);
     }
@@ -65,9 +67,10 @@ function DoctorDashboard() {
     try {
       await api.put(`/queue/complete/${queueId}`);
       await loadDoctorQueue();
+      toast.success("Consultation marked as completed!");
     } catch (err) {
       console.error("Failed to complete consultation:", err);
-      alert("⚠️ Failed to update consultation status.");
+      toast.error("Failed to update consultation status.");
     } finally {
       setCompleting(false);
     }
@@ -84,24 +87,24 @@ function DoctorDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"
+          className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full"
         />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-100 py-10 px-6 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-teal-100 py-10 px-6 font-sans">
       <div className="max-w-6xl mx-auto">
         
         {/* Sub-Header / Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-3xl border border-blue-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
-            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
+          <div className="bg-white p-6 rounded-3xl border border-teal-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
+            <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center">
               <Users size={24} />
             </div>
             <div>
@@ -110,7 +113,7 @@ function DoctorDashboard() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl border border-blue-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
+          <div className="bg-white p-6 rounded-3xl border border-teal-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
             <div className="w-12 h-12 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center">
               <Clock size={24} />
             </div>
@@ -120,7 +123,7 @@ function DoctorDashboard() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl border border-blue-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
+          <div className="bg-white p-6 rounded-3xl border border-teal-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
             <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center">
               <Activity size={24} />
             </div>
@@ -132,9 +135,9 @@ function DoctorDashboard() {
         </div>
 
         {/* Doctor Analytics Dashboard */}
-        <div className="bg-white rounded-3xl p-6 border border-blue-100/30 shadow-sm mb-8 text-left">
+        <div className="bg-white rounded-3xl p-6 border border-teal-100/30 shadow-sm mb-8 text-left">
           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-            <Activity size={14} className="text-blue-600 animate-pulse" />
+            <Activity size={14} className="text-teal-600 animate-pulse" />
             Live Practice Metrics & Analytics
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -164,7 +167,7 @@ function DoctorDashboard() {
           <div className="lg:col-span-2 space-y-8">
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <Clipboard className="text-blue-600" size={20} />
+                <Clipboard className="text-teal-600" size={20} />
                 Active Session
               </h3>
               <motion.button
@@ -186,13 +189,13 @@ function DoctorDashboard() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3 }}
-                  className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100 relative overflow-hidden"
+                  className="bg-white rounded-3xl p-8 shadow-xl border border-teal-100 relative overflow-hidden"
                 >
-                  <div className="absolute top-0 right-0 w-60 h-60 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-full blur-3xl -z-10 translate-x-20 -translate-y-20"></div>
+                  <div className="absolute top-0 right-0 w-60 h-60 bg-gradient-to-br from-teal-500/5 to-cyan-500/5 rounded-full blur-3xl -z-10 translate-x-20 -translate-y-20"></div>
 
                   <div className="flex justify-between items-start border-b border-slate-100 pb-6 mb-6">
                     <div>
-                      <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse">
+                      <span className="bg-teal-100 text-teal-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse">
                         ⚡ Consultation In Progress
                       </span>
                       <h2 className="text-3xl font-extrabold text-slate-800 mt-3">
@@ -203,7 +206,7 @@ function DoctorDashboard() {
                       </p>
                     </div>
 
-                    <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-center shadow-lg shadow-blue-500/20">
+                    <div className="bg-teal-600 text-white px-6 py-3 rounded-2xl text-center shadow-lg shadow-teal-500/20">
                       <span className="text-xs uppercase tracking-wider font-bold opacity-80 block">Token</span>
                       <span className="text-3xl font-black">#{activePatient.token_number}</span>
                     </div>
@@ -239,9 +242,9 @@ function DoctorDashboard() {
                         setSelectedPatientHistory(activePatient);
                         setShowHistoryDrawer(true);
                       }}
-                      className="bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 font-extrabold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5"
+                      className="bg-teal-50 text-teal-700 border border-teal-100 hover:bg-teal-100 font-extrabold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5"
                     >
-                      📋 View Health History
+                      <Clipboard size={14} className="mr-1" /> View Health History
                     </button>
 
                     <motion.button
@@ -263,7 +266,7 @@ function DoctorDashboard() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="bg-white rounded-3xl p-10 text-center shadow-lg border border-slate-100 flex flex-col items-center justify-center py-20"
                 >
-                  <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-6">
+                  <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center text-teal-600 mb-6">
                     <Smile size={40} />
                   </div>
                   <h2 className="text-3xl font-extrabold text-slate-800">No Active Session</h2>
@@ -276,7 +279,7 @@ function DoctorDashboard() {
                     whileTap={{ scale: 0.97 }}
                     onClick={handleCallNext}
                     disabled={callingNext || waitingQueue.length === 0}
-                    className="bg-blue-600 text-white font-extrabold px-8 py-4 rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 disabled:opacity-40 flex items-center gap-2"
+                    className="bg-teal-600 text-white font-extrabold px-8 py-4 rounded-2xl hover:bg-teal-700 transition shadow-lg shadow-teal-500/20 disabled:opacity-40 flex items-center gap-2"
                   >
                     <Play size={18} />
                     {callingNext ? "Calling..." : "Call Next Patient"}
@@ -289,7 +292,7 @@ function DoctorDashboard() {
           {/* Queue Timeline Panel */}
           <div className="space-y-8">
             <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <Users className="text-blue-600" size={20} />
+              <Users className="text-teal-600" size={20} />
               Upcoming Queue ({waitingQueue.length})
             </h3>
 
@@ -435,9 +438,9 @@ function DoctorDashboard() {
                       </div>
                     </div>
 
-                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center justify-between">
+                    <div className="bg-teal-50 border border-teal-100 rounded-2xl p-4 flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Completed Clinic Visits</span>
+                        <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider">Completed Clinic Visits</span>
                         <p className="text-2xl font-black text-slate-800 mt-1">4 visits</p>
                       </div>
                       <span className="text-3xl">🩺</span>
