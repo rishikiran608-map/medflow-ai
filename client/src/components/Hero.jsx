@@ -106,10 +106,10 @@ function Hero() {
 
             <Link to="/login">
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                className="border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 px-6 py-3.5 rounded-xl transition font-bold text-sm tracking-tight shadow-sm"
+                whileHover={{ scale: 1.05, y: -1 }}
+                className="border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 px-6 py-3.5 rounded-xl transition font-extrabold text-sm tracking-tight shadow-sm flex items-center gap-1"
               >
-                Sign In / Register
+                Get Started
               </motion.button>
             </Link>
 
