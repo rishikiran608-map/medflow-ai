@@ -11,6 +11,8 @@ const api = axios.create({
   baseURL: getBaseURL(),
 });
 
+console.log("🔍 API Base URL is set to:", api.defaults.baseURL);
+
 // Request interceptor to automatically inject authorization token
 api.interceptors.request.use(
   (config) => {
