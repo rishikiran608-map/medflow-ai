@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreditCard, ShieldCheck, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 
 function PaymentPage() {
   const { id } = useParams(); // appointment ID
@@ -47,12 +48,13 @@ function PaymentPage() {
       await api.put(`/appointments/pay/${id}`);
       
       setPaymentSuccess(true);
+      toast.success("Payment transaction completed successfully!");
       setTimeout(() => {
         navigate("/patient-dashboard");
       }, 2000);
     } catch (err) {
       console.error("Payment failed:", err);
-      alert("⚠️ Payment transaction failed. Please try again.");
+      toast.error("Payment transaction failed. Please try again.");
     } finally {
       setProcessing(false);
     }

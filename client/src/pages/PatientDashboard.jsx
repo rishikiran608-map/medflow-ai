@@ -209,16 +209,19 @@ function PatientDashboard() {
 
                 {/* Queue Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-left">
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-left relative overflow-hidden">
                     <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 font-bold text-xs uppercase tracking-wider mb-1.5">
                       <Clock size={14} className="text-violet-600" />
                       <span>AI Prediction</span>
+                      <span className="text-[9px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest animate-pulse ml-1.5">
+                        Live
+                      </span>
                     </div>
                     <p className="text-2xl font-black text-slate-800">
                       {queueEntry.estimated_wait} ± {queueEntry.margin || 2} <span className="text-sm font-bold text-slate-500">mins</span>
                     </p>
-                    <span className="text-[10px] text-green-600 font-bold mt-1.5 block">
-                      🎯 {queueEntry.probability || 94}% Confidence Score
+                    <span className="text-[10px] text-green-600 font-bold mt-1.5 block flex items-center gap-1">
+                      🤖 AI Engine • {queueEntry.probability || 94}% Confidence Score
                     </span>
                   </div>
 

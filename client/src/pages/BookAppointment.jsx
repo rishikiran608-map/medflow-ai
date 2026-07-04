@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDoctors } from "../services/doctorService";
 import { bookAppointment } from "../services/appointmentService";
+import { toast } from "sonner";
 
 function BookAppointment() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ function BookAppointment() {
 
   const handleBook = async () => {
     if (!formData.doctor || !formData.time) {
-      alert("⚠️ Please select Doctor and Time.");
+      toast.warning("Please select a Doctor and Time.");
       return;
     }
 
@@ -60,10 +61,7 @@ function BookAppointment() {
       console.log("Booking result:", result);
 
       if (result.success && result.appointment) {
-        alert(
-          `✅ Appointment Created! Platform: Pending Payment.\n\n` +
-          `🟢 Proceeding to secure checkout payment to activate your token.`
-        );
+        toast.success("Appointment Created! Proceeding to secure checkout payment to activate your token.");
         
         setFormData({
           doctor: "",
@@ -74,13 +72,13 @@ function BookAppointment() {
 
         navigate(`/payment/${result.appointment.id}`);
       } else {
-        alert("✅ Appointment Booked Successfully!");
+        toast.success("Appointment Booked Successfully!");
         navigate("/patient-dashboard");
       }
 
     } catch (error) {
       console.error(error);
-      alert("❌ Failed to Book Appointment");
+      toast.error("Failed to Book Appointment. Please select a valid open slot.");
     }
   };
 

@@ -1,11 +1,36 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-
+import api from "../api/api";
+import { toast } from "sonner";
 
 function Hero() {
+  const navigate = useNavigate();
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [loggingIn, setLoggingIn] = useState(false);
+
+  const handleTryDemo = async () => {
+    setLoggingIn(true);
+    try {
+      const res = await api.post("/auth/login", {
+        email: "admin@medflow.com",
+        password: "admin123"
+      });
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userRole", res.data.role);
+      localStorage.setItem("userEmail", "admin@medflow.com");
+      toast.success("Welcome back! Redirecting to the Live Demo Admin Console...");
+      setTimeout(() => {
+        navigate("/admin-dashboard");
+      }, 1000);
+    } catch (err) {
+      console.error(err);
+      toast.error("Demo login failed. Make sure the database is seeded or register an account.");
+    } finally {
+      setLoggingIn(false);
+    }
+  };
 
   const demoSlides = [
     {
@@ -68,13 +93,23 @@ function Hero() {
             and helps hospitals reduce overcrowding.
           </p>
 
-          <div className="mt-8 flex items-center gap-6">
+          <div className="mt-8 flex items-center gap-4 flex-wrap">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleTryDemo}
+              disabled={loggingIn}
+              className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold px-6 py-3.5 rounded-xl hover:shadow-xl transition duration-300 shadow-md shadow-blue-500/10 text-sm flex items-center gap-2"
+            >
+              ⚡ {loggingIn ? "Logging into Demo..." : "Try Live Demo"}
+            </motion.button>
+
             <Link to="/login">
               <motion.button
-                whileHover={{ x: 2 }}
-                className="text-slate-700 hover:text-blue-600 transition font-bold text-sm tracking-tight"
+                whileHover={{ scale: 1.02 }}
+                className="border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 px-6 py-3.5 rounded-xl transition font-bold text-sm tracking-tight shadow-sm"
               >
-                Get Started
+                Sign In / Register
               </motion.button>
             </Link>
 
@@ -85,9 +120,9 @@ function Hero() {
                 setActiveSlide(0);
                 setShowDemoModal(true);
               }}
-              className="border border-slate-300 text-slate-500 px-6 py-3 rounded-xl hover:bg-slate-50 hover:text-slate-700 transition font-semibold text-sm"
+              className="border border-slate-300 text-slate-500 px-6 py-3.5 rounded-xl hover:bg-slate-50 hover:text-slate-700 transition font-semibold text-sm"
             >
-              Watch Demo
+              Watch Walkthrough
             </motion.button>
           </div>
         </motion.div>

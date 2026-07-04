@@ -377,7 +377,14 @@ function AdminDashboard() {
                           </td>
                           <td className="py-4 text-slate-800">{item.patients?.full_name || "Guest Patient"}</td>
                           <td className="py-4 text-slate-600">Dr. {item.doctors?.full_name || "General Doctor"}</td>
-                          <td className="py-4">{item.estimated_wait} mins</td>
+                          <td className="py-4">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-700">{item.estimated_wait} mins</span>
+                              <span className="text-[9px] text-blue-600 font-extrabold flex items-center gap-0.5 mt-0.5 uppercase tracking-wider">
+                                🤖 AI Engine
+                              </span>
+                            </div>
+                          </td>
                           <td className="py-4 text-slate-500">
                             {item.travel_mode ? (
                               <span className="flex items-center gap-1">
