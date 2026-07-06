@@ -25,7 +25,7 @@ const createOrder = async (req, res) => {
     const options = {
       amount: Math.round(amount * 100),
       currency: "INR",
-      receipt: `medflow_${appointment_id}`,
+      receipt: appointment_id,
       notes: { appointment_id, patient_id: req.user?.id || "anonymous", platform: "MedFlow AI" },
     };
     const order = await razorpay.orders.create(options);
