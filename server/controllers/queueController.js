@@ -320,7 +320,7 @@ const completeConsultation = async (req, res) => {
   try {
     const { data: queueEntry, error: fetchErr } = await supabaseAdmin
       .from("queue")
-      .select("*")
+      .select("*, patients(*), doctors(*)")
       .eq("id", id)
       .single();
 
@@ -339,6 +339,36 @@ const completeConsultation = async (req, res) => {
         completedVisits: 5
       });
     }
+
+    // Trigger WhatsApp notification for Completed Consultation
+    const patientPhone = queueEntry.patients?.phone || "9988776655";
+    const patientName = queueEntry.patients?.full_name || "Patient";
+    const doctorName = queueEntry.doctors?.full_name || "Doctor";
+    const fee = queueEntry.doctors?.consultation_fee || 150;
+
+    let rxText = "";
+    if (prescription && prescription.length > 0) {
+      rxText = prescription.map(p => `- ${p.name}: ${p.dosage}`).join("\n");
+    } else {
+      rxText = "- General Checkup Consultation (No active medication prescribed)";
+    }
+
+    const whatsAppMessage = `✅ Consultation Completed!
+
+Dear ${patientName}, your session with Dr. ${doctorName} has been concluded.
+
+📋 DIGITAL PRESCRIPTION & DOSAGE:
+${rxText}
+
+💳 BILLING INVOICE DETAILS:
+- Consultation Fee: $${fee}.00
+- Payment Mode: Auto-debited (Co-pay)
+- Invoice ID: INV-${id.substring(0,8).toUpperCase()}
+- Status: PAID
+
+🌿 "Your health is your greatest wealth. Wishing you a speedy recovery!" - MedFlow AI Team`;
+
+    sendWhatsAppNotification(patientPhone, whatsAppMessage);
 
     // Update entry to Completed
     const { error: updateErr } = await supabaseAdmin
