@@ -15,6 +15,27 @@ function DoctorDashboard() {
   const [selectedPatientHistory, setSelectedPatientHistory] = useState(null);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
 
+  const [diagnosis, setDiagnosis] = useState("");
+  const [medsList, setMedsList] = useState([]);
+  const [medName, setMedName] = useState("");
+  const [medDosage, setMedDosage] = useState("");
+  const [medFreq, setMedFreq] = useState("1 tablet • Daily");
+
+  const handleAddMed = () => {
+    if (!medName.trim() || !medDosage.trim()) {
+      toast.warning("Please type medicine name and dosage.");
+      return;
+    }
+    setMedsList(prev => [...prev, { name: medName.trim(), dosage: `${medDosage.trim()} • ${medFreq}` }]);
+    setMedName("");
+    setMedDosage("");
+    toast.success("Medicine added to prescription list!");
+  };
+
+  const handleRemoveMed = (index) => {
+    setMedsList(prev => prev.filter((_, i) => i !== index));
+  };
+
   const loadDoctorQueue = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
@@ -65,9 +86,14 @@ function DoctorDashboard() {
   const handleComplete = async (queueId) => {
     setCompleting(true);
     try {
-      await api.put(`/queue/complete/${queueId}`);
-      await loadDoctorQueue();
+      await api.put(`/queue/complete/${queueId}`, {
+        prescription: medsList,
+        diagnosis: diagnosis || "General Checkup"
+      });
       toast.success("Consultation marked as completed!");
+      setMedsList([]);
+      setDiagnosis("");
+      await loadDoctorQueue();
     } catch (err) {
       console.error("Failed to complete consultation:", err);
       toast.error("Failed to update consultation status.");
@@ -232,6 +258,84 @@ function DoctorDashboard() {
                           ? new Date(activePatient.arrived_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
                           : "N/A"}
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Digital Prescription Pad */}
+                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 mb-6 text-left">
+                    <h4 className="text-xs font-black text-teal-600 flex items-center gap-1 uppercase tracking-wider mb-4">
+                      📝 Dynamic Prescription & Dosage Pad
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-[10px] text-slate-400 font-bold block uppercase mb-1">Diagnosis</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Acute Bronchitis, Migraine..."
+                          value={diagnosis}
+                          onChange={(e) => setDiagnosis(e.target.value)}
+                          className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 bg-white"
+                        />
+                      </div>
+                      
+                      <div className="border-t border-slate-200/50 pt-4">
+                        <label className="text-[10px] text-slate-400 font-bold block uppercase mb-2">Prescribe Medication</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            placeholder="Medicine Name"
+                            value={medName}
+                            onChange={(e) => setMedName(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none bg-white animate-none"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Dosage (e.g. 500mg)"
+                            value={medDosage}
+                            onChange={(e) => setMedDosage(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none bg-white animate-none"
+                          />
+                          <select
+                            value={medFreq}
+                            onChange={(e) => setMedFreq(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none bg-white"
+                          >
+                            <option value="1 tablet • Daily">1 tablet • Daily</option>
+                            <option value="1 tablet • Twice Daily">1 tablet • Twice Daily</option>
+                            <option value="1 tablet • Thrice Daily">1 tablet • Thrice Daily</option>
+                            <option value="1 capsule • Before meals">1 capsule • Before meals</option>
+                          </select>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAddMed}
+                          className="mt-3 w-full bg-teal-600 hover:bg-teal-700 text-white font-extrabold px-3 py-2 rounded-xl text-xs transition shadow-md shadow-teal-500/10"
+                        >
+                          ➕ Add Medicine to Prescription
+                        </button>
+                      </div>
+
+                      {medsList.length > 0 && (
+                        <div className="border-t border-slate-200/50 pt-4 space-y-2">
+                          <label className="text-[10px] text-slate-400 font-bold block uppercase">Current Medications</label>
+                          {medsList.map((m, idx) => (
+                            <div key={idx} className="bg-white border border-slate-100 rounded-xl px-3 py-2 flex justify-between items-center text-xs">
+                              <div>
+                                <span className="font-bold text-slate-700">{m.name}</span>
+                                <span className="text-[10px] text-slate-400 ml-1.5">{m.dosage}</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMed(idx)}
+                                className="text-red-500 hover:text-red-700 font-bold px-1.5"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -414,7 +518,7 @@ function DoctorDashboard() {
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Diagnosed Conditions</span>
                       <div className="mt-2.5 space-y-2">
-                        {["Allergy: Penicillin", "Hypertension (Stage 1)", "Type-2 Diabetes"].map((cond, i) => (
+                        {(selectedPatientHistory.medicalConditions || ["Allergy: Penicillin", "Hypertension (Stage 1)"]).map((cond, i) => (
                           <div key={i} className="bg-red-50/50 border border-red-100 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                             {cond}
@@ -426,10 +530,10 @@ function DoctorDashboard() {
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Prescription Regime</span>
                       <div className="mt-2.5 space-y-2">
-                        {[
+                        {(selectedPatientHistory.prescriptions || [
                           { name: "Metformin 500mg", dosage: "1 tablet • Daily (Post-meal)" },
                           { name: "Amlodipine 5mg", dosage: "1 tablet • Morning" }
-                        ].map((rx, i) => (
+                        ]).map((rx, i) => (
                           <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs text-slate-800">
                             <span className="font-bold block text-slate-700">{rx.name}</span>
                             <span className="text-[10px] text-slate-400 mt-0.5 block">{rx.dosage}</span>
@@ -441,7 +545,7 @@ function DoctorDashboard() {
                     <div className="bg-teal-50 border border-teal-100 rounded-2xl p-4 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider">Completed Clinic Visits</span>
-                        <p className="text-2xl font-black text-slate-800 mt-1">4 visits</p>
+                        <p className="text-2xl font-black text-slate-800 mt-1">{selectedPatientHistory.completedVisits || 4} visits</p>
                       </div>
                       <span className="text-3xl">🩺</span>
                     </div>

@@ -637,7 +637,7 @@ function PatientDashboard() {
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Clinical Conditions</span>
                       <div className="mt-2.5 space-y-2">
-                        {["Allergy: Penicillin", "Hypertension (Stage 1)", "Type-2 Diabetes"].map((cond, i) => (
+                        {((queueEntry && queueEntry.medicalConditions) || ["Allergy: Penicillin", "Hypertension (Stage 1)"]).map((cond, i) => (
                           <div key={i} className="bg-red-50/50 border border-red-100 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                             {cond}
@@ -649,10 +649,10 @@ function PatientDashboard() {
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Prescriptions</span>
                       <div className="mt-2.5 space-y-2">
-                        {[
+                        {((queueEntry && queueEntry.prescriptions) || [
                           { name: "Metformin 500mg", dosage: "1 tablet • Daily (Post-meal)" },
                           { name: "Amlodipine 5mg", dosage: "1 tablet • Morning" }
-                        ].map((rx, i) => (
+                        ]).map((rx, i) => (
                           <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs text-slate-800">
                             <span className="font-bold block text-slate-700">{rx.name}</span>
                             <span className="text-[10px] text-slate-400 mt-0.5 block">{rx.dosage}</span>
@@ -664,7 +664,7 @@ function PatientDashboard() {
                     <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] font-bold text-violet-700 uppercase tracking-wider">Completed Consultations</span>
-                        <p className="text-2xl font-black text-slate-800 mt-1">4 visits</p>
+                        <p className="text-2xl font-black text-slate-800 mt-1">{((queueEntry && queueEntry.completedVisits) || 4)} visits</p>
                       </div>
                       <span className="text-3xl">🩺</span>
                     </div>

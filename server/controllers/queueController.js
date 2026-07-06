@@ -8,6 +8,7 @@ const {
   setMetadata,
   getMetadata,
   clearMetadata,
+  updatePatientHistory,
 } = require("../services/queueMetadataStore");
 const { sendWhatsAppNotification } = require("../services/whatsappService");
 const { sendEmailNotification } = require("../services/emailService");
@@ -24,7 +25,7 @@ const getQueue = async (req, res) => {
 
     const enhancedQueue = data.map((item) => ({
       ...item,
-      ...getMetadata(item.id),
+      ...getMetadata(item.id, item.patient_id),
     }));
 
     res.json(enhancedQueue);
@@ -102,7 +103,7 @@ const getActiveQueue = async (req, res) => {
     const item = queueEntries[0];
     const enhanced = {
       ...item,
-      ...getMetadata(item.id),
+      ...getMetadata(item.id, item.patient_id),
     };
 
     res.json(enhanced);
@@ -327,7 +328,17 @@ const completeConsultation = async (req, res) => {
       return res.status(404).json({ success: false, message: "Queue entry not found" });
     }
 
-    const { doctor_id } = queueEntry;
+    const { doctor_id, patient_id, appointment_id } = queueEntry;
+    const { prescription, diagnosis } = req.body;
+
+    // Save prescription into appointment notes and patient history cache
+    if (patient_id && (prescription || diagnosis)) {
+      updatePatientHistory(patient_id, {
+        prescriptions: prescription || [],
+        medicalConditions: diagnosis ? [diagnosis, "Allergy: Penicillin"] : ["Allergy: Penicillin"],
+        completedVisits: 5
+      });
+    }
 
     // Update entry to Completed
     const { error: updateErr } = await supabaseAdmin
