@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const supabase = require("../config/supabase");
 const { supabaseAdmin } = require("../config/supabase");
 const {
@@ -550,7 +551,7 @@ const seedDemoData = async (req, res) => {
 
     const mockDocs = [
       { 
-        ...(docKumarId && { id: docKumarId }),
+        id: docKumarId || crypto.randomUUID(),
         full_name: "Dr. Rajesh Kumar", 
         email: "doctor@medflow.com",
         specialization: "Cardiology", 
@@ -558,13 +559,13 @@ const seedDemoData = async (req, res) => {
         consultation_fee: 250, 
         available: true 
       },
-      { full_name: "Dr. Sarah Patel", specialization: "Pediatrics", qualification: "MD, DCH", consultation_fee: 220, available: true },
-      { full_name: "Dr. Amit Sharma", specialization: "Orthopedics", qualification: "MS, MCh", consultation_fee: 280, available: true },
-      { full_name: "Dr. Emily Watson", specialization: "Dermatology", qualification: "MD, DVD", consultation_fee: 240, available: true },
-      { full_name: "Dr. Vikram Iyer", specialization: "General Medicine", qualification: "MD, FCGP", consultation_fee: 200, available: true },
-      { full_name: "Dr. Sophia Chen", specialization: "Neurology", qualification: "MD, DM (Neuro)", consultation_fee: 300, available: true },
-      { full_name: "Dr. Sanjay Gupta", specialization: "Oncology", qualification: "MD, DM (Onco)", consultation_fee: 350, available: true },
-      { full_name: "Dr. Priya Nair", specialization: "Gynecology", qualification: "MD, DGO", consultation_fee: 260, available: true }
+      { id: crypto.randomUUID(), full_name: "Dr. Sarah Patel", specialization: "Pediatrics", qualification: "MD, DCH", consultation_fee: 220, available: true },
+      { id: crypto.randomUUID(), full_name: "Dr. Amit Sharma", specialization: "Orthopedics", qualification: "MS, MCh", consultation_fee: 280, available: true },
+      { id: crypto.randomUUID(), full_name: "Dr. Emily Watson", specialization: "Dermatology", qualification: "MD, DVD", consultation_fee: 240, available: true },
+      { id: crypto.randomUUID(), full_name: "Dr. Vikram Iyer", specialization: "General Medicine", qualification: "MD, FCGP", consultation_fee: 200, available: true },
+      { id: crypto.randomUUID(), full_name: "Dr. Sophia Chen", specialization: "Neurology", qualification: "MD, DM (Neuro)", consultation_fee: 300, available: true },
+      { id: crypto.randomUUID(), full_name: "Dr. Sanjay Gupta", specialization: "Oncology", qualification: "MD, DM (Onco)", consultation_fee: 350, available: true },
+      { id: crypto.randomUUID(), full_name: "Dr. Priya Nair", specialization: "Gynecology", qualification: "MD, DGO", consultation_fee: 260, available: true }
     ];
 
     const { data: insertedDocs, error: docErr } = await supabaseAdmin.from("doctors").insert(mockDocs).select();
