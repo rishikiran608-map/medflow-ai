@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, ShieldCheck, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import { CreditCard, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 function PaymentPage() {
@@ -11,18 +11,16 @@ function PaymentPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [appointment, setAppointment] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("upi");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentId, setPaymentId] = useState(null);
 
   useEffect(() => {
     const fetchAppointmentDetails = async () => {
       try {
-        // Fetch queue details associated with this appointment
         const res = await api.get("/queue/active");
         if (res.data && res.data.appointment_id === id) {
           setAppointment(res.data);
         } else {
-          // Fallback or fetch from queue list
           const queueList = await api.get("/queue");
           const matched = queueList.data.find(q => q.appointment_id === id);
           if (matched) {
@@ -38,24 +36,83 @@ function PaymentPage() {
     fetchAppointmentDetails();
   }, [id]);
 
+  // Fallback mocks if doctor details are not fully populated
+  const docName = appointment?.doctors?.full_name || "Specialist Consultation";
+  const docFee = appointment?.doctors?.consultation_fee || 250;
+  const platformFee = 45;
+  const gstFee = Math.round(docFee * 0.18);
+  const totalAmount = docFee + platformFee + gstFee;
+
   const handlePayment = async () => {
     setProcessing(true);
     try {
-      // Simulate secure network transaction delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Call payment activation endpoint
-      await api.put(`/appointments/pay/${id}`);
-      
-      setPaymentSuccess(true);
-      toast.success("Payment transaction completed successfully!");
-      setTimeout(() => {
-        navigate("/patient-dashboard");
-      }, 2000);
+      // Step 1: Create Razorpay order via backend
+      const orderRes = await api.post("/payments/create-order", {
+        appointment_id: id,
+        amount: totalAmount,
+      });
+
+      if (!orderRes.data.success) {
+        throw new Error("Failed to create payment order");
+      }
+
+      const { order_id, key_id, amount: orderAmount, currency } = orderRes.data;
+
+      // Step 2: Open Razorpay checkout modal
+      const options = {
+        key: key_id,
+        amount: orderAmount,
+        currency: currency,
+        name: "MedFlow AI",
+        description: `Consultation — Dr. ${docName}`,
+        order_id: order_id,
+        handler: async (response) => {
+          // Step 3: Verify payment signature on backend
+          try {
+            const verifyRes = await api.post("/payments/verify", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              appointment_id: id,
+            });
+
+            if (verifyRes.data.success) {
+              setPaymentId(response.razorpay_payment_id);
+              setPaymentSuccess(true);
+              toast.success("Payment verified via Razorpay! Token activated.");
+              setTimeout(() => {
+                navigate("/patient-dashboard");
+              }, 2500);
+            } else {
+              toast.error("Payment verification failed. Contact support.");
+            }
+          } catch (verifyErr) {
+            console.error("Verification error:", verifyErr);
+            toast.error("Payment verification failed.");
+          }
+          setProcessing(false);
+        },
+        prefill: {
+          name: localStorage.getItem("userName") || "Patient",
+          email: localStorage.getItem("userEmail") || "",
+        },
+        theme: {
+          color: "#2563EB",
+          backdrop_color: "rgba(0, 0, 0, 0.7)",
+        },
+        modal: {
+          ondismiss: () => {
+            setProcessing(false);
+            toast.error("Payment cancelled.");
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
       console.error("Payment failed:", err);
-      toast.error("Payment transaction failed. Please try again.");
-    } finally {
+      toast.error("Payment initiation failed. Please try again.");
       setProcessing(false);
     }
   };
@@ -67,13 +124,6 @@ function PaymentPage() {
       </div>
     );
   }
-
-  // Fallback mocks if doctor details are not fully populated
-  const docName = appointment?.doctors?.full_name || "Specialist Consultation";
-  const docFee = appointment?.doctors?.consultation_fee || 500;
-  const platformFee = 45;
-  const gstFee = Math.round(docFee * 0.18);
-  const totalAmount = docFee + platformFee + gstFee;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-100 py-12 px-6 flex items-center justify-center font-sans">
@@ -93,7 +143,10 @@ function PaymentPage() {
                 <CreditCard className="text-blue-600" size={24} />
                 Secure Checkout Gateway
               </h2>
-              <p className="text-slate-400 text-xs mt-1.5 font-medium">Verify your bill and process secure consultation payment to activate your token.</p>
+              <p className="text-slate-400 text-xs mt-1.5 font-medium flex items-center gap-1.5">
+                <Zap size={12} className="text-amber-500" />
+                Powered by Razorpay — India's most trusted payment gateway
+              </p>
 
               {/* Bill Details */}
               <div className="mt-8 bg-slate-50 rounded-2xl p-6 border border-slate-100/50">
@@ -120,27 +173,16 @@ function PaymentPage() {
                 </div>
               </div>
 
-              {/* Payment Methods */}
-              <div className="mt-8">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Select Payment Method</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { id: "upi", label: "UPI 📱" },
-                    { id: "card", label: "Card 💳" },
-                    { id: "net", label: "Net 🏦" }
-                  ].map(method => (
-                    <button
-                      key={method.id}
-                      onClick={() => setPaymentMethod(method.id)}
-                      className={`py-3.5 rounded-xl border font-bold text-xs transition flex flex-col items-center justify-center gap-1.5 ${
-                        paymentMethod === method.id 
-                          ? "border-blue-600 bg-blue-50/50 text-blue-600 font-black" 
-                          : "border-slate-100 text-slate-500 hover:bg-slate-50"
-                      }`}
-                    >
-                      {method.label}
-                    </button>
-                  ))}
+              {/* Razorpay Badge */}
+              <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-black text-sm">R</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-700">Razorpay Secure Checkout</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">UPI • Cards • Net Banking • Wallets — All payment modes supported</p>
+                  </div>
                 </div>
               </div>
 
@@ -148,7 +190,7 @@ function PaymentPage() {
               <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-4">
                 <div className="flex items-center gap-2 text-xs text-slate-400 justify-center">
                   <ShieldCheck size={16} className="text-green-600" />
-                  <span>SSL Encrypted secure checkout transaction</span>
+                  <span>PCI-DSS compliant • SSL encrypted • RBI-regulated</span>
                 </div>
 
                 <motion.button
@@ -161,11 +203,11 @@ function PaymentPage() {
                   {processing ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verifying Transaction...</span>
+                      <span>Opening Razorpay...</span>
                     </>
                   ) : (
                     <>
-                      <span>Pay ₹{totalAmount}</span>
+                      <span>Pay ₹{totalAmount} via Razorpay</span>
                       <ArrowRight size={16} />
                     </>
                   )}
@@ -185,8 +227,13 @@ function PaymentPage() {
               </div>
               <h2 className="text-2xl font-black text-slate-800">Payment Verified!</h2>
               <p className="text-slate-400 text-xs mt-2 max-w-xs leading-relaxed">
-                Consultation payment received. Your queue token is now active. Redirecting to dashboard...
+                Consultation payment received via Razorpay. Your queue token is now active. Redirecting to dashboard...
               </p>
+              {paymentId && (
+                <p className="text-[10px] text-slate-300 mt-3 font-mono">
+                  Transaction ID: {paymentId}
+                </p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
