@@ -152,18 +152,18 @@ function BookAppointment() {
             <p className="text-slate-500 text-xs font-semibold leading-relaxed mb-4">
               Describe your symptoms below (e.g. *"chest pain"*, *"skin rashes"*, or *"kid fever"*). Our medical diagnostic engine will match and auto-select the best available doctor.
             </p>
-            <div className="flex gap-2.5">
+            <div className="flex flex-col sm:flex-row gap-2.5">
               <input
                 type="text"
                 placeholder="Type symptoms here..."
                 value={symptomsText}
                 onChange={(e) => setSymptomsText(e.target.value)}
-                className="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="flex-1 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
               />
               <button
                 type="button"
                 onClick={handleTriage}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-5 py-3 rounded-xl text-xs transition shadow-md shadow-blue-500/10 flex-shrink-0"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-5 py-3.5 rounded-xl text-xs transition shadow-md shadow-blue-500/10 flex-shrink-0 flex items-center justify-center"
               >
                 Analyze Symptoms
               </button>
