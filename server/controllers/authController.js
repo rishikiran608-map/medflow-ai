@@ -151,6 +151,13 @@ const login = async (req, res) => {
             }]);
           }
         }
+      } else {
+        // Force reset the password to default to guarantee login success
+        console.log(`Syncing demo account password to default: ${email}`);
+        await supabaseAdmin.auth.admin.updateUserById(existing.id, {
+          password: password,
+          user_metadata: { role: demoAccounts[email].role, full_name: demoAccounts[email].name }
+        });
       }
     } catch (e) {
       console.warn("Demo auto-provisioning warning:", e.message);
