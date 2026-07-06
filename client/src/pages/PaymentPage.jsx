@@ -117,6 +117,23 @@ function PaymentPage() {
     }
   };
 
+  const handleDemoBypass = async () => {
+    setProcessing(true);
+    try {
+      await api.put(`/appointments/pay/${id}`);
+      setPaymentSuccess(true);
+      toast.success("Demo Mode: Payment bypassed successfully!");
+      setTimeout(() => {
+        navigate("/patient-dashboard");
+      }, 2000);
+    } catch (err) {
+      console.error("Bypass failed:", err);
+      toast.error("Bypass failed. Please try again.");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
@@ -211,6 +228,16 @@ function PaymentPage() {
                       <ArrowRight size={16} />
                     </>
                   )}
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleDemoBypass}
+                  disabled={processing}
+                  className="w-full mt-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold py-3.5 rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50 text-xs border border-slate-200"
+                >
+                  <span>⚡ Fast Checkout (Demo Bypass)</span>
                 </motion.button>
               </div>
 
