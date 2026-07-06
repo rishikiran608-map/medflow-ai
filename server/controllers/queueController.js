@@ -688,7 +688,7 @@ const seedDemoData = async (req, res) => {
     const todayStr = new Date().toISOString().split("T")[0];
 
     // C. Seed active queue for Dr. Rajesh Kumar (5 patients)
-    const kumarStatuses = ["In Consultation", "Checked In", "Arriving", "Waiting", "Waiting"];
+    const kumarStatuses = ["In Consultation", "Checked In", "Checked In", "Checked In", "Arriving"];
     const kumarReasons = [
       "Severe chest pain and high blood pressure",
       "Regular checkup",
