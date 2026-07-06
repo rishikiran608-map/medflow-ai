@@ -3,13 +3,21 @@ const crypto = require("crypto");
 const { supabaseAdmin: supabase } = require("../config/supabase");
 const { sendWhatsAppNotification } = require("../services/whatsappService");
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpay = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+} else {
+  console.log("⚠️ [RAZORPAY] Credentials missing in environment. Payment endpoints will return configuration error.");
+}
 
 const createOrder = async (req, res) => {
   try {
+    if (!razorpay) {
+      return res.status(500).json({ success: false, message: "Razorpay payment integration is not configured on the server." });
+    }
     const { appointment_id, amount } = req.body;
     if (!appointment_id || !amount) {
       return res.status(400).json({ success: false, message: "appointment_id and amount are required" });
