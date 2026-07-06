@@ -35,10 +35,10 @@ const calculateWaitingTime = async (doctor_id) => {
   };
 
   let totalWait = 0;
-  data.forEach((item) => {
-    const meta = getMetadata(item.id);
+  for (const item of data) {
+    const meta = await getMetadata(item.id);
     totalWait += getConsultationDuration(meta.reason || "");
-  });
+  }
 
   const margin = Math.max(2, Math.round(data.length * 1.5));
   const probability = Math.max(65, 95 - (data.length * 3));

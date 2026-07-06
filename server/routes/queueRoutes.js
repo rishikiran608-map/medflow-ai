@@ -20,7 +20,7 @@ const {
 // Public queue routes
 router.get("/", getQueue);
 router.get("/predict/:doctorId", predictQueue);
-router.post("/seed-demo", seedDemoData);
+router.post("/seed-demo", authMiddleware, seedDemoData);
 
 // Protected queue routes
 router.get("/active", authMiddleware, getActiveQueue);

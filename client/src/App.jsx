@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Navbar from "./components/Navbar";
 import LandingPage from "./pages/LandingPage";
@@ -23,27 +24,27 @@ function App() {
 
         <Route
           path="/patient-dashboard"
-          element={<PatientDashboard />}
+          element={<ProtectedRoute allowedRoles={["Patient"]}><PatientDashboard /></ProtectedRoute>}
         />
 
         <Route
           path="/doctor-dashboard"
-          element={<DoctorDashboard />}
+          element={<ProtectedRoute allowedRoles={["Doctor"]}><DoctorDashboard /></ProtectedRoute>}
         />
 
         <Route
           path="/admin-dashboard"
-          element={<AdminDashboard />}
+          element={<ProtectedRoute allowedRoles={["Hospital Admin"]}><AdminDashboard /></ProtectedRoute>}
         />
 
         <Route
           path="/book-appointment"
-          element={<BookAppointment />}
+          element={<ProtectedRoute allowedRoles={["Patient"]}><BookAppointment /></ProtectedRoute>}
         />
 
         <Route
           path="/payment/:id"
-          element={<PaymentPage />}
+          element={<ProtectedRoute allowedRoles={["Patient"]}><PaymentPage /></ProtectedRoute>}
         />
       </Routes>
       <ChatWidget />

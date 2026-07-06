@@ -1,20 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
-
-// Determine local fallback vs cloud API URL
-const getBaseURL = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-    return "/api";
-  }
-  return "https://medflow-ai.onrender.com/api";
-};
-
-const api = axios.create({
-  baseURL: getBaseURL(),
-});
+import api from "../api/api";
 
 function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
