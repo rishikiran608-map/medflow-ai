@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
 const supabase = require("./config/supabase");
 
@@ -10,13 +12,17 @@ const appointmentRoutes = require("./routes/appointmentRoutes");
 const queueRoutes = require("./routes/queueRoutes");
 const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const errorHandler = require("./middleware/errorHandler");
 
 
 
 
 const app = express();
 
-app.use(cors());
+app.use(helmet());
+app.use(cors({ origin: process.env.CLIENT_URL || "*", credentials: true }));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200, message: { success: false, message: "Too many requests, please try again later." } }));
 app.use(express.json());
 
 app.use("/api/patients", patientRoutes);
@@ -25,40 +31,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/queue", queueRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
-// Temporary testing routes
-app.get("/supabase-test", async (req, res) => {
-  const { data, error } = await supabase
-    .from("patients")
-    .select("*");
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json(data);
-});
-
-app.post("/supabase-test", async (req, res) => {
-  const { data, error } = await supabase
-    .from("patients")
-    .insert([
-      {
-        full_name: req.body.full_name,
-        email: req.body.email,
-        phone: req.body.phone,
-        age: req.body.age,
-        gender: req.body.gender,
-        address: req.body.address,
-      },
-    ])
-    .select();
-
-  if (error) {
-    return res.status(500).json(error);
-  }
-
-  res.json(data);
-});
+app.use("/api/payments", paymentRoutes);
 
 app.get("/", (req, res) => {
   res.json({
@@ -66,6 +39,8 @@ app.get("/", (req, res) => {
     message: "🚀 MedFlow AI Backend Running Successfully",
   });
 });
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

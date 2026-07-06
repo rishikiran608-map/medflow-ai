@@ -10,7 +10,7 @@ const supabase = createClient(
 // Fallback logic for when OpenAI API key is missing
 const handleNlpFallback = async (message, patientId) => {
   const query = message.toLowerCase();
-  const history = getPatientHistory(patientId);
+  const history = await getPatientHistory(patientId);
 
   // Retrieve active queue status if exists
   let queueEntry = null;
@@ -207,7 +207,7 @@ const handleChat = async (req, res) => {
     console.error("Error reading queue context:", err);
   }
 
-  const userHistory = getPatientHistory(patientId);
+  const userHistory = await getPatientHistory(patientId);
 
   // If OpenAI key is set, use gpt-4o-mini
   if (process.env.OPENAI_API_KEY) {

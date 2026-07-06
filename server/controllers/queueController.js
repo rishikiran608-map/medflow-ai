@@ -23,10 +23,12 @@ const getQueue = async (req, res) => {
 
     if (error) return res.status(500).json(error);
 
-    const enhancedQueue = data.map((item) => ({
-      ...item,
-      ...getMetadata(item.id, item.patient_id),
-    }));
+    const enhancedQueue = await Promise.all(
+      data.map(async (item) => ({
+        ...item,
+        ...(await getMetadata(item.id, item.patient_id)),
+      }))
+    );
 
     res.json(enhancedQueue);
   } catch (err) {
@@ -101,9 +103,10 @@ const getActiveQueue = async (req, res) => {
     }
 
     const item = queueEntries[0];
+    const metadata = await getMetadata(item.id, item.patient_id);
     const enhanced = {
       ...item,
-      ...getMetadata(item.id, item.patient_id),
+      ...metadata,
     };
 
     res.json(enhanced);
@@ -333,10 +336,11 @@ const completeConsultation = async (req, res) => {
 
     // Save prescription into appointment notes and patient history cache
     if (patient_id && (prescription || diagnosis)) {
-      updatePatientHistory(patient_id, {
+      await updatePatientHistory(patient_id, {
         prescriptions: prescription || [],
-        medicalConditions: diagnosis ? [diagnosis, "Allergy: Penicillin"] : ["Allergy: Penicillin"],
-        completedVisits: 5
+        medicalConditions: diagnosis ? [diagnosis] : [],
+        completedVisits: 5,
+        doctorId: doctor_id,
       });
     }
 
@@ -501,10 +505,12 @@ const getDoctorQueue = async (req, res) => {
 
     if (error) return res.status(500).json(error);
 
-    const enhanced = data.map((item) => ({
-      ...item,
-      ...getMetadata(item.id),
-    }));
+    const enhanced = await Promise.all(
+      data.map(async (item) => ({
+        ...item,
+        ...(await getMetadata(item.id, item.patient_id)),
+      }))
+    );
 
     res.json(enhanced);
   } catch (err) {
@@ -558,6 +564,81 @@ const seedDemoData = async (req, res) => {
         if (patErr) throw patErr;
         patientIds.push(insertedPat.id);
       }
+    }
+
+    // Seed persistent patient EHR (medical records + prescriptions) in Supabase
+    const patientEHRData = [
+      {
+        conditions: ["Hypertension", "Coronary Artery Disease"],
+        prescriptions: [
+          { name: "Amlodipine 5mg", dosage: "1 tablet • Morning (Daily)" },
+          { name: "Aspirin 75mg", dosage: "1 tablet • Post-meal (Daily)" }
+        ],
+        completedVisits: 6
+      },
+      {
+        conditions: ["Arrhythmia"],
+        prescriptions: [
+          { name: "Metoprolol 25mg", dosage: "1 tablet • Morning" }
+        ],
+        completedVisits: 3
+      },
+      {
+        conditions: ["Type-2 Diabetes", "Mild Hyperlipidemia"],
+        prescriptions: [
+          { name: "Metformin 500mg", dosage: "1 tablet • Post-meal (Daily)" },
+          { name: "Atorvastatin 10mg", dosage: "1 tablet • Night" }
+        ],
+        completedVisits: 8
+      },
+      {
+        conditions: ["Mitral Valve Prolapse"],
+        prescriptions: [
+          { name: "Propranolol 10mg", dosage: "1 tablet • As needed" }
+        ],
+        completedVisits: 2
+      },
+      {
+        conditions: ["Post-MI Recovery", "Angina"],
+        prescriptions: [
+          { name: "Clopidogrel 75mg", dosage: "1 tablet • Morning" },
+          { name: "Nitroglycerin 0.5mg", dosage: "1 tablet • Sublingual (SOS)" }
+        ],
+        completedVisits: 10
+      },
+      {
+        conditions: ["Allergic Asthma"],
+        prescriptions: [
+          { name: "Montelukast 5mg", dosage: "1 tablet • Night" },
+          { name: "Albuterol Inhaler", dosage: "2 puffs • SOS" }
+        ],
+        completedVisits: 5
+      },
+      {
+        conditions: ["Acute Bronchitis"],
+        prescriptions: [
+          { name: "Amoxicillin 250mg", dosage: "5ml syrup • Twice daily" }
+        ],
+        completedVisits: 4
+      },
+      {
+        conditions: ["Mild Dermatitis"],
+        prescriptions: [
+          { name: "Hydrocortisone Cream 1%", dosage: "Apply twice daily" }
+        ],
+        completedVisits: 3
+      }
+    ];
+
+    for (let i = 0; i < patientIds.length; i++) {
+      const pId = patientIds[i];
+      const ehr = patientEHRData[i];
+      await updatePatientHistory(pId, {
+        medicalConditions: ehr.conditions,
+        prescriptions: ehr.prescriptions,
+        completedVisits: ehr.completedVisits,
+        doctorId: null
+      });
     }
 
     const todayStr = new Date().toISOString().split("T")[0];
