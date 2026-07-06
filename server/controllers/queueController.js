@@ -541,7 +541,9 @@ const seedDemoData = async (req, res) => {
       { full_name: "Dr. Amit Sharma", specialization: "Orthopedics", qualification: "MS, MCh", consultation_fee: 280, available: true },
       { full_name: "Dr. Emily Watson", specialization: "Dermatology", qualification: "MD, DVD", consultation_fee: 240, available: true },
       { full_name: "Dr. Vikram Iyer", specialization: "General Medicine", qualification: "MD, FCGP", consultation_fee: 200, available: true },
-      { full_name: "Dr. Sophia Chen", specialization: "Neurology", qualification: "MD, DM (Neuro)", consultation_fee: 300, available: true }
+      { full_name: "Dr. Sophia Chen", specialization: "Neurology", qualification: "MD, DM (Neuro)", consultation_fee: 300, available: true },
+      { full_name: "Dr. Sanjay Gupta", specialization: "Oncology", qualification: "MD, DM (Onco)", consultation_fee: 350, available: true },
+      { full_name: "Dr. Priya Nair", specialization: "Gynecology", qualification: "MD, DGO", consultation_fee: 260, available: true }
     ];
 
     const { data: insertedDocs, error: docErr } = await supabaseAdmin.from("doctors").insert(mockDocs).select();
@@ -549,6 +551,8 @@ const seedDemoData = async (req, res) => {
 
     const docKumar = insertedDocs.find(d => d.specialization === "Cardiology");
     const docPatel = insertedDocs.find(d => d.specialization === "Pediatrics");
+    const docSharma = insertedDocs.find(d => d.specialization === "Orthopedics");
+    const docWatson = insertedDocs.find(d => d.specialization === "Dermatology");
 
     // B. Find or insert mock patients
     const mockPatients = [
@@ -559,7 +563,11 @@ const seedDemoData = async (req, res) => {
       { full_name: "Vikram Singh", email: "vikram@example.com", phone: "9876543214", age: 52, gender: "Male", address: "Bangalore, India" },
       { full_name: "Sneha Reddy", email: "sneha@example.com", phone: "9876543215", age: 29, gender: "Female", address: "Hyderabad, India" },
       { full_name: "Arjun Gupta", email: "arjun@example.com", phone: "9876543216", age: 31, gender: "Male", address: "Pune, India" },
-      { full_name: "Kirti Joshi", email: "kirti@example.com", phone: "9876543217", age: 26, gender: "Female", address: "Ahmedabad, India" }
+      { full_name: "Kirti Joshi", email: "kirti@example.com", phone: "9876543217", age: 26, gender: "Female", address: "Ahmedabad, India" },
+      { full_name: "Rishi Kiran", email: "rishi@example.com", phone: "9876543218", age: 24, gender: "Male", address: "Kochi, India" },
+      { full_name: "Rahul Nair", email: "rahul@example.com", phone: "9876543219", age: 32, gender: "Male", address: "Chennai, India" },
+      { full_name: "Devika Sen", email: "devika@example.com", phone: "9876543220", age: 27, gender: "Female", address: "Kolkata, India" },
+      { full_name: "Maya Roy", email: "maya@example.com", phone: "9876543221", age: 39, gender: "Female", address: "New Delhi, India" }
     ];
 
     const patientIds = [];
@@ -635,6 +643,34 @@ const seedDemoData = async (req, res) => {
           { name: "Hydrocortisone Cream 1%", dosage: "Apply twice daily" }
         ],
         completedVisits: 3
+      },
+      {
+        conditions: ["Seasonal Allergy"],
+        prescriptions: [
+          { name: "Cetirizine 10mg", dosage: "1 tablet • Night" }
+        ],
+        completedVisits: 1
+      },
+      {
+        conditions: ["Gastroesophageal Reflux Disease"],
+        prescriptions: [
+          { name: "Omeprazole 20mg", dosage: "1 tablet • Before breakfast" }
+        ],
+        completedVisits: 4
+      },
+      {
+        conditions: ["Vitamin D Deficiency"],
+        prescriptions: [
+          { name: "Cholecalciferol 60K", dosage: "1 tablet • Weekly" }
+        ],
+        completedVisits: 2
+      },
+      {
+        conditions: ["Hypothyroidism"],
+        prescriptions: [
+          { name: "Levothyroxine 50mcg", dosage: "1 tablet • Morning" }
+        ],
+        completedVisits: 12
       }
     ];
 
@@ -736,7 +772,81 @@ const seedDemoData = async (req, res) => {
       setMetadata(qItem.id, { reason });
     }
 
-    res.json({ success: true, message: "Demo showcase data seeded successfully with 6 doctors (fees 200-300) and active patient queues!" });
+    // E. Seed active queue for Dr. Amit Sharma (2 patients)
+    if (docSharma) {
+      const sharmaStatuses = ["Checked In", "Waiting"];
+      const sharmaReasons = [
+        "Ligament tear follow-up check",
+        "Chronic knee pain evaluation"
+      ];
+      for (let i = 0; i < 2; i++) {
+        const patientId = patientIds[8 + i]; // Grab Rishi and Rahul
+        const status = sharmaStatuses[i];
+        const reason = sharmaReasons[i];
+
+        const { data: appt } = await supabaseAdmin.from("appointments").insert([
+          {
+            patient_id: patientId,
+            doctor_id: docSharma.id,
+            appointment_date: todayStr,
+            appointment_time: `12:${i}0:00`,
+            status: "Booked"
+          }
+        ]).select().single();
+
+        const { data: qItem } = await supabaseAdmin.from("queue").insert([
+          {
+            patient_id: patientId,
+            doctor_id: docSharma.id,
+            appointment_id: appt.id,
+            token_number: i + 1,
+            queue_status: status,
+            estimated_wait: i * 15
+          }
+        ]).select().single();
+
+        setMetadata(qItem.id, { reason });
+      }
+    }
+
+    // F. Seed active queue for Dr. Emily Watson (2 patients)
+    if (docWatson) {
+      const watsonStatuses = ["Waiting", "Waiting"];
+      const watsonReasons = [
+        "Severe skin rash consultation",
+        "Acne treatment follow-up"
+      ];
+      for (let i = 0; i < 2; i++) {
+        const patientId = patientIds[10 + i]; // Grab Devika and Maya
+        const status = watsonStatuses[i];
+        const reason = watsonReasons[i];
+
+        const { data: appt } = await supabaseAdmin.from("appointments").insert([
+          {
+            patient_id: patientId,
+            doctor_id: docWatson.id,
+            appointment_date: todayStr,
+            appointment_time: `13:${i}5:00`,
+            status: "Booked"
+          }
+        ]).select().single();
+
+        const { data: qItem } = await supabaseAdmin.from("queue").insert([
+          {
+            patient_id: patientId,
+            doctor_id: docWatson.id,
+            appointment_id: appt.id,
+            token_number: i + 1,
+            queue_status: status,
+            estimated_wait: i * 15
+          }
+        ]).select().single();
+
+        setMetadata(qItem.id, { reason });
+      }
+    }
+
+    res.json({ success: true, message: "Demo showcase data seeded successfully with 8 doctors and 12 patients with active queues!" });
   } catch (err) {
     console.error("seedDemoData error:", err);
     res.status(500).json({ success: false, message: "Failed to seed demo data", error: err.message });
