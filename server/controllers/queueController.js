@@ -535,8 +535,29 @@ const seedDemoData = async (req, res) => {
     await supabaseAdmin.from("appointments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     await supabaseAdmin.from("doctors").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
+    // Fetch existing doctor auth ID if it exists to preserve relation continuity
+    let docKumarId = undefined;
+    try {
+      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+      const existingDocUser = listData?.users?.find(u => u.email === "doctor@medflow.com");
+      if (existingDocUser) {
+        docKumarId = existingDocUser.id;
+        console.log("Found existing doctor auth user ID:", docKumarId);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch doctor user list during seed:", e.message);
+    }
+
     const mockDocs = [
-      { full_name: "Dr. Rajesh Kumar", specialization: "Cardiology", qualification: "MD, DM", consultation_fee: 250, available: true },
+      { 
+        ...(docKumarId && { id: docKumarId }),
+        full_name: "Dr. Rajesh Kumar", 
+        email: "doctor@medflow.com",
+        specialization: "Cardiology", 
+        qualification: "MD, DM", 
+        consultation_fee: 250, 
+        available: true 
+      },
       { full_name: "Dr. Sarah Patel", specialization: "Pediatrics", qualification: "MD, DCH", consultation_fee: 220, available: true },
       { full_name: "Dr. Amit Sharma", specialization: "Orthopedics", qualification: "MS, MCh", consultation_fee: 280, available: true },
       { full_name: "Dr. Emily Watson", specialization: "Dermatology", qualification: "MD, DVD", consultation_fee: 240, available: true },
