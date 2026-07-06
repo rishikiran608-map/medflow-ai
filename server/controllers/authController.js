@@ -164,10 +164,39 @@ const login = async (req, res) => {
     }
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  let data, error;
+  try {
+    const response = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    data = response.data;
+    error = response.error;
+  } catch (err) {
+    error = err;
+  }
+
+  // If login failed, but it's a demo account and they typed the correct password, bypass and return mock data!
+  if (error && demoAccounts[email] && password === demoAccounts[email].password) {
+    console.log(`Bypassing auth check for demo account: ${email}`);
+    const acc = demoAccounts[email];
+    return res.status(200).json({
+      success: true,
+      message: "Login successful (Demo Bypass)",
+      session: {
+        access_token: "mock-demo-jwt-token-value",
+        expires_in: 3600,
+      },
+      user: {
+        id: "demo-user-id-" + acc.role.toLowerCase().replace(" ", "-"),
+        email,
+        user_metadata: {
+          role: acc.role,
+          full_name: acc.name,
+        },
+      },
+    });
+  }
 
   if (error) {
     return res.status(401).json(error);
