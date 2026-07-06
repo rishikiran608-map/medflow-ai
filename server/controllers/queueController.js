@@ -524,6 +524,14 @@ const seedDemoData = async (req, res) => {
   try {
     // A. Clean slate to prevent foreign key errors and start fresh
     await supabaseAdmin.from("queue").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    
+    try {
+      await supabaseAdmin.from("prescriptions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await supabaseAdmin.from("patient_medical_records").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    } catch (e) {
+      console.log("EHR tables cleanup skipped (might not exist yet):", e.message);
+    }
+
     await supabaseAdmin.from("appointments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     await supabaseAdmin.from("doctors").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
