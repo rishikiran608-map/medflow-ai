@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Award, UsersRound, Timer, ShieldAlert, BarChart3, Activity, PlusCircle, Zap } from "lucide-react";
+import { Users, Award, UsersRound, Timer, ShieldAlert, BarChart3, Activity, PlusCircle, Zap, Camera } from "lucide-react";
 import { getPatients } from "../services/patientService";
 import { getDoctors } from "../services/doctorService";
 import { getQueue } from "../services/queueService";
@@ -19,6 +19,56 @@ function AdminDashboard() {
   const [seeding, setSeeding] = useState(false);
   const [scanId, setScanId] = useState("");
   const [scanning, setScanning] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannerInstance, setScannerInstance] = useState(null);
+
+  const startCameraScan = () => {
+    setShowScanner(true);
+    setTimeout(() => {
+      try {
+        const html5QrcodeScanner = new window.Html5QrcodeScanner(
+          "qr-reader-admin",
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          false
+        );
+        
+        html5QrcodeScanner.render(
+          async (decodedText) => {
+            html5QrcodeScanner.clear().catch(err => console.error("Error clearing scanner:", err));
+            setShowScanner(false);
+            setScanId(decodedText);
+            
+            // Auto check-in using scanned text
+            setScanning(true);
+            try {
+              await api.put("/queue/check-in", { queueId: decodedText });
+              toast.success("Webcam Scan Verified! Patient checked in successfully.");
+              await loadData();
+            } catch (err) {
+              console.error("QR check-in failed:", err);
+              toast.error("Check-in failed: " + (err.response?.data?.message || err.message));
+            } finally {
+              setScanning(false);
+            }
+          },
+          (err) => {}
+        );
+        setScannerInstance(html5QrcodeScanner);
+      } catch (err) {
+        console.error("Failed to initialize scanner:", err);
+        toast.error("Webcam scanner failed to load. Check camera permissions.");
+        setShowScanner(false);
+      }
+    }, 500);
+  };
+
+  const stopCameraScan = () => {
+    if (scannerInstance) {
+      scannerInstance.clear().catch(err => console.error("Error clearing scanner:", err));
+      setScannerInstance(null);
+    }
+    setShowScanner(false);
+  };
   const [outboxAlerts, setOutboxAlerts] = useState([
     {
       id: 1,
@@ -393,22 +443,32 @@ function AdminDashboard() {
                 </div>
                 
                 {/* QR Terminal Scanner Simulation Panel */}
-                <div className="flex items-center gap-2 w-full sm:w-auto bg-slate-50 p-2 rounded-2xl border border-slate-100/60">
-                  <input
-                    type="text"
-                    placeholder="Scan QR / Paste Token ID"
-                    value={scanId}
-                    onChange={(e) => setScanId(e.target.value)}
-                    className="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  />
-                  <button
-                    onClick={handleQRCheckIn}
-                    disabled={scanning}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs transition shadow-md shadow-blue-500/5 disabled:opacity-50"
-                  >
-                    {scanning ? "Processing..." : "Simulate QR Scan"}
-                  </button>
-                </div>
+                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto bg-slate-50 p-2 rounded-2xl border border-slate-100/60">
+                   <input
+                     type="text"
+                     placeholder="Scan QR / Paste Token ID"
+                     value={scanId}
+                     onChange={(e) => setScanId(e.target.value)}
+                     className="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                   />
+                   <div className="flex gap-2">
+                     <button
+                       onClick={handleQRCheckIn}
+                       disabled={scanning}
+                       className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs transition shadow-md shadow-blue-500/5 disabled:opacity-50 flex-1 sm:flex-initial"
+                     >
+                       {scanning ? "Processing..." : "Verify ID"}
+                     </button>
+                     <button
+                       onClick={startCameraScan}
+                       disabled={scanning}
+                       className="bg-slate-800 hover:bg-slate-900 text-white font-extrabold px-4 py-2 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5"
+                     >
+                       <Camera size={14} />
+                       <span>Scan via Camera</span>
+                     </button>
+                   </div>
+                 </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -907,6 +967,36 @@ function AdminDashboard() {
               </motion.div>
             </motion.div>
           )}
+
+           {showScanner && (
+             <motion.div
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+             >
+               <motion.div
+                 initial={{ scale: 0.95, y: 15 }}
+                 animate={{ scale: 1, y: 0 }}
+                 exit={{ scale: 0.95, y: 15 }}
+                 className="bg-white rounded-3xl p-6 max-w-md w-full border border-slate-100 shadow-2xl relative text-left"
+               >
+                 <h3 className="text-lg font-black text-slate-800 flex items-center gap-2 mb-2">
+                   📷 Live Clinic Check-In Kiosk
+                 </h3>
+                 <p className="text-xs text-slate-400 mb-6">
+                   Place the patient's digital QR token inside the viewport to scan.
+                 </p>
+                 <div id="qr-reader-admin" className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50"></div>
+                 <button
+                   onClick={stopCameraScan}
+                   className="w-full mt-6 bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold py-3.5 rounded-xl transition text-xs border border-rose-200"
+                 >
+                   Cancel Scanning
+                 </button>
+               </motion.div>
+             </motion.div>
+           )}
         </AnimatePresence>
 
       </div>

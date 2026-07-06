@@ -318,22 +318,13 @@ function PatientDashboard() {
                       </div>
                     </div>
                     
-                    {/* Simulated SVG QR Code */}
-                    <div className="w-24 h-24 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center">
-                      <svg width="80" height="80" viewBox="0 0 100 100" className="text-slate-800">
-                        {/* Outlines of QR code finder patterns */}
-                        <path d="M0 0h30v30H0zm40 0h20v20H40zm30 0h30v30H70zM0 40h20v20H0zm50 40h20v20H50zm30-40h20v20H80zM0 70h30v30H0zm80 40h20v20H80z" fill="currentColor" />
-                        <path d="M10 10h10v10H10zm70 0h10v10H80zM10 80h10v10H10z" fill="white" />
-                        <path d="M13 13h4v4h-4zm70 0h4v4h-4zm-70 70h4v4h-4z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                        {/* Mock data pixels */}
-                        <rect x="35" y="35" width="8" height="8" fill="currentColor" />
-                        <rect x="45" y="45" width="8" height="8" fill="currentColor" />
-                        <rect x="35" y="55" width="8" height="8" fill="currentColor" />
-                        <rect x="55" y="35" width="8" height="8" fill="currentColor" />
-                        <rect x="65" y="65" width="8" height="8" fill="currentColor" />
-                        <rect x="45" y="65" width="8" height="8" fill="currentColor" />
-                        <rect x="65" y="45" width="8" height="8" fill="currentColor" />
-                      </svg>
+                    {/* Real Dynamic QR Code Image */}
+                    <div className="w-24 h-24 bg-white p-1 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${queueEntry.id}`} 
+                        alt="EHR QR Token" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                   </div>
                 )}
