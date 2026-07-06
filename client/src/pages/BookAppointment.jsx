@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { getDoctors } from "../services/doctorService";
 import { bookAppointment } from "../services/appointmentService";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 function BookAppointment() {
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
+  const [symptomsText, setSymptomsText] = useState("");
+  const [triageResult, setTriageResult] = useState("");
 
   const [formData, setFormData] = useState({
     doctor: "",
@@ -14,6 +17,50 @@ function BookAppointment() {
     time: "",
     reason: "",
   });
+
+  const handleTriage = () => {
+    const text = symptomsText.toLowerCase().trim();
+    if (!text) {
+      toast.warning("Please type your symptoms first.");
+      return;
+    }
+
+    let recommendedSpecialty;
+    let reasoning;
+
+    if (text.includes("chest") || text.includes("heart") || text.includes("breathless") || text.includes("bp") || text.includes("palpitation")) {
+      recommendedSpecialty = "Cardiologist";
+      reasoning = "Your symptoms indicate potential cardiovascular stress. We recommend scheduling an evaluation with our Cardiology department.";
+    } else if (text.includes("skin") || text.includes("rash") || text.includes("itch") || text.includes("acne") || text.includes("spots") || text.includes("allergy")) {
+      recommendedSpecialty = "Dermatologist";
+      reasoning = "Skin irritation, rashes, or chronic itching point to dermatological conditions. We recommend checking in with our Dermatology team.";
+    } else if (text.includes("child") || text.includes("baby") || text.includes("kid") || text.includes("pediatric") || text.includes("infant")) {
+      recommendedSpecialty = "Pediatrician";
+      reasoning = "For child-related illnesses, developmental queries, or pediatric care, our Pediatrics clinic is best suited.";
+    } else {
+      recommendedSpecialty = "General Physician";
+      reasoning = "For general discomfort, mild fever, body aches, or general triage checkups, our General Practitioner team is recommended.";
+    }
+
+    const matchedDoctor = doctors.find(doc => 
+      doc.specialization?.toLowerCase().includes(recommendedSpecialty.toLowerCase())
+    );
+
+    if (matchedDoctor) {
+      setFormData(prev => ({
+        ...prev,
+        doctor: matchedDoctor.id
+      }));
+      setTriageResult(`✅ Recommendation: Dr. ${matchedDoctor.full_name} (${matchedDoctor.specialization})\n\n💡 Reason: ${reasoning}`);
+      toast.success(`Auto-selected Dr. ${matchedDoctor.full_name} for you!`);
+    } else {
+      setTriageResult(`⚠️ Recommended Specialty: ${recommendedSpecialty}, but no doctors are available in this area today. Reverting to General Physician.`);
+      const gpDoctor = doctors.find(doc => doc.specialization?.toLowerCase().includes("general"));
+      if (gpDoctor) {
+        setFormData(prev => ({ ...prev, doctor: gpDoctor.id }));
+      }
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -96,6 +143,41 @@ function BookAppointment() {
 
         <div className="space-y-6">
 
+          {/* AI Symptom Triage Tool */}
+          <div className="bg-gradient-to-tr from-blue-50/50 via-white to-cyan-50 border border-blue-100 rounded-3xl p-6 text-left relative overflow-hidden shadow-sm">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-full blur-2xl -z-10"></div>
+            <h4 className="text-sm font-black text-blue-600 flex items-center gap-1.5 uppercase tracking-wider mb-2">
+              🤖 AI Triage & Doctor Recommendation
+            </h4>
+            <p className="text-slate-500 text-xs font-semibold leading-relaxed mb-4">
+              Describe your symptoms below (e.g. *"chest pain"*, *"skin rashes"*, or *"kid fever"*). Our medical diagnostic engine will match and auto-select the best available doctor.
+            </p>
+            <div className="flex gap-2.5">
+              <input
+                type="text"
+                placeholder="Type symptoms here..."
+                value={symptomsText}
+                onChange={(e) => setSymptomsText(e.target.value)}
+                className="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+              <button
+                type="button"
+                onClick={handleTriage}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-5 py-3 rounded-xl text-xs transition shadow-md shadow-blue-500/10 flex-shrink-0"
+              >
+                Analyze Symptoms
+              </button>
+            </div>
+            {triageResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-semibold text-slate-700 whitespace-pre-line"
+              >
+                {triageResult}
+              </motion.div>
+            )}
+          </div>
 
           <div>
             <label className="font-semibold">

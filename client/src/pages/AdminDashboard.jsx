@@ -19,6 +19,40 @@ function AdminDashboard() {
   const [seeding, setSeeding] = useState(false);
   const [scanId, setScanId] = useState("");
   const [scanning, setScanning] = useState(false);
+  const [outboxAlerts, setOutboxAlerts] = useState([
+    {
+      id: 1,
+      time: "Just Now",
+      type: "WhatsApp",
+      recipient: "Arjun Sharma",
+      message: "⚠️ Alert: Dr. Davis's schedule is running 12 mins behind due to consult extension. Your appointment has been optimized. AI predicted adjust wait: 24 mins.",
+      status: "Delivered"
+    },
+    {
+      id: 2,
+      time: "2 mins ago",
+      type: "SMS",
+      recipient: "Sneha Reddy",
+      message: "✅ Success: Slot Backfilled! Rohan cancelled, so your token was automatically moved up. New wait: 8 mins.",
+      status: "Delivered"
+    },
+    {
+      id: 3,
+      time: "15 mins ago",
+      type: "WhatsApp",
+      recipient: "Vijay Kumar",
+      message: "🚗 Commute Check: We noticed high traffic on your route. Please start 10 mins early to preserve your slot. ETA: 22 mins.",
+      status: "Delivered"
+    },
+    {
+      id: 4,
+      time: "1 hour ago",
+      type: "WhatsApp",
+      recipient: "Rohan Patel",
+      message: "🎫 QR Verified: Welcome to clinic. Checked-in for Dr. Smith. Token #3 is active.",
+      status: "Sent"
+    }
+  ]);
 
   const handleQRCheckIn = async () => {
     if (!scanId) {
@@ -113,6 +147,20 @@ function AdminDashboard() {
     try {
       await api.post("/queue/walk-in", walkInFormData);
       toast.success("Walk-in patient registered and checked-in successfully!");
+      
+      // Add simulated live outbox log
+      setOutboxAlerts(prev => [
+        {
+          id: Date.now(),
+          time: "Just Now",
+          type: "WhatsApp",
+          recipient: walkInFormData.full_name,
+          message: `🎫 Walk-in Confirmed: Checked-in successfully. Assigned Token #${queue.length + 1}. Estimated wait calculated by AI.`,
+          status: "Delivered"
+        },
+        ...prev
+      ]);
+
       setShowWalkInModal(false);
       setWalkInFormData({
         full_name: "",
@@ -157,6 +205,19 @@ function AdminDashboard() {
     try {
       await api.post("/queue/seed-demo");
       toast.success("Live showcase demo data seeded successfully!");
+      
+      setOutboxAlerts(prev => [
+        {
+          id: Date.now(),
+          time: "Just Now",
+          type: "WhatsApp Broadcast",
+          recipient: "All Seeding Patients",
+          message: "⚡ Live Demo Seed: Recalculated estimated wait times for all scheduled consultations. Commute monitors active.",
+          status: "Delivered"
+        },
+        ...prev
+      ]);
+
       await loadData();
     } catch (err) {
       console.error("Failed to seed demo data:", err);
@@ -289,7 +350,8 @@ function AdminDashboard() {
             { id: "monitor", label: "Live Queue Monitor", icon: BarChart3 },
             { id: "analytics", label: "SaaS Analytics", icon: Activity },
             { id: "doctors", label: "Doctors Directory", icon: Award },
-            { id: "patients", label: "Registered Patients", icon: Users }
+            { id: "patients", label: "Registered Patients", icon: Users },
+            { id: "alerts", label: "AI Outbox Alerts", icon: ShieldAlert }
           ].map(tab => {
             const Icon = tab.icon;
             return (
@@ -417,7 +479,7 @@ function AdminDashboard() {
                 SaaS Analytical Performance Indicators
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Patients Today</span>
                   <p className="text-3xl font-black text-slate-800 mt-2">{patients.length || 24} patients</p>
@@ -432,6 +494,11 @@ function AdminDashboard() {
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Queue Efficiency Rating</span>
                   <p className="text-3xl font-black text-slate-800 mt-2">92.4%</p>
                   <p className="text-xs text-green-600 font-semibold mt-1">▼ 8.1% no-show skip auto-recovery</p>
+                </div>
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">AI Peak Delay Forecast</span>
+                  <p className="text-3xl font-black text-slate-800 mt-2">16:00 - 18:00</p>
+                  <p className="text-xs text-red-500 font-bold mt-1">⚠️ High traffic delay risk (probability 88%)</p>
                 </div>
               </div>
 
@@ -542,6 +609,45 @@ function AdminDashboard() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: AI Outbox Alerts */}
+          {activeTab === "alerts" && (
+            <div>
+              <h3 className="text-lg font-extrabold text-slate-800 mb-2 flex items-center gap-2">
+                <ShieldAlert className="text-blue-600" size={20} />
+                Live AI Outbox Automated Alerts
+              </h3>
+              <p className="text-slate-400 text-xs font-semibold mb-6">
+                Live stream of triggered notifications dispatched by the queue coordinator (commute monitors, delay shifting, auto-backfills).
+              </p>
+              <div className="space-y-4">
+                {outboxAlerts.map((alert) => (
+                  <div key={alert.id} className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xs font-black shrink-0">
+                        {alert.type === "SMS" ? "📱" : "💬"}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-700">{alert.recipient}</span>
+                          <span className="text-[9px] bg-slate-200 text-slate-500 font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                            {alert.type}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{alert.message}</p>
+                      </div>
+                    </div>
+                    <div className="flex md:flex-col items-end gap-2 md:gap-0.5 self-stretch md:self-auto justify-between md:justify-center">
+                      <span className="text-[10px] text-slate-400 font-bold">{alert.time}</span>
+                      <span className="text-[9px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                        {alert.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
