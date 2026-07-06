@@ -42,9 +42,14 @@ function BookAppointment() {
       reasoning = "For general discomfort, mild fever, body aches, or general triage checkups, our General Practitioner team is recommended.";
     }
 
-    const matchedDoctor = doctors.find(doc => 
-      doc.specialization?.toLowerCase().includes(recommendedSpecialty.toLowerCase())
-    );
+    const matchedDoctor = doctors.find(doc => {
+      const spec = doc.specialization?.toLowerCase() || "";
+      const rec = recommendedSpecialty.toLowerCase();
+      return spec.includes(rec) || rec.includes(spec) || 
+             (spec.startsWith("cardio") && rec.startsWith("cardio")) ||
+             (spec.startsWith("derm") && rec.startsWith("derm")) ||
+             (spec.startsWith("pediat") && rec.startsWith("pediat"));
+    });
 
     if (matchedDoctor) {
       setFormData(prev => ({
