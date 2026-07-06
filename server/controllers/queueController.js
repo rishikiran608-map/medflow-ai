@@ -513,36 +513,39 @@ const getDoctorQueue = async (req, res) => {
   }
 };
 
-// 11. Seed Showcase Demo Data (creates 5 mock patients with active states)
+// 11. Seed Showcase Demo Data (creates 6 doctors, 8 patients, populated active queues)
 const seedDemoData = async (req, res) => {
   try {
-    // A. Ensure we have Dr. Rajesh Kumar
-    const { data: existingDocs } = await supabaseAdmin.from("doctors").select("id");
-    let doctorIds = (existingDocs || []).map((d) => d.id);
+    // A. Clean slate to prevent foreign key errors and start fresh
+    await supabaseAdmin.from("queue").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    await supabaseAdmin.from("appointments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    await supabaseAdmin.from("doctors").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
-    if (doctorIds.length === 0) {
-      const mockDocs = [
-        { full_name: "Dr. Rajesh Kumar", specialization: "Cardiology", qualification: "MD, DM", consultation_fee: 800, available: true },
-        { full_name: "Dr. Sarah Patel", specialization: "Pediatrics", qualification: "MD, DCH", consultation_fee: 600, available: true },
-        { full_name: "Dr. Amit Sharma", specialization: "Orthopedics", qualification: "MS, MCh", consultation_fee: 700, available: true }
-      ];
-      const { data: insertedDocs, error: docErr } = await supabaseAdmin.from("doctors").insert(mockDocs).select();
-      if (docErr) throw docErr;
-      doctorIds = insertedDocs.map((d) => d.id);
-    }
+    const mockDocs = [
+      { full_name: "Dr. Rajesh Kumar", specialization: "Cardiology", qualification: "MD, DM", consultation_fee: 250, available: true },
+      { full_name: "Dr. Sarah Patel", specialization: "Pediatrics", qualification: "MD, DCH", consultation_fee: 220, available: true },
+      { full_name: "Dr. Amit Sharma", specialization: "Orthopedics", qualification: "MS, MCh", consultation_fee: 280, available: true },
+      { full_name: "Dr. Emily Watson", specialization: "Dermatology", qualification: "MD, DVD", consultation_fee: 240, available: true },
+      { full_name: "Dr. Vikram Iyer", specialization: "General Medicine", qualification: "MD, FCGP", consultation_fee: 200, available: true },
+      { full_name: "Dr. Sophia Chen", specialization: "Neurology", qualification: "MD, DM (Neuro)", consultation_fee: 300, available: true }
+    ];
 
-    const doctorId = doctorIds[0];
+    const { data: insertedDocs, error: docErr } = await supabaseAdmin.from("doctors").insert(mockDocs).select();
+    if (docErr) throw docErr;
 
-    // B. Clear current queue entries for this doctor to start fresh
-    await supabaseAdmin.from("queue").delete().eq("doctor_id", doctorId);
+    const docKumar = insertedDocs.find(d => d.specialization === "Cardiology");
+    const docPatel = insertedDocs.find(d => d.specialization === "Pediatrics");
 
-    // C. Find or insert mock patients
+    // B. Find or insert mock patients
     const mockPatients = [
       { full_name: "Aarav Mehta", email: "aarav@example.com", phone: "9876543210", age: 34, gender: "Male", address: "Mumbai, India" },
       { full_name: "Priya Sharma", email: "priya@example.com", phone: "9876543211", age: 28, gender: "Female", address: "Delhi, India" },
       { full_name: "Rohan Das", email: "rohan@example.com", phone: "9876543212", age: 45, gender: "Male", address: "Kolkata, India" },
       { full_name: "Ananya Iyer", email: "ananya@example.com", phone: "9876543213", age: 22, gender: "Female", address: "Chennai, India" },
-      { full_name: "Vikram Singh", email: "vikram@example.com", phone: "9876543214", age: 52, gender: "Male", address: "Bangalore, India" }
+      { full_name: "Vikram Singh", email: "vikram@example.com", phone: "9876543214", age: 52, gender: "Male", address: "Bangalore, India" },
+      { full_name: "Sneha Reddy", email: "sneha@example.com", phone: "9876543215", age: 29, gender: "Female", address: "Hyderabad, India" },
+      { full_name: "Arjun Gupta", email: "arjun@example.com", phone: "9876543216", age: 31, gender: "Male", address: "Pune, India" },
+      { full_name: "Kirti Joshi", email: "kirti@example.com", phone: "9876543217", age: 26, gender: "Female", address: "Ahmedabad, India" }
     ];
 
     const patientIds = [];
@@ -557,63 +560,46 @@ const seedDemoData = async (req, res) => {
       }
     }
 
-    // D. Create mock appointments and queue entries
-    const statuses = ["In Consultation", "Checked In", "Arriving", "Waiting", "Waiting"];
-    const mockReasons = [
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    // C. Seed active queue for Dr. Rajesh Kumar (5 patients)
+    const kumarStatuses = ["In Consultation", "Checked In", "Arriving", "Waiting", "Waiting"];
+    const kumarReasons = [
       "Severe chest pain and high blood pressure",
       "Regular checkup",
       "Critical cardiac evaluation",
       "Follow-up consultation",
-      "General consultation"
+      "General checkup"
     ];
-    const todayStr = new Date().toISOString().split("T")[0];
 
-    for (let i = 0; i < patientIds.length; i++) {
+    for (let i = 0; i < 5; i++) {
       const patientId = patientIds[i];
-      const status = statuses[i];
-      const reason = mockReasons[i];
-      const tokenNumber = i + 1;
-      const estWait = i * 12;
+      const status = kumarStatuses[i];
+      const reason = kumarReasons[i];
 
-      // Create appointment
-      const { data: appt, error: apptErr } = await supabaseAdmin
-        .from("appointments")
-        .insert([
-          {
-            patient_id: patientId,
-            doctor_id: doctorId,
-            appointment_date: todayStr,
-            appointment_time: `${10 + i}:00:00`,
-            status: status === "In Consultation" ? "In Consultation" : "Booked"
-          }
-        ])
-        .select()
-        .single();
+      const { data: appt } = await supabaseAdmin.from("appointments").insert([
+        {
+          patient_id: patientId,
+          doctor_id: docKumar.id,
+          appointment_date: todayStr,
+          appointment_time: `10:${i}0:00`,
+          status: status === "In Consultation" ? "In Consultation" : "Booked"
+        }
+      ]).select().single();
 
-      if (apptErr) throw apptErr;
+      const { data: qItem } = await supabaseAdmin.from("queue").insert([
+        {
+          patient_id: patientId,
+          doctor_id: docKumar.id,
+          appointment_id: appt.id,
+          token_number: i + 1,
+          queue_status: status,
+          estimated_wait: i * 12
+        }
+      ]).select().single();
 
-      // Create queue entry
-      const { data: qItem, error: qErr } = await supabaseAdmin
-        .from("queue")
-        .insert([
-          {
-            patient_id: patientId,
-            doctor_id: doctorId,
-            appointment_id: appt.id,
-            token_number: tokenNumber,
-            queue_status: status,
-            estimated_wait: estWait
-          }
-        ])
-        .select()
-        .single();
-
-      if (qErr) throw qErr;
-
-      // Set the reason in the metadata cache!
       setMetadata(qItem.id, { reason });
 
-      // Add travel mode metadata for the arriving patient
       if (status === "Arriving") {
         setMetadata(qItem.id, {
           reason,
@@ -624,7 +610,44 @@ const seedDemoData = async (req, res) => {
       }
     }
 
-    res.json({ success: true, message: "Demo showcase data seeded successfully for Dr. Rajesh Kumar!" });
+    // D. Seed active queue for Dr. Sarah Patel (3 patients)
+    const patelStatuses = ["Checked In", "Waiting", "Waiting"];
+    const patelReasons = [
+      "Child general vaccination checkup",
+      "Fever evaluation for infant",
+      "Growth monitoring checkup"
+    ];
+
+    for (let i = 0; i < 3; i++) {
+      const patientId = patientIds[5 + i]; // Grab Sneha, Arjun, Kirti
+      const status = patelStatuses[i];
+      const reason = patelReasons[i];
+
+      const { data: appt } = await supabaseAdmin.from("appointments").insert([
+        {
+          patient_id: patientId,
+          doctor_id: docPatel.id,
+          appointment_date: todayStr,
+          appointment_time: `11:${i}5:00`,
+          status: "Booked"
+        }
+      ]).select().single();
+
+      const { data: qItem } = await supabaseAdmin.from("queue").insert([
+        {
+          patient_id: patientId,
+          doctor_id: docPatel.id,
+          appointment_id: appt.id,
+          token_number: i + 1,
+          queue_status: status,
+          estimated_wait: i * 15
+        }
+      ]).select().single();
+
+      setMetadata(qItem.id, { reason });
+    }
+
+    res.json({ success: true, message: "Demo showcase data seeded successfully with 6 doctors (fees 200-300) and active patient queues!" });
   } catch (err) {
     console.error("seedDemoData error:", err);
     res.status(500).json({ success: false, message: "Failed to seed demo data", error: err.message });
