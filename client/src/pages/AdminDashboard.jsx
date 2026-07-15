@@ -281,10 +281,23 @@ function AdminDashboard() {
     const timer = setTimeout(() => {
       loadData();
     }, 0);
-    const interval = setInterval(loadData, 8000);
+
+    let interval = setInterval(loadData, 20000);
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        loadData();
+        interval = setInterval(loadData, 20000);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       clearTimeout(timer);
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [loadData]);
 

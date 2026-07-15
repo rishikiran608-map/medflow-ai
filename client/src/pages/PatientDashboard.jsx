@@ -67,10 +67,22 @@ function PatientDashboard() {
       loadActiveQueue();
     }, 0);
 
-    const interval = setInterval(loadActiveQueue, 8000);
+    let interval = setInterval(loadActiveQueue, 20000);
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        loadActiveQueue();
+        interval = setInterval(loadActiveQueue, 20000);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       clearTimeout(timer);
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [loadActiveQueue]);
 

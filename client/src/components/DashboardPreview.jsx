@@ -1,47 +1,20 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-
-import { getPatients } from "../services/patientService";
-import { getDoctors } from "../services/doctorService";
-import { getQueue } from "../services/queueService";
 
 function DashboardPreview() {
-  const [patients, setPatients] = useState([]);
-  const [doctors, setDoctors] = useState([]);
-  const [queue, setQueue] = useState([]);
+  // Static mock data for the landing page preview — no live API calls needed here
+  const patients = Array(24).fill(null);
+  const doctors = Array(6).fill(null);
+  const queue = [
+    { id: 1, token_number: 1, estimated_wait: 12 },
+    { id: 2, token_number: 2, estimated_wait: 24 },
+    { id: 3, token_number: 3, estimated_wait: 36 },
+    { id: 4, token_number: 4, estimated_wait: 48 },
+  ];
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadDashboard = async () => {
-      try {
-        const patientsData = await getPatients();
-        const doctorsData = await getDoctors();
-        const queueData = await getQueue();
+  const averageWait = Math.round(
+    queue.reduce((sum, item) => sum + (item.estimated_wait || 0), 0) / queue.length
+  );
 
-        if (isMounted) {
-          setPatients(patientsData);
-          setDoctors(doctorsData);
-          setQueue(queueData);
-        }
-      } catch (err) {
-        console.error("Dashboard Error:", err);
-      }
-    };
-    loadDashboard();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const averageWait =
-    queue.length > 0
-      ? Math.round(
-          queue.reduce(
-            (sum, item) => sum + (item.estimated_wait || 0),
-            0
-          ) / queue.length
-        )
-      : 0;
 
   return (
     <section id="dashboard" className="py-20 bg-gray-100">

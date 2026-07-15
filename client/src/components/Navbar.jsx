@@ -1,15 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { LogOut, User, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 
 function Navbar() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("userRole");
-  const userName = localStorage.getItem("userName") || "User";
+  const token = useMemo(() => localStorage.getItem("token"), []);
+  const role = useMemo(() => localStorage.getItem("userRole"), []);
+  const userName = useMemo(() => localStorage.getItem("userName") || "User", []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");

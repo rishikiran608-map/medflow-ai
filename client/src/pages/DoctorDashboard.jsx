@@ -60,10 +60,22 @@ function DoctorDashboard() {
       loadDoctorQueue();
     }, 0);
 
-    const interval = setInterval(loadDoctorQueue, 8000);
+    let interval = setInterval(loadDoctorQueue, 20000);
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        loadDoctorQueue();
+        interval = setInterval(loadDoctorQueue, 20000);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       clearTimeout(timer);
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [loadDoctorQueue]);
 
@@ -413,7 +425,7 @@ function DoctorDashboard() {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      transition={{ delay: index * 0.05 }}
+                      transition={{ duration: 0.2 }}
                       className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition flex justify-between items-center"
                     >
                       <div className="flex gap-3 items-center text-left">

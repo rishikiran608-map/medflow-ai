@@ -142,7 +142,8 @@ function Hero() {
   transition={{ duration: 0.5 }}
   src={"https://images.unsplash.com/photo-1584515933487-779824d29309?w=800"}
   className="rounded-3xl shadow-2xl"
-   alt="Doctor"
+  alt="Doctor"
+  loading="lazy"
 />
           
         </motion.div>
