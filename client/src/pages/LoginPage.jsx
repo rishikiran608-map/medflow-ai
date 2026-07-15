@@ -19,103 +19,75 @@ function LoginPage() {
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
   const handleQuickFill = (roleName) => {
-    if (roleName === "admin") {
-      setFormData({
-        ...formData,
-        email: "admin@medflow.com",
-        password: "admin123"
-      });
-    } else if (roleName === "doctor") {
-      setFormData({
-        ...formData,
-        email: "doctor@medflow.com",
-        password: "doctor123"
-      });
-    } else {
-      setFormData({
-        ...formData,
-        email: "patient@medflow.com",
-        password: "patient123"
-      });
-    }
+    const credentials = {
+      admin:   { email: "admin@medflow.com",   password: "admin123" },
+      doctor:  { email: "doctor@medflow.com",  password: "doctor123" },
+      patient: { email: "patient@medflow.com", password: "patient123" },
+    };
+    const cred = credentials[roleName];
+    if (cred) setFormData((prev) => ({ ...prev, ...cred }));
   };
+
   const handleLogin = async () => {
     setError("");
     setSuccess("");
-    try {
-      const res = await api.post(
-        "/auth/login",
-        {
-          email: formData.email,
-          password: formData.password,
-        }
-      );
+    const res = await api.post("/auth/login", {
+      email: formData.email,
+      password: formData.password,
+    });
 
-      const data = res.data;
-      console.log("LOGIN RESPONSE:", data);
+    const data = res.data;
 
-      if (data.session) {
-        localStorage.setItem("token", data.session.access_token);
-      }
-
-      if (data.user) {
-        localStorage.setItem("userId", data.user.id);
-        localStorage.setItem("userEmail", formData.email);
-        const name = data.user?.user_metadata?.full_name || "User";
-        localStorage.setItem("userName", name);
-      }
-
-      const role = data.user?.user_metadata?.role || formData.role;
-      localStorage.setItem("userRole", role);
-
-      if (role === "Patient") {
-        navigate("/book-appointment");
-      } else if (role === "Doctor") {
-        navigate("/doctor-dashboard");
-      } else {
-        navigate("/admin-dashboard");
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Invalid Email or Password");
+    if (data.session) {
+      localStorage.setItem("token", data.session.access_token);
     }
+    if (data.user) {
+      localStorage.setItem("userId", data.user.id);
+      localStorage.setItem("userEmail", formData.email);
+      localStorage.setItem("userName", data.user?.user_metadata?.full_name || "User");
+    }
+
+    const role = data.user?.user_metadata?.role || formData.role;
+    localStorage.setItem("userRole", role);
+
+    if (role === "Patient") navigate("/book-appointment");
+    else if (role === "Doctor") navigate("/doctor-dashboard");
+    else navigate("/admin-dashboard");
   };
 
   const handleRegister = async () => {
     setError("");
     setSuccess("");
-    try {
-      const res = await api.post(
-        "/auth/register",
-        {
-          full_name: formData.full_name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-          phone: formData.phone,
-        }
-      );
+    const res = await api.post("/auth/register", {
+      full_name: formData.full_name,
+      email: formData.email,
+      password: formData.password,
+      role: formData.role,
+      phone: formData.phone,
+    });
 
-      if (res.data.success) {
-        setSuccess("✅ Account registered successfully! Please log in.");
-        setIsRegistering(false);
-        setFormData({
-          ...formData,
-          password: "", // Clear password
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      const details = err.response?.data;
-      const errorMsg = details?.message || details?.error_description || details?.error || err.message || "Registration failed. Try again.";
-      setError(errorMsg);
+    if (res.data.success) {
+      setSuccess("✅ Account registered successfully! Please log in.");
+      setIsRegistering(false);
+      setFormData((prev) => ({ ...prev, password: "" }));
     }
+  };
+
+  const handleError = (err) => {
+    console.error(err);
+    const details = err.response?.data;
+    setError(
+      details?.message ||
+      details?.error_description ||
+      details?.error ||
+      err.message ||
+      "Something went wrong. Please try again."
+    );
   };
 
   return (
@@ -129,7 +101,6 @@ function LoginPage() {
         <h1 className="text-4xl font-black text-center text-blue-600 tracking-tight">
           MedFlow AI
         </h1>
-
         <p className="text-center text-gray-500 mt-2 font-medium">
           Smart Hospital Queue Management
         </p>
@@ -144,75 +115,41 @@ function LoginPage() {
               transition={{ duration: 0.3 }}
               className="mt-8 space-y-5"
             >
-
-
-              {/* Hackathon Demo Account Widgets */}
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left mb-4">
+              {/* Demo Account Quick Fill */}
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2.5">
                   ⚡ Hackathon Demo Accounts
                 </span>
                 <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("admin")}
-                    className="bg-blue-50 border border-blue-100 text-blue-700 hover:bg-blue-100 font-extrabold py-2 px-1 rounded-xl text-[10px] transition"
-                  >
-                    Admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("doctor")}
-                    className="bg-green-50 border border-green-100 text-green-700 hover:bg-green-100 font-extrabold py-2 px-1 rounded-xl text-[10px] transition"
-                  >
-                    Doctor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("patient")}
-                    className="bg-purple-50 border border-purple-100 text-purple-700 hover:bg-purple-100 font-extrabold py-2 px-1 rounded-xl text-[10px] transition"
-                  >
-                    Patient
-                  </button>
+                  {[
+                    { key: "admin",   label: "Admin",   cls: "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100" },
+                    { key: "doctor",  label: "Doctor",  cls: "bg-green-50 border-green-100 text-green-700 hover:bg-green-100" },
+                    { key: "patient", label: "Patient", cls: "bg-purple-50 border-purple-100 text-purple-700 hover:bg-purple-100" },
+                  ].map(({ key, label, cls }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => handleQuickFill(key)}
+                      className={`border font-extrabold py-2 px-1 rounded-xl text-[10px] transition ${cls}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 text-sm">Email Address</label>
-                <div className="relative mt-2">
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="name@example.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium"
-                  />
-                </div>
-              </div>
+              <FormInput label="Email Address" name="email"    type="email"    placeholder="name@example.com" value={formData.email}    onChange={handleChange} />
+              <FormInput label="Password"      name="password" type="password" placeholder="••••••••"         value={formData.password} onChange={handleChange} />
 
-              <div>
-                <label className="font-semibold text-slate-700 text-sm">Password</label>
-                <div className="relative mt-2">
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium"
-                  />
-                </div>
-              </div>
+              <SubmitButton
+                label="Sign In"
+                loadingLabel="Signing in..."
+                onSubmit={handleLogin}
+                onError={handleError}
+              />
 
               <button
-                onClick={handleLogin}
-                className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 mt-2"
-              >
-                Sign In
-              </button>
-
-              <button
-                onClick={() => setIsRegistering(true)}
+                onClick={() => { setError(""); setSuccess(""); setIsRegistering(true); }}
                 className="w-full border border-blue-600 text-blue-600 py-3.5 rounded-xl font-bold hover:bg-blue-50 transition"
               >
                 Create Account
@@ -227,73 +164,20 @@ function LoginPage() {
               transition={{ duration: 0.3 }}
               className="mt-8 space-y-5"
             >
-              <div>
-                <label className="font-semibold text-slate-700 text-sm">Full Name</label>
-                <div className="relative mt-2">
-                  <input
-                    type="text"
-                    name="full_name"
-                    placeholder="John Doe"
-                    value={formData.full_name}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium"
-                  />
-                </div>
-              </div>
+              <FormInput label="Full Name"     name="full_name" type="text"     placeholder="John Doe"         value={formData.full_name} onChange={handleChange} />
+              <FormInput label="Phone Number"  name="phone"     type="text"     placeholder="10 digit number"  value={formData.phone}     onChange={handleChange} />
+              <FormInput label="Email Address" name="email"     type="email"    placeholder="name@example.com" value={formData.email}     onChange={handleChange} />
+              <FormInput label="Password"      name="password"  type="password" placeholder="••••••••"         value={formData.password}  onChange={handleChange} />
 
-              <div>
-                <label className="font-semibold text-slate-700 text-sm">Phone Number</label>
-                <div className="relative mt-2">
-                  <input
-                    type="text"
-                    name="phone"
-                    placeholder="10 digit number"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium"
-                  />
-                </div>
-              </div>
-
-
-
-              <div>
-                <label className="font-semibold text-slate-700 text-sm">Email Address</label>
-                <div className="relative mt-2">
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="name@example.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 text-sm">Password</label>
-                <div className="relative mt-2">
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium"
-                  />
-                </div>
-              </div>
+              <SubmitButton
+                label="Register Account"
+                loadingLabel="Registering..."
+                onSubmit={handleRegister}
+                onError={handleError}
+              />
 
               <button
-                onClick={handleRegister}
-                className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 mt-2"
-              >
-                Register Account
-              </button>
-
-              <button
-                onClick={() => setIsRegistering(false)}
+                onClick={() => { setError(""); setSuccess(""); setIsRegistering(false); }}
                 className="w-full border border-slate-300 text-slate-600 py-3.5 rounded-xl font-bold hover:bg-slate-50 transition"
               >
                 Back to Sign In
@@ -315,7 +199,6 @@ function LoginPage() {
               <span>{error}</span>
             </motion.div>
           )}
-
           {success && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -328,9 +211,64 @@ function LoginPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
       </motion.div>
     </div>
+  );
+}
+
+// ─── Reusable labelled input ───────────────────────────────────────────────────
+function FormInput({ label, name, type, placeholder, value, onChange }) {
+  return (
+    <div>
+      <label className="font-semibold text-slate-700 text-sm">{label}</label>
+      <input
+        type={type}
+        name={name}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className="w-full mt-2 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium"
+      />
+    </div>
+  );
+}
+
+// ─── Submit button with self-contained loading guard ──────────────────────────
+// Immediately disables on first click → prevents double-submit lag.
+function SubmitButton({ label, loadingLabel, onSubmit, onError }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    if (loading) return;       // hard guard against rapid re-clicks
+    setLoading(true);
+    try {
+      await onSubmit();
+    } catch (err) {
+      onError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 mt-2 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+    >
+      {loading && (
+        <svg
+          className="animate-spin h-4 w-4 text-white shrink-0"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+      )}
+      {loading ? loadingLabel : label}
+    </button>
   );
 }
 
