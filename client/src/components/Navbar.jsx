@@ -47,6 +47,25 @@ function Navbar() {
     window.location.reload();
   };
 
+  const handleNavClick = (sectionId) => {
+    setMobileMenuOpen(false);
+    if (window.location.pathname !== "/") {
+      navigate("/");
+      // Wait for navigation transition before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 300);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   const getDashboardLink = () => {
     if (!token) return "/login";
     if (role === "Patient") return "/patient-dashboard";
@@ -70,10 +89,25 @@ function Navbar() {
         {/* Desktop Navigation Links */}
         <div className="hidden md:flex items-center gap-8">
           <Link to="/" className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Home</Link>
-          <a href="#features" className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Features</a>
+          <button
+            onClick={() => handleNavClick("features")}
+            className="font-medium text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
+          >
+            Features
+          </button>
           <Link to={getDashboardLink()} className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Dashboard</Link>
-          <a href="#about" className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">About</a>
-          <a href="#contact" className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Contact</a>
+          <button
+            onClick={() => handleNavClick("about")}
+            className="font-medium text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
+          >
+            About
+          </button>
+          <button
+            onClick={() => handleNavClick("contact")}
+            className="font-medium text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
+          >
+            Contact
+          </button>
         </div>
 
         {/* Right side: Login button or User Menu */}
@@ -140,10 +174,25 @@ function Navbar() {
           className="md:hidden mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3 text-left"
         >
           <Link to="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Home</Link>
-          <a href="#features" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Features</a>
+          <button
+            onClick={() => handleNavClick("features")}
+            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm text-left w-full"
+          >
+            Features
+          </button>
           <Link to={getDashboardLink()} onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Dashboard</Link>
-          <a href="#about" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">About</a>
-          <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Contact</a>
+          <button
+            onClick={() => handleNavClick("about")}
+            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm text-left w-full"
+          >
+            About
+          </button>
+          <button
+            onClick={() => handleNavClick("contact")}
+            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm text-left w-full"
+          >
+            Contact
+          </button>
           
           <div className="border-t border-slate-100 my-1"></div>
           
