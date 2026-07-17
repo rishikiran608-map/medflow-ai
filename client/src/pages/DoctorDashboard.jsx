@@ -480,14 +480,27 @@ function DoctorDashboard() {
             </div>
 
             {/* Doctor Assistant Chat widget */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-md flex flex-col h-[400px] overflow-hidden text-left">
-              <div className="bg-gradient-to-r from-teal-600 to-cyan-600 p-4 text-white flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner animate-pulse">
-                  🩺
+            <div className="bg-white rounded-3xl border-2 border-teal-500/20 shadow-xl shadow-teal-500/5 flex flex-col h-[400px] overflow-hidden text-left ring-4 ring-teal-500/5">
+              <div className="bg-gradient-to-r from-teal-600 to-cyan-600 p-4 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner animate-pulse">
+                    🩺
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-extrabold text-sm">Clinical Assistant</h3>
+                      <span className="text-[8px] bg-white text-teal-600 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5">
+                        ⚡ CLINICAL RAG
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-white/90 font-semibold tracking-wide">EHR Vector Semantic Match & GPT-4o</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-sm">Clinical Assistant</h3>
-                  <p className="text-[10px] text-white/80">MedFlow OS Agent Orchestrator</p>
+                <div className="flex flex-col items-end shrink-0">
+                  <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-300">
+                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping" />
+                    RAG Connected
+                  </span>
                 </div>
               </div>
 

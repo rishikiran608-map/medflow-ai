@@ -712,15 +712,28 @@ function PatientDashboard() {
       </div>
 
       {/* ─── RIGHT PANEL: WORKSPACE AI CHAT WIDGET ─── */}
-      <div className="lg:col-span-1 bg-white rounded-3xl border border-slate-100 shadow-md flex flex-col h-[650px] overflow-hidden">
+      <div className="lg:col-span-1 bg-white rounded-3xl border-2 border-blue-500/20 shadow-xl shadow-blue-500/5 flex flex-col h-[650px] overflow-hidden ring-4 ring-blue-500/5">
         {/* Assistant Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-cyan-500 p-4 text-white flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner">
-            🤖
+        <div className="bg-gradient-to-r from-blue-600 to-cyan-500 p-4 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner animate-pulse">
+              🤖
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-extrabold text-sm">Health Assistant</h3>
+                <span className="text-[8px] bg-white text-blue-600 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5">
+                  ⚡ RAG ACTIVE
+                </span>
+              </div>
+              <p className="text-[9px] text-white/90 font-semibold tracking-wide">MedFlow pgvector RAG & GPT-4o</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-extrabold text-sm">Health Assistant</h3>
-            <p className="text-[10px] text-white/80">MedFlow OS Agent Orchestrator</p>
+          <div className="flex flex-col items-end shrink-0">
+            <span className="flex items-center gap-1 text-[8px] font-black uppercase text-green-300">
+              <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping" />
+              Store Online
+            </span>
           </div>
         </div>
 
