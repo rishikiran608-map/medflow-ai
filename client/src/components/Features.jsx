@@ -66,8 +66,8 @@ function Features() {
             Platform Features
           </span>
           <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">
-            Built Different.
-            <span className="text-blue-600"> Not Just Another Chatbot.</span>
+            Predict. Prepare.
+            <span className="text-blue-600"> Heal.</span>
           </h2>
           <p className="mt-4 text-slate-500 text-lg max-w-2xl mx-auto">
             3 custom AI engines, 2 background daemons, and a fully deployed
