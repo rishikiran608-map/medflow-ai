@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -26,6 +26,23 @@ function RouteLoader() {
       <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
     </div>
   );
+}
+
+// Only show the floating ChatWidget on the home/landing page.
+// Dashboards each have their own embedded AI assistant panel.
+function ConditionalChatWidget() {
+  const location = useLocation();
+  const dashboardPaths = [
+    "/patient-dashboard",
+    "/doctor-dashboard",
+    "/admin-dashboard",
+    "/pharmacist-dashboard",
+    "/clinic-owner-dashboard",
+    "/book-appointment",
+  ];
+  const isDashboard = dashboardPaths.some(p => location.pathname.startsWith(p));
+  if (isDashboard) return null;
+  return <ChatWidget />;
 }
 
 function App() {
@@ -79,7 +96,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      <ChatWidget />
+      <ConditionalChatWidget />
       <CommandPalette />
     </BrowserRouter>
   );
