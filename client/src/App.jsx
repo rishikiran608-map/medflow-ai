@@ -7,12 +7,15 @@ import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import AuthCallback from "./pages/AuthCallback";
 import ChatWidget from "./components/ChatWidget";
+import CommandPalette from "./components/CommandPalette";
 import { Toaster } from "sonner";
 
 // Code splitting (Task 4)
 const PatientDashboard = lazy(() => import("./pages/PatientDashboard"));
 const DoctorDashboard = lazy(() => import("./pages/DoctorDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const PharmacistDashboard = lazy(() => import("./pages/PharmacistDashboard"));
+const ClinicOwnerDashboard = lazy(() => import("./pages/ClinicOwnerDashboard"));
 const BookAppointment = lazy(() => import("./pages/BookAppointment"));
 const PaymentPage = lazy(() => import("./pages/PaymentPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -53,6 +56,16 @@ function App() {
           />
 
           <Route
+            path="/pharmacist-dashboard"
+            element={<ProtectedRoute allowedRoles={["Pharmacist"]}><PharmacistDashboard /></ProtectedRoute>}
+          />
+
+          <Route
+            path="/clinic-owner-dashboard"
+            element={<ProtectedRoute allowedRoles={["Clinic Owner"]}><ClinicOwnerDashboard /></ProtectedRoute>}
+          />
+
+          <Route
             path="/book-appointment"
             element={<ProtectedRoute allowedRoles={["Patient"]}><BookAppointment /></ProtectedRoute>}
           />
@@ -67,6 +80,7 @@ function App() {
         </Routes>
       </Suspense>
       <ChatWidget />
+      <CommandPalette />
     </BrowserRouter>
   );
 }

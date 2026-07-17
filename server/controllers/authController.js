@@ -94,7 +94,9 @@ const login = async (req, res) => {
   const demoAccounts = {
     "admin@medflow.com": { password: "admin123", role: "Hospital Admin", name: "Admin Desk" },
     "doctor@medflow.com": { password: "doctor123", role: "Doctor", name: "Dr. Rajesh Kumar" },
-    "patient@medflow.com": { password: "patient123", role: "Patient", name: "Patient Demo" }
+    "patient@medflow.com": { password: "patient123", role: "Patient", name: "Patient Demo" },
+    "pharmacist@medflow.com": { password: "pharmacist123", role: "Pharmacist", name: "Pharmacist Station" },
+    "owner@medflow.com": { password: "owner123", role: "Clinic Owner", name: "Owner Office" }
   };
 
   if (demoAccounts[email] && password === demoAccounts[email].password) {

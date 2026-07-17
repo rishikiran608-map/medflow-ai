@@ -38,9 +38,13 @@ function Navbar() {
     localStorage.setItem("userRole", newRole);
     localStorage.setItem("userName", `${newRole} Demo`);
     if (newRole === "Patient") {
-      navigate("/book-appointment");
+      navigate("/patient-dashboard");
     } else if (newRole === "Doctor") {
       navigate("/doctor-dashboard");
+    } else if (newRole === "Pharmacist") {
+      navigate("/pharmacist-dashboard");
+    } else if (newRole === "Clinic Owner") {
+      navigate("/clinic-owner-dashboard");
     } else {
       navigate("/admin-dashboard");
     }
@@ -70,6 +74,8 @@ function Navbar() {
     if (!token) return "/login";
     if (role === "Patient") return "/patient-dashboard";
     if (role === "Doctor") return "/doctor-dashboard";
+    if (role === "Pharmacist") return "/pharmacist-dashboard";
+    if (role === "Clinic Owner") return "/clinic-owner-dashboard";
     return "/admin-dashboard";
   };
 
@@ -133,6 +139,8 @@ function Navbar() {
                   <option value="Patient">Patient</option>
                   <option value="Doctor">Doctor</option>
                   <option value="Hospital Admin">Admin</option>
+                  <option value="Pharmacist">Pharmacist</option>
+                  <option value="Clinic Owner">Clinic Owner</option>
                 </select>
               </div>
               <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600" title={`${userName} (${role})`}>

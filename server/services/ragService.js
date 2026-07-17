@@ -1,0 +1,153 @@
+const { supabaseAdmin } = require("../config/supabase");
+const OpenAI = require("openai");
+
+// Generate embedding for text (uses OpenAI's text-embedding-3-small, fallbacks to zero-vectors)
+const generateEmbedding = async (text) => {
+  if (!text) return null;
+  
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const response = await openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: text.replace(/\n/g, " "),
+      });
+      return response.data[0].embedding;
+    } catch (err) {
+      console.error("Error generating OpenAI embedding, using fallback:", err.message);
+    }
+  }
+  
+  // 1536-dimension float array for pgvector compatibility
+  return Array(1536).fill(0.0);
+};
+
+// Vector similarity search inside Supabase database via the custom RPC match_documents
+const vectorSearch = async ({ embedding, role, category = null, limit = 5 }) => {
+  try {
+    const { data, error } = await supabaseAdmin.rpc("match_documents", {
+      query_embedding: embedding,
+      match_threshold: 0.1, // low threshold for testing
+      match_count: limit,
+      filter_category: category,
+      filter_role_access: role
+    });
+
+    if (error) {
+      console.error("RPC match_documents error:", error.message);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error("vectorSearch exception:", err.message);
+    return [];
+  }
+};
+
+// Fetch real-time patient clinical records directly from SQL tables
+const getPatientLiveContext = async (patientId) => {
+  if (!patientId) return null;
+  
+  try {
+    // 1. Vitals & Medical record summary
+    const { data: record } = await supabaseAdmin
+      .from("patient_medical_records")
+      .select("*")
+      .eq("patient_id", patientId)
+      .maybeSingle();
+
+    // 2. Active prescriptions
+    const { data: prescriptions } = await supabaseAdmin
+      .from("prescriptions")
+      .select("*")
+      .eq("patient_id", patientId)
+      .order("prescribed_at", { ascending: false });
+
+    // 3. Appointments
+    const { data: appointments } = await supabaseAdmin
+      .from("appointments")
+      .select("*, doctors(full_name)")
+      .eq("patient_id", patientId)
+      .order("appointment_date", { ascending: false })
+      .limit(3);
+
+    // 4. Live Queue Status
+    const { data: queue } = await supabaseAdmin
+      .from("queue")
+      .select("*, doctors(full_name)")
+      .eq("patient_id", patientId)
+      .in("queue_status", ["Waiting", "On The Way", "Arriving", "Checked In", "In Consultation"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return {
+      record: record || { medical_conditions: [], completed_visits: 0 },
+      prescriptions: prescriptions || [],
+      appointments: appointments || [],
+      queue: queue || null
+    };
+  } catch (err) {
+    console.error("Failed to retrieve live patient context:", err.message);
+    return null;
+  }
+};
+
+// Hybrid search connecting vector chunks and live database parameters
+const performHybridSearch = async ({ query, patientId = null, role = "Patient", category = null, limit = 5 }) => {
+  // 1. Generate Query Vector
+  const queryEmbedding = await generateEmbedding(query);
+  
+  // 2. Fetch semantic matches from pgvector knowledge_documents
+  let vectorResults = [];
+  if (queryEmbedding) {
+    vectorResults = await vectorSearch({ embedding: queryEmbedding, role, category, limit });
+  }
+  
+  // 3. Retrieve live patient record context if a patient context is provided
+  let patientLiveContext = null;
+  if (patientId) {
+    patientLiveContext = await getPatientLiveContext(patientId);
+  }
+
+  // 4. Compute Confidence Score & compile findings
+  let totalScore = 0.85; // baseline confidence
+  if (vectorResults.length > 0) {
+    // Average similarity score of matching chunks
+    const sum = vectorResults.reduce((acc, doc) => acc + (doc.similarity || 0), 0);
+    totalScore = sum / vectorResults.length;
+  }
+  
+  // Force score range [0.0 - 1.0]
+  const confidenceScore = Math.min(1.0, Math.max(0.2, parseFloat(totalScore.toFixed(2))));
+
+  // 5. Build citations list
+  const citations = vectorResults.map(doc => ({
+    title: doc.title,
+    category: doc.category,
+    confidence: doc.similarity ? parseFloat(doc.similarity.toFixed(2)) : 0.8
+  }));
+
+  // Add default citations for live database sources if used
+  if (patientLiveContext) {
+    citations.push({
+      title: "Active Patient Profile & EHR (Live Database)",
+      category: "Patient Record",
+      confidence: 1.0
+    });
+  }
+
+  return {
+    query,
+    vectorResults,
+    patientLiveContext,
+    confidenceScore,
+    citations
+  };
+};
+
+module.exports = {
+  generateEmbedding,
+  performHybridSearch,
+  getPatientLiveContext
+};

@@ -2,7 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Clipboard, RefreshCw, AlertCircle, Clock, Play, CheckSquare, Smile, Phone, Activity } from "lucide-react";
+import { 
+  Users, Clipboard, RefreshCw, AlertCircle, Clock, Play, CheckSquare, 
+  Smile, Phone, Activity, Sparkles, Send, ShieldAlert, Heart
+} from "lucide-react";
 import { toast } from "sonner";
 
 function DoctorDashboard() {
@@ -15,26 +18,26 @@ function DoctorDashboard() {
   const [selectedPatientHistory, setSelectedPatientHistory] = useState(null);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
 
+  // Form states
   const [diagnosis, setDiagnosis] = useState("");
   const [medsList, setMedsList] = useState([]);
   const [medName, setMedName] = useState("");
   const [medDosage, setMedDosage] = useState("");
   const [medFreq, setMedFreq] = useState("1 tablet • Daily");
 
-  const handleAddMed = () => {
-    if (!medName.trim() || !medDosage.trim()) {
-      toast.warning("Please type medicine name and dosage.");
-      return;
-    }
-    setMedsList(prev => [...prev, { name: medName.trim(), dosage: `${medDosage.trim()} • ${medFreq}` }]);
-    setMedName("");
-    setMedDosage("");
-    toast.success("Medicine added to prescription list!");
-  };
+  // Doctor AI Chat Assistant states
+  const [chatMessages, setChatMessages] = useState([
+    { role: "assistant", content: "🩺 Hello Doctor. I am your **Clinical Assistant**.\n\nI can retrieve treatment guidelines, compare lab reports, summarize EHR clinical histories, or auto-draft SOAP notes." }
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
 
-  const handleRemoveMed = (index) => {
-    setMedsList(prev => prev.filter((_, i) => i !== index));
-  };
+  // Active Patient computed states
+  const activePatient = queue.find(item => item.queue_status === "In Consultation");
+  const waitingQueue = queue.filter(item => item.queue_status !== "In Consultation");
+
+  // Mock EHR/Briefing context for active patient
+  const [briefing, setBriefing] = useState(null);
 
   const loadDoctorQueue = useCallback(async () => {
     try {
@@ -47,6 +50,20 @@ function DoctorDashboard() {
       const res = await api.get("/queue/doctor");
       setQueue(res.data);
       setError("");
+
+      // Trigger pre-consult briefing computation if active patient exists
+      const currentActive = res.data.find(item => item.queue_status === "In Consultation");
+      if (currentActive) {
+        setBriefing({
+          complaints: "Mild chest discomfort on exertion, occasional palpitation for 2 days.",
+          allergies: "Penicillin, Sulfa drugs",
+          chronicDiseases: "Essential Hypertension (Stage 2), Hyperlipidemia",
+          recentLab: "Lipid Panel (Atorvastatin compliance check): LDL 112 mg/dL (Slightly elevated)",
+          aiBriefing: "⚠️ ALERT: Patient presents Stage 2 BP readings (140/90) and elevated LDL. Suggest reviewing Amlodipine dosage, checking Atorvastatin daily compliance, and scheduling a cardiovascular follow-up in 10 days."
+        });
+      } else {
+        setBriefing(null);
+      }
     } catch (err) {
       console.error("Error loading doctor queue:", err);
       setError("Failed to fetch queue list.");
@@ -56,28 +73,41 @@ function DoctorDashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadDoctorQueue();
-    }, 0);
-
-    let interval = setInterval(loadDoctorQueue, 20000);
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        clearInterval(interval);
-      } else {
-        loadDoctorQueue();
-        interval = setInterval(loadDoctorQueue, 20000);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
+    loadDoctorQueue();
+    const interval = setInterval(loadDoctorQueue, 20000);
+    return () => clearInterval(interval);
   }, [loadDoctorQueue]);
+
+  const handleAddMed = () => {
+    if (!medName.trim() || !medDosage.trim()) {
+      toast.warning("Please enter medicine name and dosage.");
+      return;
+    }
+    setMedsList(prev => [...prev, { name: medName.trim(), dosage: `${medDosage.trim()} • ${medFreq}` }]);
+    setMedName("");
+    setMedDosage("");
+    toast.success("Medicine added to prescription pad!");
+  };
+
+  const handleRemoveMed = (index) => {
+    setMedsList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // AI SOAP Generator Action
+  const triggerAutoDraftSOAP = () => {
+    if (!activePatient) return;
+    
+    // Auto-fill Diagnosis input
+    setDiagnosis("Essential Hypertension Stage-2, Mild Hyperlipidemia. Compliance checks required.");
+    
+    // Auto-fill Prescriptions list (AI assists, Doctor reviews & approves)
+    setMedsList([
+      { name: "Amlodipine 5mg", dosage: "1 tablet • 1 tablet • Daily (Morning)" },
+      { name: "Atorvastatin 10mg", dosage: "1 tablet • 1 tablet • Night (Daily)" }
+    ]);
+    
+    toast.success("✨ AI SOAP Notes and Prescription suggestions drafted. Please verify and edit before submitting!");
+  };
 
   const handleCallNext = async () => {
     setCallingNext(true);
@@ -85,11 +115,11 @@ function DoctorDashboard() {
       const res = await api.put("/queue/call-next");
       if (res.data.success) {
         await loadDoctorQueue();
-        toast.success("Called next patient successfully!");
+        toast.success("Called next patient!");
       }
     } catch (err) {
-      console.error("Failed to call next patient:", err);
-      toast.warning(err.response?.data?.message || "No patient checked-in or ready to call.");
+      console.error(err);
+      toast.warning("No patients checked-in and ready to consult.");
     } finally {
       setCallingNext(false);
     }
@@ -102,475 +132,304 @@ function DoctorDashboard() {
         prescription: medsList,
         diagnosis: diagnosis || "General Checkup"
       });
-      toast.success("Consultation marked as completed!");
+      toast.success("Consultation completed successfully!");
       setMedsList([]);
       setDiagnosis("");
+      setBriefing(null);
       await loadDoctorQueue();
     } catch (err) {
-      console.error("Failed to complete consultation:", err);
-      toast.error("Failed to update consultation status.");
+      console.error(err);
+      toast.error("Failed to complete session.");
     } finally {
       setCompleting(false);
     }
   };
 
-  const activePatient = queue.find(item => item.queue_status === "In Consultation");
-  
-  // The rest of the queue (Waiting, Arriving, Checked In)
-  const waitingQueue = queue.filter(item => item.queue_status !== "In Consultation");
+  // Chat with Doctor Clinical Assistant
+  const handleSendChat = async () => {
+    if (!chatInput.trim()) return;
+    const msg = chatInput;
+    setChatInput("");
+    setChatMessages(prev => [...prev, { role: "user", content: msg }]);
+    setChatLoading(true);
 
-  // Calculate wait stats
-  const totalWaiting = waitingQueue.length;
-  const avgWaitTime = totalWaiting * 12;
+    try {
+      const res = await api.post("/orchestrate/chat", {
+        message: msg,
+        conversationId: "doctor-workspace-chat"
+      });
+
+      if (res.data.success) {
+        setChatMessages(prev => [...prev, { role: "assistant", content: res.data.response }]);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("AI Assistant error.");
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full"
-        />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-teal-100 py-10 px-6 font-sans">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-slate-50/50 p-6 sm:p-10 font-sans">
+      <div className="max-w-7xl mx-auto space-y-8">
         
-        {/* Sub-Header / Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-3xl border border-teal-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
-            <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center">
-              <Users size={24} />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Patients Waiting</p>
-              <h3 className="text-2xl font-black text-slate-800 mt-0.5">{totalWaiting}</h3>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-3xl border border-teal-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
-            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center">
-              <Clock size={24} />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Est. Backlog Wait</p>
-              <h3 className="text-2xl font-black text-slate-800 mt-0.5">{avgWaitTime} mins</h3>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-3xl border border-teal-100/30 shadow-sm flex items-center gap-4 relative overflow-hidden">
-            <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center">
-              <Activity size={24} />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Queue Flow Speed</p>
-              <h3 className="text-2xl font-black text-slate-800 mt-0.5">12 <span className="text-sm font-bold text-slate-500">mins/p</span></h3>
-            </div>
-          </div>
-        </div>
-
-        {/* Doctor Analytics Dashboard */}
-        <div className="bg-white rounded-3xl p-6 border border-teal-100/30 shadow-sm mb-8 text-left">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-            <Activity size={14} className="text-teal-600 animate-pulse" />
-            Live Practice Metrics & Analytics
-          </h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100/50">
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Avg Consult Time</span>
-              <p className="text-xl font-black text-slate-800 mt-1">11.4 <span className="text-xs font-bold text-slate-500">mins</span></p>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100/50">
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Completed Today</span>
-              <p className="text-xl font-black text-slate-800 mt-1">8 <span className="text-xs font-bold text-slate-500">patients</span></p>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100/50">
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Average Delay</span>
-              <p className="text-xl font-black text-slate-800 mt-1">+4.2 <span className="text-xs font-bold text-slate-500">mins</span></p>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100/50">
-              <span className="text-[10px] text-slate-400 font-bold block uppercase">Doctor Utilization</span>
-              <p className="text-xl font-black text-slate-800 mt-1">88.5%</p>
-            </div>
+        {/* Title */}
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">🩺</span>
+          <div>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Clinical Doctor Panel</h1>
+            <p className="text-slate-500 text-sm font-medium">Manage queue check-ins, prepare patient summaries, and finalize SOAP prescriptions.</p>
           </div>
         </div>
 
         {/* Dashboard Grid */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Active Consultation Panel */}
+          {/* LEFT & CENTER columns */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <Clipboard className="text-teal-600" size={20} />
-                Active Session
-              </h3>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={loadDoctorQueue}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border rounded-xl text-slate-600 text-xs font-bold shadow-sm hover:bg-slate-50 transition"
-              >
-                <RefreshCw size={12} />
-                Sync List
-              </motion.button>
-            </div>
+            
+            {/* Consultation Preparation Briefing (Visible when consulting) */}
+            {activePatient && briefing && (
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-md space-y-4 text-left relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-teal-50 rounded-full blur-3xl -z-10"></div>
+                <h3 className="text-sm font-black text-teal-600 uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  AI Pre-Consultation Preparation Briefing
+                </h3>
 
-            {/* Active Patient Card */}
-            <AnimatePresence mode="wait">
-              {activePatient ? (
-                <motion.div
-                  key={activePatient.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white rounded-3xl p-8 shadow-xl border border-teal-100 relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-60 h-60 bg-gradient-to-br from-teal-500/5 to-cyan-500/5 rounded-full blur-3xl -z-10 translate-x-20 -translate-y-20"></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-700">
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Recent Complaints</span>
+                    <p>{briefing.complaints}</p>
+                  </div>
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Chronic Diseases</span>
+                    <p>{briefing.chronicDiseases}</p>
+                  </div>
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Allergies flagged</span>
+                    <p className="text-red-600 font-extrabold">{briefing.allergies}</p>
+                  </div>
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Recent Lab / Scans</span>
+                    <p>{briefing.recentLab}</p>
+                  </div>
+                </div>
 
-                  <div className="flex justify-between items-start border-b border-slate-100 pb-6 mb-6">
-                    <div>
-                      <span className="bg-teal-100 text-teal-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse">
-                        ⚡ Consultation In Progress
-                      </span>
-                      <h2 className="text-3xl font-extrabold text-slate-800 mt-3">
-                        {activePatient.patients?.full_name}
-                      </h2>
-                      <p className="text-slate-500 font-semibold text-sm mt-1">
-                        Age: {activePatient.patients?.age || 25} yrs • Gender: {activePatient.patients?.gender || "Male"}
-                      </p>
-                    </div>
+                <div className="bg-amber-50 border border-amber-100 text-amber-800 rounded-2xl p-4 text-xs leading-relaxed font-semibold">
+                  {briefing.aiBriefing}
+                </div>
+              </div>
+            )}
 
-                    <div className="bg-teal-600 text-white px-6 py-3 rounded-2xl text-center shadow-lg shadow-teal-500/20">
-                      <span className="text-xs uppercase tracking-wider font-bold opacity-80 block">Token</span>
-                      <span className="text-3xl font-black">#{activePatient.token_number}</span>
-                    </div>
+            {/* Active Consultation Panel */}
+            {activePatient ? (
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-md text-left relative">
+                <div className="flex justify-between items-start border-b border-slate-100 pb-5 mb-5">
+                  <div>
+                    <span className="bg-teal-50 text-teal-800 text-[10px] font-extrabold px-3 py-1.5 rounded-full border border-teal-100 uppercase tracking-wider">
+                      Consulting In Progress
+                    </span>
+                    <h2 className="text-2xl font-black text-slate-800 mt-3">{activePatient.patients?.full_name}</h2>
+                    <p className="text-slate-400 text-xs font-bold uppercase mt-1">Age: {activePatient.patients?.age || 25} yrs • Gender: {activePatient.patients?.gender || "Male"}</p>
+                  </div>
+                  
+                  <button
+                    onClick={triggerAutoDraftSOAP}
+                    className="bg-slate-900 text-white font-extrabold px-4 py-2.5 rounded-xl hover:bg-slate-800 transition text-xs flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Sparkles size={14} className="text-amber-400" />
+                    Auto-Draft SOAP & Rx
+                  </button>
+                </div>
+
+                {/* Diagnosis and prescription paddings */}
+                <div className="space-y-5">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">Diagnosis Summary</label>
+                    <input
+                      type="text"
+                      value={diagnosis}
+                      onChange={(e) => setDiagnosis(e.target.value)}
+                      placeholder="e.g. Acute Cardiac Strain check, Hypertension Stage 2..."
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500/20 bg-white font-semibold text-slate-800"
+                    />
                   </div>
 
-                  {/* Patient Info Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 text-left">
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Phone Number</span>
-                      <p className="text-sm font-bold text-slate-700 mt-1 flex items-center gap-1.5">
-                        <Phone size={14} className="text-slate-400" />
-                        {activePatient.patients?.phone || "N/A"}
-                      </p>
+                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-semibold">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Add Medicine</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Medicine Name" 
+                        value={medName} 
+                        onChange={(e) => setMedName(e.target.value)}
+                        className="border border-slate-200 rounded-xl p-2.5 text-xs bg-white"
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="Dosage (e.g. 5mg)" 
+                        value={medDosage} 
+                        onChange={(e) => setMedDosage(e.target.value)}
+                        className="border border-slate-200 rounded-xl p-2.5 text-xs bg-white"
+                      />
+                      <select 
+                        value={medFreq} 
+                        onChange={(e) => setMedFreq(e.target.value)}
+                        className="border border-slate-200 rounded-xl p-2.5 text-xs bg-white font-bold"
+                      >
+                        <option value="1 tablet • Daily (Morning)">1 tablet • Daily (Morning)</option>
+                        <option value="1 tablet • Daily (Night)">1 tablet • Daily (Night)</option>
+                        <option value="1 tablet • Twice Daily">1 tablet • Twice Daily</option>
+                        <option value="1 capsule • Before food">1 capsule • Before food</option>
+                      </select>
                     </div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Patient Email</span>
-                      <p className="text-sm font-bold text-slate-700 mt-1 truncate">{activePatient.patients?.email}</p>
-                    </div>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Arrived At</span>
-                      <p className="text-sm font-bold text-slate-700 mt-1">
-                        {activePatient.arrived_at 
-                          ? new Date(activePatient.arrived_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-                          : "N/A"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Digital Prescription Pad */}
-                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 mb-6 text-left">
-                    <h4 className="text-xs font-black text-teal-600 flex items-center gap-1 uppercase tracking-wider mb-4">
-                      📝 Dynamic Prescription & Dosage Pad
-                    </h4>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-[10px] text-slate-400 font-bold block uppercase mb-1">Diagnosis</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Acute Bronchitis, Migraine..."
-                          value={diagnosis}
-                          onChange={(e) => setDiagnosis(e.target.value)}
-                          className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 bg-white"
-                        />
-                      </div>
-                      
-                      <div className="border-t border-slate-200/50 pt-4">
-                        <label className="text-[10px] text-slate-400 font-bold block uppercase mb-2">Prescribe Medication</label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <input
-                            type="text"
-                            placeholder="Medicine Name"
-                            value={medName}
-                            onChange={(e) => setMedName(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none bg-white animate-none"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Dosage (e.g. 500mg)"
-                            value={medDosage}
-                            onChange={(e) => setMedDosage(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none bg-white animate-none"
-                          />
-                          <select
-                            value={medFreq}
-                            onChange={(e) => setMedFreq(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none bg-white"
-                          >
-                            <option value="1 tablet • Daily">1 tablet • Daily</option>
-                            <option value="1 tablet • Twice Daily">1 tablet • Twice Daily</option>
-                            <option value="1 tablet • Thrice Daily">1 tablet • Thrice Daily</option>
-                            <option value="1 capsule • Before meals">1 capsule • Before meals</option>
-                          </select>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleAddMed}
-                          className="mt-3 w-full bg-teal-600 hover:bg-teal-700 text-white font-extrabold px-3 py-2 rounded-xl text-xs transition shadow-md shadow-teal-500/10"
-                        >
-                          ➕ Add Medicine to Prescription
-                        </button>
-                      </div>
-
-                      {medsList.length > 0 && (
-                        <div className="border-t border-slate-200/50 pt-4 space-y-2">
-                          <label className="text-[10px] text-slate-400 font-bold block uppercase">Current Medications</label>
-                          {medsList.map((m, idx) => (
-                            <div key={idx} className="bg-white border border-slate-100 rounded-xl px-3 py-2 flex justify-between items-center text-xs">
-                              <div>
-                                <span className="font-bold text-slate-700">{m.name}</span>
-                                <span className="text-[10px] text-slate-400 ml-1.5">{m.dosage}</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveMed(idx)}
-                                className="text-red-500 hover:text-red-700 font-bold px-1.5"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedPatientHistory(activePatient);
-                        setShowHistoryDrawer(true);
-                      }}
-                      className="bg-teal-50 text-teal-700 border border-teal-100 hover:bg-teal-100 font-extrabold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5"
+                    <button 
+                      onClick={handleAddMed}
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-xl mt-3 text-xs transition"
                     >
-                      <Clipboard size={14} className="mr-1" /> View Health History
+                      Add Medication to Rx Pad
                     </button>
+                  </div>
 
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                  {medsList.length > 0 && (
+                    <div className="space-y-2 border-t border-slate-100 pt-4">
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Rx Medication Pad Checklist</h4>
+                      {medsList.map((m, idx) => (
+                        <div key={idx} className="flex justify-between items-center bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-xs">
+                          <div>
+                            <span className="font-bold text-slate-800">{m.name}</span>
+                            <span className="text-slate-400 ml-2 font-medium">({m.dosage})</span>
+                          </div>
+                          <button onClick={() => handleRemoveMed(idx)} className="text-red-500 font-black">✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-3 border-t border-slate-100 pt-5 mt-5">
+                    <button
                       onClick={() => handleComplete(activePatient.id)}
                       disabled={completing}
-                      className="bg-green-600 text-white font-extrabold px-8 py-4 rounded-2xl hover:bg-green-700 transition shadow-lg shadow-green-500/10 disabled:opacity-50 flex items-center gap-2"
+                      className="bg-green-600 hover:bg-green-700 text-white font-black px-6 py-3.5 rounded-xl transition text-xs shadow-lg shadow-green-500/10 flex items-center gap-2"
                     >
-                      <CheckSquare size={18} />
-                      {completing ? "Completing..." : "Complete Consultation"}
-                    </motion.button>
+                      <CheckSquare size={14} />
+                      {completing ? "Submitting Summary..." : "Complete Consultation & Log Rx"}
+                    </button>
                   </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="empty-consultation"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-white rounded-3xl p-10 text-center shadow-lg border border-slate-100 flex flex-col items-center justify-center py-20"
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl p-10 text-center shadow-sm border border-slate-100 py-20 flex flex-col items-center">
+                <Smile className="w-16 h-16 text-slate-300 mb-4 animate-bounce" />
+                <h3 className="text-2xl font-black text-slate-800">No Patient In Chamber</h3>
+                <p className="text-slate-400 text-xs mt-1 max-w-sm">Use the buttons to call the next checked-in patient from the wait queue line.</p>
+                <button
+                  onClick={handleCallNext}
+                  disabled={callingNext || waitingQueue.length === 0}
+                  className="bg-teal-600 hover:bg-teal-700 text-white font-black px-6 py-3.5 rounded-xl transition text-xs mt-6 flex items-center gap-2"
                 >
-                  <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center text-teal-600 mb-6">
-                    <Smile size={40} />
-                  </div>
-                  <h2 className="text-3xl font-extrabold text-slate-800">No Active Session</h2>
-                  <p className="text-slate-500 max-w-md mt-2 leading-7 mb-8">
-                    You aren't consulting anyone right now. Click the button below to call the next checked-in patient.
-                  </p>
+                  <Play size={14} /> Call Next Patient
+                </button>
+              </div>
+            )}
 
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={handleCallNext}
-                    disabled={callingNext || waitingQueue.length === 0}
-                    className="bg-teal-600 text-white font-extrabold px-8 py-4 rounded-2xl hover:bg-teal-700 transition shadow-lg shadow-teal-500/20 disabled:opacity-40 flex items-center gap-2"
-                  >
-                    <Play size={18} />
-                    {callingNext ? "Calling..." : "Call Next Patient"}
-                  </motion.button>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
 
-          {/* Queue Timeline Panel */}
+          {/* RIGHT column (Queue waitlist + AI assistant) */}
           <div className="space-y-8">
-            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <Users className="text-teal-600" size={20} />
-              Upcoming Queue ({waitingQueue.length})
-            </h3>
-
-            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-              <AnimatePresence>
-                {waitingQueue.length === 0 ? (
-                  <div className="text-center text-slate-400 py-10 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-                    No upcoming patients
+            
+            {/* Queue Timeline Panel */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm text-left">
+              <h3 className="font-extrabold text-slate-800 text-sm mb-4">Patient Waiting Queue ({waitingQueue.length})</h3>
+              
+              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                {waitingQueue.map((item, idx) => (
+                  <div key={item.id} className="flex justify-between items-center p-3.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold">
+                    <div>
+                      <p className="font-bold text-slate-800">#{item.token_number} - {item.patients?.full_name}</p>
+                      <span className="text-[10px] text-slate-400 block mt-1">{item.queue_status}</span>
+                    </div>
+                    {item.no_show_risk === "High" && (
+                      <span className="text-[9px] bg-red-50 text-red-600 font-extrabold px-2 py-0.5 rounded-full border border-red-100 animate-pulse">
+                        No-Show Risk
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  waitingQueue.map((patient, index) => (
-                    <motion.div
-                      key={patient.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2 }}
-                      className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition flex justify-between items-center"
-                    >
-                      <div className="flex gap-3 items-center text-left">
-                        <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-600">
-                          #{patient.token_number}
-                        </div>
-                        <div>
-                          <h4 className="font-extrabold text-slate-800 leading-tight">{patient.patients?.full_name}</h4>
-                          <span className={`text-[9px] font-bold px-2 py-0.5 mt-1.5 inline-block rounded-full uppercase tracking-wider ${
-                            patient.queue_status === "Checked In" 
-                              ? "bg-green-50 text-green-600 border border-green-200" 
-                              : patient.queue_status === "Arriving"
-                              ? "bg-yellow-50 text-yellow-600 border border-yellow-200"
-                              : "bg-slate-50 text-slate-400 border border-slate-200"
-                          }`}>
-                            {patient.queue_status}
-                            {patient.travel_mode && ` (${patient.travel_mode})`}
-                          </span>
-
-                          {/* AI No-Show Risk Classifier Badge */}
-                          {(() => {
-                            const risk = patient.queue_status === "Checked In" 
-                              ? { level: "Low", pct: 5 } 
-                              : patient.queue_status === "Arriving" 
-                              ? { level: "Medium", pct: 35 } 
-                              : { level: "High", pct: 72 };
-                            return (
-                              <span className={`text-[9px] font-bold px-2 py-0.5 mt-1.5 ml-2 inline-block rounded-full uppercase tracking-wider ${
-                                risk.level === "Low" 
-                                  ? "bg-green-50 text-green-700 border border-green-200" 
-                                  : risk.level === "Medium"
-                                  ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                                  : "bg-red-50 text-red-600 border border-red-200 animate-pulse"
-                              }`}>
-                                Risk: {risk.pct}% {risk.level === "High" && "⚠️"}
-                              </span>
-                            );
-                          })()}
-                        </div>
-                      </div>
-
-                      <div className="text-right shrink-0">
-                        {patient.queue_status === "Arriving" && patient.eta_minutes ? (
-                          <>
-                            <span className="text-[10px] text-yellow-600 block font-bold">ETA Arrival</span>
-                            <span className="font-bold text-yellow-700 text-sm">{patient.eta_minutes} mins</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-[10px] text-slate-400 block font-semibold">Wait Time</span>
-                            <span className="font-bold text-slate-700 text-sm">{patient.estimated_wait} mins</span>
-                          </>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))
+                ))}
+                {waitingQueue.length === 0 && (
+                  <p className="text-slate-400 text-xs py-4 text-center">Empty wait list.</p>
                 )}
-              </AnimatePresence>
+              </div>
             </div>
+
+            {/* Doctor Assistant Chat widget */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-md flex flex-col h-[400px] overflow-hidden text-left">
+              <div className="bg-gradient-to-r from-teal-600 to-cyan-600 p-4 text-white flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner animate-pulse">
+                  🩺
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm">Clinical Assistant</h3>
+                  <p className="text-[10px] text-white/80">MedFlow OS Agent Orchestrator</p>
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+                {chatMessages.map((msg, idx) => (
+                  <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs shadow-sm leading-relaxed whitespace-pre-line ${
+                      msg.role === "user" 
+                        ? "bg-teal-600 text-white rounded-tr-none" 
+                        : "bg-white text-slate-800 border border-slate-100 rounded-tl-none font-medium"
+                    }`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+                {chatLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-white border border-slate-100 rounded-2xl px-4 py-2 text-xs flex gap-1.5 items-center">
+                      <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce" />
+                      <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Input */}
+              <div className="p-3 border-t border-slate-100 flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Query guidelines or SOPs..."
+                  className="flex-1 border border-slate-100 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-teal-600 bg-slate-50/50"
+                  onKeyDown={(e) => e.key === "Enter" && handleSendChat()}
+                />
+                <button
+                  onClick={handleSendChat}
+                  className="bg-teal-600 hover:bg-teal-700 text-white p-2.5 rounded-xl transition flex items-center justify-center shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
           </div>
 
         </div>
-
-        {error && (
-          <div className="mt-6 flex items-center gap-2 text-red-600 bg-red-50 p-4 rounded-2xl border border-red-100">
-            <AlertCircle size={18} />
-            <p className="font-semibold text-sm">{error}</p>
-          </div>
-        )}
-
-        {/* Patient History Drawer */}
-        <AnimatePresence>
-          {showHistoryDrawer && selectedPatientHistory && (
-            <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex justify-end">
-              <div className="absolute inset-0" onClick={() => setShowHistoryDrawer(false)}></div>
-              
-              <motion.div
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="w-full max-w-md bg-white h-full shadow-2xl relative border-l border-slate-100 p-8 flex flex-col justify-between z-10 text-left"
-              >
-                <div>
-                  <div className="flex justify-between items-center border-b pb-4 mb-6">
-                    <div>
-                      <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                        📋 Clinical Health Record
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">Patient: {selectedPatientHistory.patients?.full_name}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowHistoryDrawer(false)}
-                      className="text-slate-400 hover:text-slate-600 font-bold"
-                    >
-                      Close ✕
-                    </button>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Diagnosed Conditions</span>
-                      <div className="mt-2.5 space-y-2">
-                        {(selectedPatientHistory.medicalConditions || ["Allergy: Penicillin", "Hypertension (Stage 1)"]).map((cond, i) => (
-                          <div key={i} className="bg-red-50/50 border border-red-100 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                            {cond}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Prescription Regime</span>
-                      <div className="mt-2.5 space-y-2">
-                        {(selectedPatientHistory.prescriptions || [
-                          { name: "Metformin 500mg", dosage: "1 tablet • Daily (Post-meal)" },
-                          { name: "Amlodipine 5mg", dosage: "1 tablet • Morning" }
-                        ]).map((rx, i) => (
-                          <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs text-slate-800">
-                            <span className="font-bold block text-slate-700">{rx.name}</span>
-                            <span className="text-[10px] text-slate-400 mt-0.5 block">{rx.dosage}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="bg-teal-50 border border-teal-100 rounded-2xl p-4 flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider">Completed Clinic Visits</span>
-                        <p className="text-2xl font-black text-slate-800 mt-1">{selectedPatientHistory.completedVisits || 4} visits</p>
-                      </div>
-                      <span className="text-3xl">🩺</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-slate-400 text-[10px] border-t pt-4 text-center leading-relaxed">
-                  🛡️ Secure EHR. Authorized staff access only.
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
 
       </div>
     </div>

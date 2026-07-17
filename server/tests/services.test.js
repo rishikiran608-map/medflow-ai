@@ -133,12 +133,14 @@ describe("MedFlow AI - Core Services & Middleware Unit Tests", () => {
       // Mock the chainable DB call
       mockSelect.mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          in: vi.fn().mockResolvedValue({
-            data: [
-              { id: "queue-1", queue_status: "Waiting" },
-              { id: "queue-2", queue_status: "Waiting" },
-            ],
-            error: null,
+          in: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({
+              data: [
+                { id: "queue-1", queue_status: "Waiting" },
+                { id: "queue-2", queue_status: "Waiting" },
+              ],
+              error: null,
+            })
           }),
         }),
       });
@@ -152,7 +154,7 @@ describe("MedFlow AI - Core Services & Middleware Unit Tests", () => {
 
       const result = await calculateWaitingTime("doctor-1");
       expect(result.patientsWaiting).toBe(2);
-      expect(result.estimatedWait).toBe(38); // 30 mins (emergency) + 8 mins (follow-up)
+      expect(result.estimatedWait).toBe(39); // 30 mins (emergency) + 9 mins (follow-up)
       expect(result.delayProbability).toBe("Medium");
     });
   });

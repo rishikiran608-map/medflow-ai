@@ -13,6 +13,7 @@ const queueRoutes = require("./routes/queueRoutes");
 const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const orchestrationRoutes = require("./routes/orchestrationRoutes");
 const errorHandler = require("./middleware/errorHandler");
 
 
@@ -23,7 +24,7 @@ const app = express();
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL || "*", credentials: true }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200, message: { success: false, message: "Too many requests, please try again later." } }));
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 app.use("/api/patients", patientRoutes);
 app.use("/api/doctors", doctorRoutes);
@@ -32,6 +33,7 @@ app.use("/api/queue", queueRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/orchestrate", orchestrationRoutes);
 
 app.get("/", (req, res) => {
   res.json({

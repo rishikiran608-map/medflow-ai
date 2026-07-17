@@ -26,9 +26,11 @@ function LoginPage() {
 
   const handleQuickFill = (roleName) => {
     const credentials = {
-      admin:   { email: "admin@medflow.com",   password: "admin123" },
-      doctor:  { email: "doctor@medflow.com",  password: "doctor123" },
-      patient: { email: "patient@medflow.com", password: "patient123" },
+      admin:      { email: "admin@medflow.com",      password: "admin123" },
+      doctor:     { email: "doctor@medflow.com",     password: "doctor123" },
+      patient:    { email: "patient@medflow.com",    password: "patient123" },
+      pharmacist: { email: "pharmacist@medflow.com", password: "pharmacist123" },
+      owner:      { email: "owner@medflow.com",      password: "owner123" }
     };
     const cred = credentials[roleName];
     if (cred) setFormData((prev) => ({ ...prev, ...cred }));
@@ -75,8 +77,10 @@ function LoginPage() {
     const role = data.user?.user_metadata?.role || formData.role;
     localStorage.setItem("userRole", role);
 
-    if (role === "Patient") navigate("/book-appointment");
+    if (role === "Patient") navigate("/patient-dashboard");
     else if (role === "Doctor") navigate("/doctor-dashboard");
+    else if (role === "Pharmacist") navigate("/pharmacist-dashboard");
+    else if (role === "Clinic Owner") navigate("/clinic-owner-dashboard");
     else navigate("/admin-dashboard");
   };
 
@@ -140,11 +144,13 @@ function LoginPage() {
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2.5">
                   ⚡ Hackathon Demo Accounts
                 </span>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
-                    { key: "admin",   label: "Admin",   cls: "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100" },
-                    { key: "doctor",  label: "Doctor",  cls: "bg-green-50 border-green-100 text-green-700 hover:bg-green-100" },
-                    { key: "patient", label: "Patient", cls: "bg-purple-50 border-purple-100 text-purple-700 hover:bg-purple-100" },
+                    { key: "admin",      label: "Admin",      cls: "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100" },
+                    { key: "doctor",     label: "Doctor",     cls: "bg-green-50 border-green-100 text-green-700 hover:bg-green-100" },
+                    { key: "patient",    label: "Patient",    cls: "bg-purple-50 border-purple-100 text-purple-700 hover:bg-purple-100" },
+                    { key: "pharmacist", label: "Pharma",     cls: "bg-amber-50 border-amber-100 text-amber-700 hover:bg-amber-100" },
+                    { key: "owner",      label: "Owner",      cls: "bg-rose-50 border-rose-100 text-rose-700 hover:bg-rose-100" }
                   ].map(({ key, label, cls }) => (
                     <button
                       key={key}
