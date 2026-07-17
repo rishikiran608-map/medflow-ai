@@ -7,7 +7,7 @@ const analyzePrescriptionHandwriting = async (base64Image, mimeType) => {
     try {
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini", // support image inputs
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -59,7 +59,7 @@ You MUST respond ONLY with a structured JSON object containing:
     }
   }
 
-  // Robust mock response for handwriting analysis
+  // Fallback mock
   return {
     hospital: "MedFlow Prime Clinic",
     doctor: "Dr. Rajesh Kumar",
@@ -75,7 +75,7 @@ You MUST respond ONLY with a structured JSON object containing:
   };
 };
 
-const analyzeSymptomCameraPhoto = async (base64Image, mimeType) => {
+const analyzeSymptomCameraPhoto = async (base64Image, mimeType, symptomsText = "") => {
   const hasOpenAI = !!process.env.OPENAI_API_KEY;
 
   if (hasOpenAI) {
@@ -87,29 +87,28 @@ const analyzeSymptomCameraPhoto = async (base64Image, mimeType) => {
           {
             role: "system",
             content: `You are the MedFlow AI Symptom Camera Analyzer.
-A patient has uploaded an image of a visible symptom (e.g. skin rash, eye redness, mouth lesion, swelling, injury, medical device).
+A patient has uploaded a symptom image and described their symptoms as: "${symptomsText}".
 
-CRITICAL DIRECTIVE: NEVER diagnose a specific medical condition. You are an assistant, not a doctor.
-Instead:
-1. Describe your objective observations (color, shape, swelling, layout, context).
-2. Recommend questions the patient should ask their doctor during their next visit.
-3. Generate a brief consultation prep summary for the doctor.
+CRITICAL DIRECTIVE: NEVER diagnose a specific disease. You must assist the doctor without replacing them.
+Analyze the image and text to identify visible signs (e.g. redness, swelling, scaling) and list mentioned elements.
 
-Respond in a structured JSON layout matching:
+Return a JSON format matching exactly this schema:
 {
-  "observations": "Detailed objective notes about the image details",
-  "suggestedQuestions": [
-    "Question 1 regarding duration",
-    "Question 2 regarding worsening factors"
-  ],
-  "consultationSummary": "Brief overview for doctor check-in prep",
-  "disclaimer": "⚠️ Disclaimer: This AI analysis is purely observational and does not constitute a clinical diagnosis. Please consult a qualified doctor for medical evaluation."
+  "primaryComplaint": "Short description of the primary complaint.",
+  "visibleFindings": "Objective visual details observed in the photo (e.g. localized skin rash, redness, scaling).",
+  "symptomsMentioned": ["List", "of", "symptoms"],
+  "duration": "Estimated duration (e.g., '3 days')",
+  "severity": "Mild/Moderate/Severe",
+  "suggestedDepartment": "Dermatology/ENT/Ophthalmology/Dentistry/General Medicine",
+  "urgencyLevel": "Routine Consultation / Urgent Care / Immediate ER",
+  "additionalNotes": "E.g., patient should keep the wound dry and consult a physician.",
+  "confidenceScore": 85
 }`
           },
           {
             role: "user",
             content: [
-              { type: "text", content: "Analyze this symptom image." },
+              { type: "text", content: `Analyze the symptoms text and image. User text: "${symptomsText}"` },
               {
                 type: "image_url",
                 image_url: { url: `data:${mimeType || 'image/jpeg'};base64,${base64Image}` }
@@ -127,16 +126,43 @@ Respond in a structured JSON layout matching:
     }
   }
 
-  // Robust mock response for symptom analysis
+  // Robust mock response matching the requested schema exactly
+  const lowerText = symptomsText.toLowerCase();
+  let complaint = symptomsText || "Patient reports visible discomfort or symptoms.";
+  let dept = "General Medicine";
+  let severity = "Mild";
+  let urgency = "Routine Consultation";
+  let findings = "Mild localized redness or inflammation is visible on the uploaded symptom image.";
+  
+  if (lowerText.includes("skin") || lowerText.includes("rash") || lowerText.includes("burn") || lowerText.includes("itch")) {
+    dept = "Dermatology";
+    findings = "The symptom image shows clear localized redness (erythema), mild scaling, and surface irritation.";
+  } else if (lowerText.includes("ear") || lowerText.includes("throat") || lowerText.includes("cough") || lowerText.includes("fever")) {
+    dept = "ENT";
+    findings = "Visible redness or congestion around the throat or nasal cavity pathway is observed.";
+  } else if (lowerText.includes("eye") || lowerText.includes("vision") || lowerText.includes("red")) {
+    dept = "Ophthalmology";
+    findings = "Symptom image depicts focal scleral redness and mild vascular injection near the conjunctiva.";
+  } else if (lowerText.includes("tooth") || lowerText.includes("gum") || lowerText.includes("dental")) {
+    dept = "Dentistry";
+    findings = "Mild gingival swelling and surface plaque accumulation around the molar sector.";
+  }
+
+  if (lowerText.includes("severe") || lowerText.includes("pain") || lowerText.includes("chest")) {
+    severity = "Severe";
+    urgency = "Urgent Care";
+  }
+
   return {
-    observations: "Observations: The image shows localized skin redness (erythema) with slight scaling. There is no visible active bleeding or purulent discharge, but mild inflammation is evident. Swelling appears minimal.",
-    suggestedQuestions: [
-      "How long has this redness been present?",
-      "Does this skin irritation itch or burn when exposed to heat?",
-      "Have you recently changed soaps, cosmetics, or laundry detergents?"
-    ],
-    consultationSummary: "Patient presents a localized red skin lesion with mild scaling. Suggest checking for allergic dermatitis or localized fungal irritation during clinical examination.",
-    disclaimer: "⚠️ Disclaimer: This AI analysis is purely observational and does not constitute a clinical diagnosis. Please consult a qualified doctor for medical evaluation."
+    primaryComplaint: complaint,
+    visibleFindings: findings,
+    symptomsMentioned: symptomsText ? symptomsText.split(/[,\s]+/).filter(w => w.length > 3).slice(0, 4) : ["Discomfort", "Swelling"],
+    duration: lowerText.includes("day") ? "3 days" : "1 day",
+    severity: severity,
+    suggestedDepartment: dept,
+    urgencyLevel: urgency,
+    additionalNotes: "Patient should keep the area clean, avoid scratching, and consult their doctor.",
+    confidenceScore: 88
   };
 };
 

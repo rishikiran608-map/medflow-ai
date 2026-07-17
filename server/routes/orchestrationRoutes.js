@@ -73,13 +73,13 @@ router.post("/vision/prescription", authMiddleware, async (req, res) => {
 
 // 3. Symptom Camera Analyzer
 router.post("/vision/symptom", authMiddleware, async (req, res) => {
-  const { base64Image, mimeType } = req.body;
+  const { base64Image, mimeType, symptomsText } = req.body;
   if (!base64Image) {
     return res.status(400).json({ success: false, message: "Image data is required" });
   }
 
   try {
-    const analysis = await analyzeSymptomCameraPhoto(base64Image, mimeType);
+    const analysis = await analyzeSymptomCameraPhoto(base64Image, mimeType, symptomsText);
     res.json({ success: true, analysis });
   } catch (err) {
     console.error("Symptom Vision route error:", err.message);

@@ -4,7 +4,8 @@ import api from "../api/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, Clipboard, RefreshCw, AlertCircle, Clock, Play, CheckSquare, 
-  Smile, Phone, Activity, Sparkles, Send, ShieldAlert, Heart
+  Smile, Phone, Activity, Sparkles, Send, ShieldAlert, Heart,
+  ScanLine, ShieldCheck, FlaskConical, Eye, Stethoscope
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -230,6 +231,110 @@ function DoctorDashboard() {
                 </div>
               </div>
             )}
+
+            {/* ─── Patient AI Symptom Summary (from BookAppointment) ─── */}
+            {activePatient && (() => {
+              let parsedSummary = null;
+              try {
+                // notes field stores JSON with aiSummary from BookAppointment
+                const notesRaw = activePatient.appointments?.notes || activePatient.notes || "{}";
+                const parsed = JSON.parse(notesRaw);
+                if (parsed?.aiSummary && parsed.aiSummary.primaryComplaint) {
+                  parsedSummary = parsed;
+                }
+              } catch (_) {}
+              if (!parsedSummary) return null;
+              const s = parsedSummary.aiSummary;
+              const severityColor = s.severity === "Severe" ? "text-red-600" : s.severity === "Moderate" ? "text-amber-600" : "text-green-600";
+              const urgentBg = s.urgencyLevel?.toLowerCase().includes("urgent") ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200";
+              return (
+                <div className="bg-white rounded-3xl border border-indigo-100 shadow-md overflow-hidden text-left">
+                  <div className="bg-gradient-to-r from-indigo-600 to-blue-500 px-6 py-3.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5 text-white">
+                      <ScanLine size={15} />
+                      <p className="font-black text-sm">Patient AI Symptom Summary</p>
+                      <span className="text-[9px] bg-white/20 px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Pre-Visit Report</span>
+                    </div>
+                    <div className="text-white/80 text-[10px] font-bold">
+                      Confidence: {s.confidenceScore || 85}%
+                    </div>
+                  </div>
+
+                  <div className="p-5 space-y-4">
+                    {/* Primary complaint */}
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Primary Complaint</p>
+                      <p className="text-sm font-semibold text-slate-700 leading-relaxed">{s.primaryComplaint}</p>
+                    </div>
+
+                    {/* Visible Findings */}
+                    {s.visibleFindings && (
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Visible Findings (AI Camera Analysis)</p>
+                        <p className="text-sm font-semibold text-slate-600 leading-relaxed">{s.visibleFindings}</p>
+                      </div>
+                    )}
+
+                    {/* Chips row */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Duration</p>
+                        <p className="text-xs font-extrabold text-slate-700">{s.duration || "—"}</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Severity</p>
+                        <p className={`text-xs font-extrabold ${severityColor}`}>{s.severity}</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Suggested Dept.</p>
+                        <p className="text-xs font-extrabold text-indigo-600">{s.suggestedDepartment}</p>
+                      </div>
+                      <div className={`border rounded-xl p-3 ${urgentBg}`}>
+                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Urgency</p>
+                        <p className="text-xs font-extrabold text-slate-700">{s.urgencyLevel}</p>
+                      </div>
+                    </div>
+
+                    {/* Symptoms list */}
+                    {(s.symptomsMentioned || []).length > 0 && (
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Symptoms Reported by Patient</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {s.symptomsMentioned.map((sym, i) => (
+                            <span key={i} className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-bold px-2.5 py-1 rounded-full">
+                              {sym}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* AI Notes */}
+                    {s.additionalNotes && (
+                      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-3.5 flex gap-2.5">
+                        <ShieldCheck size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[9px] font-black text-amber-800 uppercase mb-0.5">AI Notes for Doctor</p>
+                          <p className="text-xs text-amber-700 font-semibold leading-relaxed">{s.additionalNotes}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Original Patient Text */}
+                    {parsedSummary.symptomText && (
+                      <div className="border-t border-slate-100 pt-3.5">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Original Patient Description</p>
+                        <p className="text-xs text-slate-500 font-semibold italic leading-relaxed">"{parsedSummary.symptomText}"</p>
+                      </div>
+                    )}
+
+                    <div className="text-[9px] text-slate-400 font-bold border-t border-slate-100 pt-2">
+                      ⚠ AI-generated pre-visit summary only — not a clinical diagnosis. Verified by doctor before treatment.
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Active Consultation Panel */}
             {activePatient ? (
