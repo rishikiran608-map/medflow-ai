@@ -161,7 +161,7 @@ const keywordFallbackSearch = async ({ query, role, category = null, limit = 5 }
     }
     
     // Score documents by keyword hits in title/content
-    const scored = data.map(doc => {
+    const scored = documents.map(doc => {
       let score = 0;
       const titleLower = (doc.title || "").toLowerCase();
       const contentLower = (doc.content || "").toLowerCase();
