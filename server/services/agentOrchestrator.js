@@ -473,8 +473,60 @@ Strict Guidelines:
 
     // NLP rule fallback engine if API key is missing or failed
     if (!reply) {
-      // 1. RAG vector/keyword search matches take first priority
-      if (ragResult.vectorResults && ragResult.vectorResults.length > 0) {
+      // 1. Tool-specific keyword matches take FIRST priority over RAG
+      if (userQuery.includes("prescription") || userQuery.includes("medicine") || userQuery.includes("my tablet") || userQuery.includes("my medication") || userQuery.includes("my drugs")) {
+        const rx = await orchestratorTools.get_patient_prescriptions({}, userId);
+        toolOutput = rx;
+        reply = (rx.prescriptions && rx.prescriptions.length > 0)
+          ? `💊 **Your Active Prescriptions:**\n${rx.prescriptions.map(p => `• **${p.medicine_name}**: ${p.dosage}`).join("\n")}\n\n_Last updated from your verified medical records._`
+          : "💊 No active prescriptions found in your medical records. Please consult your doctor for an updated prescription.";
+      }
+      else if (userQuery.includes("queue") || userQuery.includes("status") || userQuery.includes("token") || userQuery.includes("wait") || userQuery.includes("my turn")) {
+        const q = await orchestratorTools.get_queue_status({}, userId);
+        toolOutput = q;
+        reply = q.queue
+          ? `🟢 **Active Queue Ticket:**\n• **Token:** #${q.queue.token_number}\n• **Doctor:** Dr. ${q.queue.doctors?.full_name || "General Doctor"}\n• **Status:** ${q.queue.queue_status}\n• **Wait:** ${q.queue.estimated_wait} mins`
+          : "🟢 You do not have any active appointments or check-ins today.";
+      }
+      else if (userQuery.includes("slot") || userQuery.includes("available time") || userQuery.includes("avail")) {
+        const slotsResult = await orchestratorTools.get_available_slots({ doctorName: userQuery });
+        toolOutput = slotsResult;
+        reply = `📅 **Available Slots for Dr. ${slotsResult.doctor} (${slotsResult.specialty}):**\n` +
+          slotsResult.availableSlots.map(s => `• **${s}**`).join("\n") +
+          "\n\nYou can book by asking me to schedule a slot.";
+      }
+      else if (userQuery.includes("book") || userQuery.includes("schedule appointment")) {
+        const bookResult = await orchestratorTools.book_appointment({ timeSlot: "10:30" }, userId);
+        toolOutput = bookResult;
+        reply = bookResult.success
+          ? `✅ **Appointment Booked!** ${bookResult.message}`
+          : `❌ **Booking failed:** ${bookResult.message}`;
+      }
+      else if (userQuery.includes("interaction") || userQuery.includes("drug warning") || userQuery.includes("conflict") || userQuery.includes("combine")) {
+        const medicines = [];
+        if (userQuery.includes("aspirin")) medicines.push("Aspirin");
+        if (userQuery.includes("clopidogrel")) medicines.push("Clopidogrel");
+        if (userQuery.includes("metformin")) medicines.push("Metformin");
+        if (userQuery.includes("amlodipine")) medicines.push("Amlodipine");
+        if (userQuery.includes("atorvastatin")) medicines.push("Atorvastatin");
+        if (userQuery.includes("contrast")) medicines.push("Contrast Dye");
+        if (medicines.length === 0) medicines.push("Aspirin", "Metformin"); // Better default pair
+        const check = await orchestratorTools.check_drug_interactions({ medicines });
+        toolOutput = check;
+        reply = `💊 **Drug Interaction Scan (Medicines: ${medicines.join(", ")}):**\n\n` + check.warnings.join("\n");
+      }
+      else if (userRole === "Hospital Admin" && (userQuery.includes("report") || userQuery.includes("admin") || userQuery.includes("load") || userQuery.includes("operational"))) {
+        const report = await orchestratorTools.get_operational_report();
+        toolOutput = report;
+        reply = `📊 **Admin Operational Report:**\n- **Active Queue Load:** ${report.activeLoad} patients\n- **Completed Consults:** ${report.throughput}\n- **No-Show Ratio:** ${report.noShowRate}\n- **Busiest Hours:** ${report.busiestHours}\n- **Staffing Advice:** ${report.staffingAlerts}`;
+      }
+      else if (userRole === "Clinic Owner" && (userQuery.includes("kpi") || userQuery.includes("business") || userQuery.includes("revenue") || userQuery.includes("clinic performance"))) {
+        const kpis = await orchestratorTools.get_business_kpis();
+        toolOutput = kpis;
+        reply = `💼 **Clinic Business KPI Summary:**\n- **Revenue Trend:** ${kpis.revenueEstimated}\n- **Total Bookings:** ${kpis.totalBookings}\n- **Doctor Utilization:** ${kpis.doctorUtilization}\n- **AI Adoption Rate:** ${kpis.aiAdoptionRate}\n- **Patient Retention:** ${kpis.retentionRate}`;
+      }
+      // 2. RAG vector/keyword search for clinical knowledge queries
+      else if (ragResult.vectorResults && ragResult.vectorResults.length > 0) {
         const bestMatch = ragResult.vectorResults[0];
         if (language === "te") {
           reply = `📖 **మెడ్‌ఫ్లో RAG నాలెడ్జ్ బేస్ [${bestMatch.category}]:**\n\n` +
@@ -488,58 +540,7 @@ Strict Guidelines:
             `*(Confidence Score: ${ragResult.confidenceScore} • RAG Auto-Fallback)*`;
         }
       }
-      // 2. Fall back to key word matches
-      else if (userQuery.includes("prescription") || userQuery.includes("medicine") || userQuery.includes("tablet") || userQuery.includes("take")) {
-        const rx = await orchestratorTools.get_patient_prescriptions({}, userId);
-        toolOutput = rx;
-        reply = (rx.prescriptions && rx.prescriptions.length > 0)
-          ? `💊 **Active Prescriptions:**\n${rx.prescriptions.map(p => `• **${p.medicine_name}**: ${p.dosage}`).join("\n")}`
-          : "💊 No active prescriptions found in your medical records folder.";
-      } 
-      else if (userQuery.includes("queue") || userQuery.includes("status") || userQuery.includes("token") || userQuery.includes("wait")) {
-        const q = await orchestratorTools.get_queue_status({}, userId);
-        toolOutput = q;
-        reply = q.queue
-          ? `🟢 **Active Queue Ticket:**\n• **Token:** #${q.queue.token_number}\n• **Doctor:** Dr. ${q.queue.doctors?.full_name || "General Doctor"}\n• **Status:** ${q.queue.queue_status}\n• **Wait:** ${q.queue.estimated_wait} mins`
-          : "🟢 You do not have any active appointments or check-ins today.";
-      } 
-      else if (userQuery.includes("slot") || userQuery.includes("time") || userQuery.includes("avail")) {
-        const slotsResult = await orchestratorTools.get_available_slots({ doctorName: userQuery });
-        toolOutput = slotsResult;
-        reply = `📅 **Available Slots for Dr. ${slotsResult.doctor} (${slotsResult.specialty}):**\n` +
-          slotsResult.availableSlots.map(s => `• **${s}**`).join("\n") +
-          "\n\nYou can book by asking me to schedule a slot.";
-      } 
-      else if (userQuery.includes("book") || userQuery.includes("schedule")) {
-        const bookResult = await orchestratorTools.book_appointment({ timeSlot: "10:30" }, userId);
-        toolOutput = bookResult;
-        reply = bookResult.success
-          ? `✅ **Appointment Booked!** ${bookResult.message}`
-          : `❌ **Booking failed:** ${bookResult.message}`;
-      }
-      else if (userQuery.includes("interaction") || userQuery.includes("warning") || userQuery.includes("conflict")) {
-        const medicines = [];
-        if (userQuery.includes("aspirin")) medicines.push("Aspirin");
-        if (userQuery.includes("clopidogrel")) medicines.push("Clopidogrel");
-        if (userQuery.includes("metformin")) medicines.push("Metformin");
-        if (userQuery.includes("contrast")) medicines.push("Contrast Dye");
-        if (medicines.length === 0) medicines.push("Aspirin", "Clopidogrel");
-
-        const check = await orchestratorTools.check_drug_interactions({ medicines });
-        toolOutput = check;
-        reply = `💊 **Drug Interaction Scan (Medicines: ${medicines.join(", ")}):**\n\n` +
-          check.warnings.join("\n");
-      }
-      else if (userRole === "Hospital Admin" && (userQuery.includes("report") || userQuery.includes("admin") || userQuery.includes("load"))) {
-        const report = await orchestratorTools.get_operational_report();
-        toolOutput = report;
-        reply = `📊 **Admin Operational Report:**\n- **Active Queue Load:** ${report.activeLoad} patients\n- **Completed Consults:** ${report.throughput}\n- **No-Show Ratio:** ${report.noShowRate}\n- **Busiest Hours:** ${report.busiestHours}\n- **Staffing Advice:** ${report.staffingAlerts}`;
-      }
-      else if (userRole === "Clinic Owner" && (userQuery.includes("kpi") || userQuery.includes("business") || userQuery.includes("revenue"))) {
-        const kpis = await orchestratorTools.get_business_kpis();
-        toolOutput = kpis;
-        reply = `💼 **Clinic Business KPI Summary:**\n- **Revenue Trend:** ${kpis.revenueEstimated}\n- **Total Bookings:** ${kpis.totalBookings}\n- **Doctor Utilization:** ${kpis.doctorUtilization}\n- **AI Adoption Rate:** ${kpis.aiAdoptionRate}\n- **Patient Retention:** ${kpis.retentionRate}`;
-      }
+      // 3. Generic greeting / fallback
       else {
         reply = `👋 Hello! I am the **${assigned.name}**.\n\nI am connected to the shared MedFlow RAG platform. I can execute tools matching your **${userRole}** permissions scope.\n\nTry asking me to check appointments, medication interaction warnings, queue predictions, or operational reports.`;
       }
