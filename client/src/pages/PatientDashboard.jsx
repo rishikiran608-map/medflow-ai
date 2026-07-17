@@ -348,11 +348,17 @@ function PatientDashboard() {
 
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Estimated Wait</span>
-                    <span className="text-lg font-black text-slate-800">{queueEntry.estimated_wait} mins</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">
+                      {t("patient.etaWait") || "Estimated Wait"}
+                    </span>
+                    <span className="text-lg font-black text-slate-800">
+                      {queueEntry.estimated_wait} {locale === "te" ? "నిమిషాలు" : "mins"}
+                    </span>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">AI Prediction Confidence</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">
+                      {locale === "te" ? "AI అంచనా ఖచ్చితత్వం" : "AI Prediction Confidence"}
+                    </span>
                     <span className="text-lg font-black text-green-600">{queueEntry.probability || 94}%</span>
                   </div>
                 </div>
@@ -364,7 +370,7 @@ function PatientDashboard() {
                       onClick={() => setShowTravelModal(true)} 
                       className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl transition text-xs flex items-center gap-2"
                     >
-                      <Navigation size={14} /> Start Commute Tracker
+                      <Navigation size={14} /> {locale === "te" ? "ప్రయాణాన్ని ప్రారంభించండి" : "Start Commute Tracker"}
                     </button>
                   )}
                   {queueEntry.queue_status === "Arriving" && (
@@ -372,7 +378,7 @@ function PatientDashboard() {
                       onClick={handleCheckIn} 
                       className="bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-3 rounded-xl transition text-xs flex items-center gap-2"
                     >
-                      <CheckCircle size={14} /> Verify Clinic QR Check-in
+                      <CheckCircle size={14} /> {locale === "te" ? "క్లినిక్ QR చెక్-ఇన్ ధృవీకరించండి" : "Verify Clinic QR Check-in"}
                     </button>
                   )}
                 </div>
@@ -380,20 +386,26 @@ function PatientDashboard() {
             ) : (
               <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-md text-center py-12">
                 <span className="text-4xl block mb-3">📅</span>
-                <h3 className="font-extrabold text-slate-800 text-lg">No Active Bookings Today</h3>
-                <p className="text-slate-400 text-xs font-semibold mt-1">Book an appointment or check-in to activate your queue tracking card.</p>
+                <h3 className="font-extrabold text-slate-800 text-lg">
+                  {locale === "te" ? "ఈరోజు ఎటువంటి అపాయింట్‌మెంట్‌లు లేవు" : "No Active Bookings Today"}
+                </h3>
+                <p className="text-slate-400 text-xs font-semibold mt-1">
+                  {locale === "te" ? "మీ క్యూ ట్రాకింగ్ కార్డ్‌ని యాక్టివేట్ చేయడానికి అపాయింట్‌మెంట్‌ను బుక్ చేయండి." : "Book an appointment or check-in to activate your queue tracking card."}
+                </p>
                 <button 
                   onClick={() => navigate("/book-appointment")} 
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl mt-5 transition text-xs inline-flex items-center gap-2"
                 >
-                  <Plus size={14} /> Book Appointment
+                  <Plus size={14} /> {t("how.step1") || "Book Appointment"}
                 </button>
               </div>
             )}
 
             {/* Upcoming Appointments List */}
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-md">
-              <h3 className="font-extrabold text-slate-800 text-lg mb-4">Upcoming Appointments</h3>
+              <h3 className="font-extrabold text-slate-800 text-lg mb-4">
+                {locale === "te" ? "రాబోయే అపాయింట్‌మెంట్‌లు" : "Upcoming Appointments"}
+              </h3>
               <div className="space-y-3">
                 {appointmentsList.length > 0 ? (
                   appointmentsList.map((app) => (
@@ -408,18 +420,26 @@ function PatientDashboard() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-slate-400 text-xs py-2">No future scheduled slots on record.</p>
+                  <p className="text-slate-400 text-xs py-2">
+                    {locale === "te" ? "భవిష్యత్తు షెడ్యూల్ చేసిన అపాయింట్‌మెంట్‌లు ఏవీ లేవు." : "No future scheduled slots on record."}
+                  </p>
                 )}
               </div>
             </div>
 
             {/* Emergency Contacts Widget */}
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-md">
-              <h3 className="font-extrabold text-slate-800 text-lg mb-4">🚨 Emergency Contacts</h3>
+              <h3 className="font-extrabold text-slate-800 text-lg mb-4">
+                {locale === "te" ? "🚨 అత్యవసర పరిచయాలు" : "🚨 Emergency Contacts"}
+              </h3>
               <div className="flex justify-between items-center bg-red-50 border border-red-100 rounded-2xl p-4 text-xs">
                 <div>
-                  <p className="font-bold text-red-800">Clinic Emergency Desk</p>
-                  <p className="text-red-600/80 mt-0.5">Avail 24/7 Priority Hotline</p>
+                  <p className="font-bold text-red-800">
+                    {locale === "te" ? "క్లినిక్ అత్యవసర డెస్క్" : "Clinic Emergency Desk"}
+                  </p>
+                  <p className="text-red-600/80 mt-0.5">
+                    {locale === "te" ? "24/7 ప్రాధాన్యత హాట్‌లైన్ అందుబాటులో ఉంది" : "Avail 24/7 Priority Hotline"}
+                  </p>
                 </div>
                 <a href="tel:108" className="bg-red-600 hover:bg-red-700 text-white font-bold p-3 rounded-xl transition">
                   <Phone size={14} />
