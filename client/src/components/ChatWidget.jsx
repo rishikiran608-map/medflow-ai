@@ -6,12 +6,14 @@ function ChatWidget() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "👋 Hello! I am your **MedFlow AI Assistant**.\n\nI can help you manage your hospital visit. Try asking me:\n\n1. 🩺 *\"List all available doctors\"*\n2. 📅 *\"Show available slots for Cardiology\"*\n3. 📝 *\"Book Dr. Smith at 10:00\"*\n4. 🟢 *\"Check my queue status\"*",
+      content: "👋 Hello! I am your **MedFlow AI Assistant**.\n\nI can help you with:\n\n1. 🧠 *\"I have chest pain and fever\"* — AI Symptom Triage\n2. 🩺 *\"List all available doctors\"*\n3. 📅 *\"Show available slots for Cardiology\"*\n4. 🟢 *\"Check my queue status\"*\n5. ⚠️ *\"Am I at risk of missing my appointment?\"*",
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -20,6 +22,39 @@ function ChatWidget() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  // 🎤 Voice Input using Web Speech API
+  const handleVoiceInput = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Please use Chrome.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognitionRef.current = recognition;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+      // Auto-send the voice message
+      setTimeout(() => handleSend(transcript), 200);
+    };
+
+    recognition.start();
+  };
 
   const handleSend = async (textToSend) => {
     const messageText = textToSend || input;
@@ -136,6 +171,12 @@ function ChatWidget() {
           {/* Quick Suggestions Chips */}
           <div className="px-4 py-2 bg-slate-50/50 border-t border-slate-100 flex gap-2 overflow-x-auto scrollbar-none whitespace-nowrap">
             <button
+              onClick={() => handleSuggestionClick("I have a headache and fever. What specialist should I see?")}
+              className="bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 text-xs font-bold px-3 py-1.5 rounded-full transition shadow-sm flex-shrink-0"
+            >
+              🧠 Symptom Triage
+            </button>
+            <button
               onClick={() => handleSuggestionClick("Show available doctors")}
               className="bg-white hover:bg-blue-50 text-blue-600 border border-blue-100 text-xs font-bold px-3 py-1.5 rounded-full transition shadow-sm flex-shrink-0"
             >
@@ -145,7 +186,7 @@ function ChatWidget() {
               onClick={() => handleSuggestionClick("Show available slots")}
               className="bg-white hover:bg-blue-50 text-blue-600 border border-blue-100 text-xs font-bold px-3 py-1.5 rounded-full transition shadow-sm flex-shrink-0"
             >
-              📅 Get Available Slots
+              📅 Get Slots
             </button>
             <button
               onClick={() => handleSuggestionClick("Check my queue status")}
@@ -153,7 +194,14 @@ function ChatWidget() {
             >
               🟢 Queue Status
             </button>
+            <button
+              onClick={() => handleSuggestionClick("Am I at risk of missing my appointment? Analyze my no-show risk based on commute and travel mode.")}
+              className="bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold px-3 py-1.5 rounded-full transition shadow-sm flex-shrink-0 animate-pulse"
+            >
+              ⚠️ No-Show Risk
+            </button>
           </div>
+
 
           {/* Input Footer */}
           <form
@@ -163,12 +211,38 @@ function ChatWidget() {
             }}
             className="p-3 bg-white border-t border-slate-100 flex gap-2 items-center"
           >
+            {/* 🎤 Voice Input Button */}
+            <button
+              type="button"
+              onClick={handleVoiceInput}
+              title={isListening ? "Stop listening" : "Speak your message"}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition shrink-0 ${
+                isListening
+                  ? "bg-red-500 text-white animate-pulse shadow-md shadow-red-300"
+                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+              }`}
+            >
+              {isListening ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <rect x="6" y="6" width="12" height="12" rx="2"/>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+                </svg>
+              )}
+            </button>
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything (e.g. List doctors...)"
-              className="flex-1 bg-slate-50 border border-slate-100 text-slate-800 placeholder-slate-400 text-sm px-4 py-2.5 rounded-xl outline-none focus:border-blue-500 focus:bg-white transition"
+              placeholder={isListening ? "🎤 Listening..." : "Ask anything or describe symptoms..."}
+              className={`flex-1 border text-slate-800 placeholder-slate-400 text-sm px-4 py-2.5 rounded-xl outline-none transition ${
+                isListening
+                  ? "bg-red-50 border-red-300 focus:border-red-400"
+                  : "bg-slate-50 border-slate-100 focus:border-blue-500 focus:bg-white"
+              }`}
             />
             <button
               type="submit"

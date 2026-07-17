@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
+import AuthCallback from "./pages/AuthCallback";
 import PatientDashboard from "./pages/PatientDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -21,6 +22,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
 
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
         <Route
           path="/patient-dashboard"

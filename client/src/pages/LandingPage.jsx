@@ -1,5 +1,6 @@
 import Hero from "../components/Hero";
 import Features from "../components/Features";
+import HowItWorks from "../components/HowItWorks";
 import Stats from "../components/Stats";
 import DashboardPreview from "../components/DashboardPreview";
 function LandingPage() {
@@ -7,6 +8,7 @@ function LandingPage() {
   <div className="min-h-screen bg-blue-50">
     <Hero />
     <Features />
+    <HowItWorks />
     <Stats />
     <DashboardPreview />
   </div>
@@ -14,4 +16,4 @@ function LandingPage() {
 );
 }
 
-export default LandingPage;
+export default LandingPage;

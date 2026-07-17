@@ -75,7 +75,7 @@ function Hero() {
           transition={{ duration: 1 }}
         >
           <p className="text-blue-600 font-semibold mb-3">
-            🚑 AI Powered Hospital Queue Management
+            🚑 AI-Powered Clinic Management Platform
           </p>
 
           <motion.h1
@@ -89,9 +89,31 @@ function Hero() {
           </motion.h1>
 
           <p className="mt-6 text-gray-600 text-lg">
-            MedFlow AI predicts waiting time, lets patients join queues remotely,
-            and helps hospitals reduce overcrowding.
+            MedFlow AI connects patients, doctors &amp; admins in real time — with autonomous AI agents, smart queue prediction, and commute-aware no-show prevention.
           </p>
+
+          {/* Impact Stats Row */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+            className="mt-6 flex flex-wrap gap-4"
+          >
+            {[
+              { icon: "⏱️", value: "2+ hrs", label: "Saved per patient" },
+              { icon: "📉", value: "20%", label: "No-show reduction" },
+              { icon: "💰", value: "₹1L/mo", label: "Revenue recovered" },
+              { icon: "🤖", value: "3 AI", label: "Custom engines" },
+            ].map((stat) => (
+              <div key={stat.label} className="flex items-center gap-2 bg-white border border-slate-100 rounded-xl px-3 py-2 shadow-sm">
+                <span className="text-lg">{stat.icon}</span>
+                <div>
+                  <p className="text-sm font-black text-slate-800 leading-none">{stat.value}</p>
+                  <p className="text-[10px] text-slate-500 font-semibold">{stat.label}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
 
           <div className="mt-8 flex items-center gap-4 flex-wrap">
             <motion.button

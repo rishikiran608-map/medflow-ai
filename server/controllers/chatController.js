@@ -31,6 +31,71 @@ const handleNlpFallback = async (message, patientId) => {
   }
 
   try {
+    // 0. 🧠 AI SYMPTOM TRIAGE ENGINE — classify urgency + recommend specialist
+    const symptomKeywords = [
+      "pain", "ache", "fever", "cough", "cold", "headache", "dizzy", "nausea", "vomit",
+      "chest", "breath", "bleeding", "rash", "swelling", "tired", "fatigue", "sore",
+      "throat", "stomach", "back", "joint", "eye", "ear", "skin", "burn", "injury",
+      "heart", "pressure", "sugar", "diabetes", "bp", "seizure", "unconscious", "faint",
+      "hurt", "ill", "sick", "symptom", "feeling", "unwell", "body"
+    ];
+    const isSymptomQuery = symptomKeywords.some(kw => query.includes(kw));
+
+    if (isSymptomQuery) {
+      // Urgency classification
+      const emergencySymptoms = ["chest pain", "can't breathe", "unconscious", "seizure", "severe bleeding", "heart attack", "stroke", "faint"];
+      const urgentSymptoms = ["high fever", "vomiting", "severe pain", "difficulty breathing", "chest", "heart"];
+      
+      const isEmergency = emergencySymptoms.some(s => query.includes(s));
+      const isUrgent = !isEmergency && urgentSymptoms.some(s => query.includes(s));
+
+      // Specialist mapping
+      const specialistMap = [
+        { keywords: ["chest", "heart", "bp", "pressure", "palpitation"], specialist: "Cardiologist", icon: "❤️" },
+        { keywords: ["stomach", "nausea", "vomit", "gastric", "digestion", "liver"], specialist: "Gastroenterologist", icon: "🫁" },
+        { keywords: ["skin", "rash", "itch", "burn", "acne", "derma"], specialist: "Dermatologist", icon: "🧴" },
+        { keywords: ["headache", "dizzy", "migraine", "seizure", "neuro", "memory"], specialist: "Neurologist", icon: "🧠" },
+        { keywords: ["joint", "back", "knee", "bone", "muscle", "ortho"], specialist: "Orthopedic Surgeon", icon: "🦴" },
+        { keywords: ["eye", "vision", "blur"], specialist: "Ophthalmologist", icon: "👁️" },
+        { keywords: ["ear", "hearing", "throat", "nose", "ent"], specialist: "ENT Specialist", icon: "👂" },
+        { keywords: ["sugar", "diabetes", "thyroid", "hormone"], specialist: "Endocrinologist", icon: "🩸" },
+        { keywords: ["fever", "cold", "cough", "flu", "fatigue", "body", "tired", "sore", "pain", "ill", "sick"], specialist: "General Physician", icon: "🩺" },
+      ];
+
+      let recommendedSpecialist = { specialist: "General Physician", icon: "🩺" };
+      for (const entry of specialistMap) {
+        if (entry.keywords.some(kw => query.includes(kw))) {
+          recommendedSpecialist = entry;
+          break;
+        }
+      }
+
+      let urgencyBadge, urgencyText, urgencyColor, advice;
+      if (isEmergency) {
+        urgencyBadge = "🚨 EMERGENCY";
+        urgencyText = "Your symptoms indicate a possible medical emergency.";
+        urgencyColor = "⛔";
+        advice = "**Please call emergency services (108) immediately or go to the nearest Emergency Room. Do NOT wait for a regular appointment.**";
+      } else if (isUrgent) {
+        urgencyBadge = "⚠️ URGENT";
+        urgencyText = "Your symptoms require prompt medical attention today.";
+        urgencyColor = "🟠";
+        advice = `Please book an **urgent appointment** with a **${recommendedSpecialist.specialist}** as soon as possible.`;
+      } else {
+        urgencyBadge = "✅ ROUTINE";
+        urgencyText = "Your symptoms appear to be non-emergency.";
+        urgencyColor = "🟢";
+        advice = `A **regular consultation** with a **${recommendedSpecialist.specialist}** is recommended.`;
+      }
+
+      return `${urgencyColor} **AI Symptom Triage — ${urgencyBadge}**\n\n` +
+        `${urgencyText}\n\n` +
+        `**Recommended Specialist:** ${recommendedSpecialist.icon} ${recommendedSpecialist.specialist}\n\n` +
+        `${advice}\n\n` +
+        `*⚠️ Disclaimer: This is an AI-powered triage. Always consult a qualified doctor for accurate diagnosis.*\n\n` +
+        `Would you like me to **show available slots** for a ${recommendedSpecialist.specialist}?`;
+    }
+
     // 1. Tablet Dosage and Medication questions
     if (query.includes("tablet") || query.includes("medicine") || query.includes("dosage") || query.includes("eat") || query.includes("take") || query.includes("prescrib")) {
       const rxList = history.prescriptions || [];
@@ -39,7 +104,7 @@ const handleNlpFallback = async (message, patientId) => {
       }
       return `💊 **Your Active Prescription & Dosage Schedule:**\n\n` +
         rxList.map(rx => `• **${rx.name}**: Take ${rx.dosage}`).join("\n") +
-        `\n\n*Note: Follow the instructions carefully or message Dr. Kumar if symptoms persist.*`;
+        `\n\n*Note: Follow the instructions carefully or message your doctor if symptoms persist.*`;
     }
 
     // 2. Queue token / present wait time / condition status check
@@ -53,6 +118,20 @@ const handleNlpFallback = async (message, patientId) => {
         `- **Check-in Status:** ${queueEntry.queue_status}\n` +
         `- **Est. Wait Time:** ${queueEntry.estimated_wait} mins\n\n` +
         `Please stay close to the waiting area!`;
+    }
+
+    // 2b. No-Show Risk Analysis
+    if (query.includes("no-show") || query.includes("risk") || query.includes("miss") || query.includes("late") || query.includes("no show")) {
+      if (!queueEntry) {
+        return "You don't have an active queue entry. Book an appointment first and I can analyze your no-show risk.";
+      }
+      const { predictNoShowProbability } = require("../services/noShowAIService");
+      const riskResult = predictNoShowProbability(queueEntry);
+      const riskEmoji = riskResult.riskLevel === "High" ? "🔴" : riskResult.riskLevel === "Medium" ? "🟠" : "🟢";
+      return `${riskEmoji} **AI No-Show Risk Analysis:**\n\n` +
+        `- **Risk Level:** ${riskResult.riskLevel} (${riskResult.probability}% probability)\n` +
+        `- **Risk Factors:**\n${riskResult.reasons.map(r => `  • ${r}`).join("\n")}\n\n` +
+        `${riskResult.riskLevel === "High" ? "⚠️ Please start your commute soon to preserve your slot!" : "✅ You are on track. Keep it up!"}`;
     }
 
     // 3. Previous visit description / diagnosed conditions
@@ -213,14 +292,23 @@ const handleChat = async (req, res) => {
   if (process.env.OPENAI_API_KEY) {
     try {
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      const systemPrompt = `You are the MedFlow AI assistant for a hospital clinic. You help patients manage appointments, prescriptions, and queue status.
+      const systemPrompt = `You are the MedFlow AI assistant for a hospital clinic. You help patients manage appointments, prescriptions, queue status, and also perform AI symptom triage.
+
 Patient Health Profile Context:
 - Active Queue Ticket: ${queueEntry ? `#${queueEntry.token_number} for Dr. ${queueEntry.doctors?.full_name} (Status: ${queueEntry.queue_status}, Wait: ${queueEntry.estimated_wait} mins)` : 'None'}
 - Diagnosed Conditions: ${(userHistory.medicalConditions || []).join(", ")}
 - Active Prescriptions: ${JSON.stringify(userHistory.prescriptions || [])}
 - Completed Visits: ${userHistory.completedVisits || 4}
 
-Provide concise, polite, and reassuring guidance. When explaining medicine intake or queue waiting times, refer to the exact values in the profile context above.`;
+Your capabilities:
+1. SYMPTOM TRIAGE: When a patient describes symptoms, classify urgency as Emergency/Urgent/Routine, recommend the right specialist, and advise accordingly. Always add a disclaimer to see a real doctor.
+2. QUEUE STATUS: Report live queue info from the context above.
+3. PRESCRIPTIONS: Help with medication schedules from the prescriptions list.
+4. APPOINTMENTS: Help book or check available slots.
+5. NO-SHOW RISK: Warn the patient if their commute status puts them at risk of missing their appointment.
+
+Be concise, warm, and professional. Use emojis sparingly for clarity.`;
+
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",

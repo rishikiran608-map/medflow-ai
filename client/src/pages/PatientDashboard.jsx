@@ -219,6 +219,59 @@ function PatientDashboard() {
                   </div>
                 </div>
 
+                {/* ── Queue Journey Progress Bar ── */}
+                {(() => {
+                  const stages = [
+                    { key: "Waiting",         label: "Booked",      icon: "📋" },
+                    { key: "On The Way",       label: "On The Way",  icon: "🚗" },
+                    { key: "Arriving",         label: "Arriving",    icon: "📍" },
+                    { key: "Checked In",       label: "At Clinic",   icon: "🏥" },
+                    { key: "In Consultation",  label: "Consulting",  icon: "🩺" },
+                  ];
+                  const currentIdx = stages.findIndex(s => s.key === queueEntry.queue_status);
+                  const activeIdx = currentIdx === -1 ? 0 : currentIdx;
+
+                  return (
+                    <div className="mb-8 bg-violet-50/50 rounded-2xl p-5 border border-violet-100/50">
+                      <p className="text-[10px] font-black text-violet-500 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+                        🗺️ Your Journey
+                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping inline-block" />
+                      </p>
+                      <div className="relative">
+                        {/* Connecting line */}
+                        <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200" />
+                        <div
+                          className="absolute top-5 left-0 h-0.5 bg-violet-500 transition-all duration-700"
+                          style={{ width: `${(activeIdx / (stages.length - 1)) * 100}%` }}
+                        />
+                        {/* Stage dots */}
+                        <div className="relative flex justify-between">
+                          {stages.map((stage, idx) => {
+                            const done = idx < activeIdx;
+                            const active = idx === activeIdx;
+                            return (
+                              <div key={stage.key} className="flex flex-col items-center gap-2" style={{ width: `${100 / stages.length}%` }}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base border-2 transition-all duration-500 z-10 ${
+                                  active  ? "border-violet-500 bg-violet-600 text-white shadow-lg shadow-violet-300 scale-110 animate-pulse" :
+                                  done    ? "border-violet-400 bg-violet-100 text-violet-600" :
+                                            "border-slate-200 bg-white text-slate-300"
+                                }`}>
+                                  {done ? "✓" : stage.icon}
+                                </div>
+                                <span className={`text-[9px] font-black uppercase tracking-wider text-center leading-tight ${
+                                  active ? "text-violet-700" : done ? "text-violet-400" : "text-slate-300"
+                                }`}>
+                                  {stage.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Queue Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                   <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-left relative overflow-hidden">
