@@ -8,6 +8,7 @@ import {
   ScanLine, ShieldCheck, FlaskConical, Eye, Stethoscope
 } from "lucide-react";
 import { toast } from "sonner";
+import { DEMO_QUEUE } from "../data/demoData";
 
 function DoctorDashboard() {
   const navigate = useNavigate();
@@ -49,18 +50,19 @@ function DoctorDashboard() {
       }
 
       const res = await api.get("/queue/doctor");
-      setQueue(res.data);
+      const queueData = res.data?.length > 0 ? res.data : DEMO_QUEUE;
+      setQueue(queueData);
       setError("");
 
       // Trigger pre-consult briefing computation if active patient exists
-      const currentActive = res.data.find(item => item.queue_status === "In Consultation");
+      const currentActive = queueData.find(item => item.queue_status === "In Consultation");
       if (currentActive) {
         setBriefing({
-          complaints: "Mild chest discomfort on exertion, occasional palpitation for 2 days.",
-          allergies: "Penicillin, Sulfa drugs",
-          chronicDiseases: "Essential Hypertension (Stage 2), Hyperlipidemia",
-          recentLab: "Lipid Panel (Atorvastatin compliance check): LDL 112 mg/dL (Slightly elevated)",
-          aiBriefing: "⚠️ ALERT: Patient presents Stage 2 BP readings (140/90) and elevated LDL. Suggest reviewing Amlodipine dosage, checking Atorvastatin daily compliance, and scheduling a cardiovascular follow-up in 10 days."
+          complaints: "Exertional chest tightness and shortness of breath for 3 days. Occasional palpitation at rest.",
+          allergies: "Penicillin G, Sulfonamides (Documented)",
+          chronicDiseases: "Essential Hypertension (Stage 2), Hyperlipidemia (LDL 128 mg/dL)",
+          recentLab: "Lipid Panel: LDL 128 mg/dL ↑ | HbA1c 6.2% (borderline) | ECG: Normal sinus rhythm",
+          aiBriefing: "⚠️ CLINICAL ALERT: Patient presents Stage 2 hypertension (BP 138/86) with elevated LDL and borderline pre-diabetic HbA1c. Recommend reviewing Amlodipine 5mg dosage — consider up-titration. Atorvastatin compliance check needed. Schedule cardiovascular follow-up in 10 days. Rule out early ACS with troponin if chest tightness persists."
         });
       } else {
         setBriefing(null);

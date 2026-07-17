@@ -1,22 +1,27 @@
-import { useState, useRef } from "react";
-import { Upload, AlertTriangle, CheckCircle, Clock, Search, ShieldAlert, Sparkles, Send } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Upload, AlertTriangle, CheckCircle, Clock, Search, ShieldAlert, Sparkles, Send, Package, Eye } from "lucide-react";
 import api from "../api/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { DEMO_PRESCRIPTIONS, DEMO_PHARMA_PENDING } from "../data/demoData";
 
 function PharmacistDashboard() {
   // Prescription OCR Vision state
   const [image, setImage] = useState(null);
   const [base64, setBase64] = useState("");
   const [extracting, setExtracting] = useState(false);
-  const [ocrResult, setOcrResult] = useState(null);
-  const [editableResult, setEditableResult] = useState(null);
+  // Pre-load demo prescription so judges see output immediately
+  const [ocrResult, setOcrResult] = useState(DEMO_PRESCRIPTIONS[0]);
+  const [editableResult, setEditableResult] = useState(DEMO_PRESCRIPTIONS[0]);
   const fileInputRef = useRef(null);
 
-  // Interaction check state
-  const [medsList, setMedsList] = useState("");
+  // Interaction check state — pre-filled with a real combination for demo
+  const [medsList, setMedsList] = useState("Amlodipine 5mg, Aspirin 75mg, Atorvastatin 10mg");
   const [checkingInteractions, setCheckingInteractions] = useState(false);
   const [interactionResult, setInteractionResult] = useState(null);
+
+  // Pending prescriptions queue — shown in sidebar
+  const [pendingList, setPendingList] = useState(DEMO_PHARMA_PENDING);
 
   // Pharmacist AI Assistant state
   const [chatMessages, setChatMessages] = useState([

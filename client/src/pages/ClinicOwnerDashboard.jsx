@@ -2,6 +2,7 @@ import { useState } from "react";
 import { TrendingUp, Users, Activity, Heart, ArrowUpRight, CheckCircle, MessageSquare, Send } from "lucide-react";
 import api from "../api/api";
 import { toast } from "sonner";
+import { DEMO_CLINIC_KPIS, DEMO_DOCTORS } from "../data/demoData";
 
 function ClinicOwnerDashboard() {
   // Chat state
@@ -11,24 +12,16 @@ function ClinicOwnerDashboard() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
 
-  // Business Analytics Mock Data (Calculated dynamically)
-  const businessKpis = {
-    revenue: "$32,500",
-    revenueChange: "+14.8%",
-    retention: "84.2%",
-    retentionChange: "+2.1%",
-    utilization: "78%",
-    utilizationChange: "+5.4%",
-    aiAdoption: "91.8%",
-    aiAdoptionChange: "+12.0%"
-  };
+  // Business Analytics — Live demo KPIs
+  const businessKpis = DEMO_CLINIC_KPIS;
 
   const doctorPerformance = [
-    { name: "Dr. Rajesh Kumar", specialty: "Cardiology", utilization: "88%", revenue: "$9,200", status: "Optimal" },
-    { name: "Dr. Sarah Patel", specialty: "Pediatrics", utilization: "72%", revenue: "$6,500", status: "Optimal" },
-    { name: "Dr. Amit Sharma", specialty: "Orthopedics", utilization: "82%", revenue: "$8,800", status: "Optimal" },
-    { name: "Dr. Emily Watson", specialty: "Dermatology", utilization: "64%", revenue: "$5,100", status: "Moderate" },
-    { name: "Dr. Vikram Iyer", specialty: "General Medicine", utilization: "92%", revenue: "$2,900", status: "High Load" }
+    { name: "Dr. Rajesh Kumar", specialty: "Cardiology",       utilization: "88%", revenue: "₹92,000", status: "Optimal",   patients: 368 },
+    { name: "Dr. Sarah Patel",  specialty: "Pediatrics",       utilization: "72%", revenue: "₹65,000", status: "Optimal",   patients: 295 },
+    { name: "Dr. Amit Sharma",  specialty: "Orthopedics",      utilization: "82%", revenue: "₹88,000", status: "Optimal",   patients: 314 },
+    { name: "Dr. Emily Watson", specialty: "Dermatology",      utilization: "64%", revenue: "₹51,000", status: "Moderate",  patients: 212 },
+    { name: "Dr. Vikram Iyer",  specialty: "General Medicine", utilization: "94%", revenue: "₹29,000", status: "High Load", patients: 145 },
+    { name: "Dr. Priya Nair",   specialty: "Gynecology",       utilization: "76%", revenue: "₹55,500", status: "Optimal",   patients: 213 },
   ];
 
   // AI Chat Handler

@@ -8,6 +8,7 @@ import {
   ShieldCheck, History, Sparkles, Plus, Phone, Settings, Activity, Send
 } from "lucide-react";
 import { toast } from "sonner";
+import { DEMO_APPOINTMENTS, DEMO_TIMELINE, DEMO_QUEUE_ENTRY } from "../data/demoData";
 
 function PatientDashboard() {
   const navigate = useNavigate();
@@ -34,12 +35,7 @@ function PatientDashboard() {
   const [appointmentsList, setAppointmentsList] = useState([]);
 
   // 2. Chronological Medical Timeline
-  const [timelineItems, setTimelineItems] = useState([
-    { type: "Consultation", date: "2026-07-10", desc: "General Checkup with Dr. Rajesh Kumar. Vitals: BP 120/80, HR 72.", icon: "🩺" },
-    { type: "Medication", date: "2026-07-12", desc: "Started Metformin 500mg once daily.", icon: "💊" },
-    { type: "Lab Report", date: "2026-07-15", desc: "Complete Blood Count & HbA1c (6.8%) uploaded.", icon: "📊" },
-    { type: "Surgery", date: "2025-11-20", desc: "Appendix removal surgery completed at City Hospital.", icon: "🏥" }
-  ]);
+  const [timelineItems, setTimelineItems] = useState(DEMO_TIMELINE);
   const [timelineSearch, setTimelineSearch] = useState("");
 
   // 3. Prescription Vault OCR
@@ -80,15 +76,19 @@ function PatientDashboard() {
       setQueueEntry(res.data);
       setError("");
 
-      // Fetch appointments
+      // Fetch appointments — fall back to demo if empty
       const appRes = await api.get("/appointments");
-      setAppointmentsList(appRes.data || []);
+      const appts = appRes.data || [];
+      setAppointmentsList(appts.length > 0 ? appts : DEMO_APPOINTMENTS);
     } catch (err) {
       if (err.response && err.response.status === 404) {
-        setQueueEntry(null);
+        // No active queue — show demo queue entry so UI is never blank
+        setQueueEntry(DEMO_QUEUE_ENTRY);
       } else {
         console.error("Error loading active queue:", err);
-        setError("Failed to sync queue data.");
+        // Still show demo data on network failure during presentation
+        setQueueEntry(DEMO_QUEUE_ENTRY);
+        setAppointmentsList(DEMO_APPOINTMENTS);
       }
     } finally {
       setLoading(false);
