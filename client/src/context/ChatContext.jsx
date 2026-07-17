@@ -138,7 +138,11 @@ export function ChatProvider({ children }) {
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: response.data.response },
+        { 
+          role: "assistant", 
+          content: response.data.response,
+          citations: response.data.citations
+        },
       ]);
     } catch (err) {
       console.error("Orchestrator chat context error:", err);

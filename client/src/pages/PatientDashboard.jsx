@@ -250,7 +250,14 @@ function PatientDashboard() {
         language: locale || "en"
       });
       if (res.data.success) {
-        setChatMessages(prev => [...prev, { role: "assistant", content: res.data.response }]);
+        setChatMessages(prev => [
+          ...prev, 
+          { 
+            role: "assistant", 
+            content: res.data.response,
+            citations: res.data.citations
+          }
+        ]);
       }
     } catch (err) {
       console.error(err);
@@ -742,17 +749,36 @@ function PatientDashboard() {
 
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
-          {chatMessages.map((msg, idx) => (
-            <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs shadow-sm leading-relaxed whitespace-pre-line ${
-                msg.role === "user" 
-                  ? "bg-blue-600 text-white rounded-tr-none" 
-                  : "bg-white text-slate-800 border border-slate-100 rounded-tl-none font-medium"
-              }`}>
-                {msg.content}
+          {chatMessages.map((msg, idx) => {
+            const isUser = msg.role === "user";
+            return (
+              <div key={idx} className={`flex flex-col ${isUser ? "items-end" : "items-start"} gap-1`}>
+                <div className="flex items-start">
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs shadow-sm leading-relaxed whitespace-pre-line ${
+                    isUser 
+                      ? "bg-blue-600 text-white rounded-tr-none font-semibold" 
+                      : "bg-white text-slate-800 border border-slate-100 rounded-tl-none font-medium"
+                  }`}>
+                    {msg.content}
+                  </div>
+                </div>
+                {!isUser && msg.citations && msg.citations.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-0.5 max-w-[85%]">
+                    {msg.citations.map((cite, cIdx) => (
+                      <div
+                        key={cIdx}
+                        className="inline-flex items-center gap-1 bg-blue-50/50 text-blue-600 border border-blue-100 rounded-full px-2 py-0.5 text-[9px] font-black tracking-wide"
+                      >
+                        <span>📖</span>
+                        <span className="truncate max-w-[120px]">{cite.title}</span>
+                        <span className="opacity-75">({Math.round(cite.confidence * 100)}%)</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
           {chatLoading && (
             <div className="flex justify-start">
               <div className="bg-white border border-slate-100 rounded-2xl px-4 py-2 text-xs flex gap-1.5 items-center">

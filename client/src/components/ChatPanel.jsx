@@ -19,21 +19,42 @@ import { motion } from "framer-motion";
 function MessageBubble({ msg, config }) {
   const isUser = msg.role === "user";
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      {!isUser && (
-        <div className={`w-7 h-7 rounded-full bg-gradient-to-tr ${config.themeColor} flex items-center justify-center text-sm shrink-0 mr-2 mt-0.5 shadow-md`}>
-          <span className="text-xs">{config.logo}</span>
+    <div className={`flex flex-col ${isUser ? "items-end" : "items-start"} gap-1`}>
+      <div className="flex items-start">
+        {!isUser && (
+          <div className={`w-7 h-7 rounded-full bg-gradient-to-tr ${config.themeColor} flex items-center justify-center text-sm shrink-0 mr-2 mt-0.5 shadow-md`}>
+            <span className="text-xs">{config.logo}</span>
+          </div>
+        )}
+        <div
+          className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-[13px] shadow-sm leading-relaxed whitespace-pre-line ${
+            isUser
+              ? `${config.accent} rounded-tr-none font-semibold`
+              : "bg-white text-slate-800 border border-slate-100 rounded-tl-none font-medium"
+          }`}
+        >
+          {msg.content}
+        </div>
+      </div>
+
+      {/* RAG citations display */}
+      {!isUser && msg.citations && msg.citations.length > 0 && (
+        <div className="ml-9 flex flex-wrap gap-1 mt-0.5 max-w-[85%]">
+          {msg.citations.map((cite, idx) => (
+            <div
+              key={idx}
+              className="inline-flex items-center gap-1.5 bg-blue-50/50 hover:bg-blue-50 text-blue-600 border border-blue-100/60 rounded-full px-2 py-0.5 text-[9px] font-black tracking-wide shadow-sm"
+              title={`Source Category: ${cite.category}`}
+            >
+              <span>📖</span>
+              <span className="truncate max-w-[120px]">{cite.title}</span>
+              <span className="bg-blue-100 px-1 py-0.2 rounded-full text-[8px] opacity-90">
+                {Math.round(cite.confidence * 100)}% Match
+              </span>
+            </div>
+          ))}
         </div>
       )}
-      <div
-        className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-[13px] shadow-sm leading-relaxed whitespace-pre-line ${
-          isUser
-            ? `${config.accent} rounded-tr-none font-semibold`
-            : "bg-white text-slate-800 border border-slate-100 rounded-tl-none font-medium"
-        }`}
-      >
-        {msg.content}
-      </div>
     </div>
   );
 }
