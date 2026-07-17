@@ -1,11 +1,25 @@
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, User, Menu, X } from "lucide-react";
-import { useState, useMemo } from "react";
+import { LogOut, User, Menu, X, Sun, Moon } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 
 function Navbar() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark" || 
+      (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDarkMode]);
   
   const token = useMemo(() => localStorage.getItem("token"), []);
   const role = useMemo(() => localStorage.getItem("userRole"), []);
@@ -51,6 +65,15 @@ function Navbar() {
 
         {/* Right side: Login button or User Menu */}
         <div className="hidden md:flex items-center gap-4">
+          {/* Dark Mode Toggle (Task 13) */}
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+            title="Toggle theme"
+          >
+            {isDarkMode ? <Sun size={16} className="text-yellow-500" /> : <Moon size={16} />}
+          </button>
+
           {token ? (
             <div className="flex items-center gap-3">
               <div className="flex flex-col text-right">
@@ -101,6 +124,20 @@ function Navbar() {
           <a href="#about" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">About</a>
           <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Contact</a>
           
+          <div className="border-t border-slate-100 my-1"></div>
+          
+          {/* Mobile Dark Mode Toggle */}
+          <button
+            onClick={() => {
+              setIsDarkMode(!isDarkMode);
+              setMobileMenuOpen(false);
+            }}
+            className="px-4 py-2 flex items-center justify-between text-slate-600 hover:bg-slate-50 rounded-xl text-sm"
+          >
+            <span className="font-medium">Dark Mode</span>
+            {isDarkMode ? <Sun size={16} className="text-yellow-500" /> : <Moon size={16} />}
+          </button>
+
           <div className="border-t border-slate-100 my-1"></div>
           {token ? (
             <div className="px-4 py-2 flex items-center justify-between">

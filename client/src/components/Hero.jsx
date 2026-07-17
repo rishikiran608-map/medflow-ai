@@ -38,28 +38,28 @@ function Hero() {
       description: "Patients book an appointment today and join the live virtual queue from the safety of their homes, eliminating physical waiting rooms entirely.",
       badge: "Step 1 • Patients",
       icon: "📱",
-      image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600"
+      image: "/images/booking.jpg"
     },
     {
       title: "2. Real-Time AI Predictions",
       description: "Our proprietary machine learning engine calculates the exact waiting time (e.g., 24 ± 4 mins) along with a dynamic certainty probability score.",
       badge: "Step 2 • Predictive AI",
       icon: "🎯",
-      image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600"
+      image: "/images/predictions.jpg"
     },
     {
       title: "3. Live Commute Traffic Sync",
       description: "Integrates simulated Google Maps traffic feeds. If heavy traffic blocks the route, the system updates travel ETAs and notifies the doctor.",
       badge: "Step 3 • Commute Sync",
       icon: "🗺️",
-      image: "https://images.unsplash.com/photo-1569003339405-ea396a5a8a90?w=600"
+      image: "/images/commute.jpg"
     },
     {
       title: "4. Contactless QR Check-in",
       description: "Upon arrival, patients scan their digital token QR code at the reception desk to instantly check in and alert the staff.",
       badge: "Step 4 • Clinic Arrival",
       icon: "🎫",
-      image: "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=600"
+      image: "/images/qr_checkin.jpg"
     }
   ];
 
@@ -162,7 +162,7 @@ function Hero() {
     rotate: 2,
   }}
   transition={{ duration: 0.5 }}
-  src={"https://images.unsplash.com/photo-1584515933487-779824d29309?w=800"}
+  src={"/images/hero_doctor.jpg"}
   className="rounded-3xl shadow-2xl"
   alt="Doctor"
   loading="lazy"
