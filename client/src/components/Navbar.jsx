@@ -1,10 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, User, Menu, X, Sun, Moon } from "lucide-react";
+import { LogOut, User, Menu, X, Sun, Moon, Globe } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useLanguage } from "../context/LanguageContext";
 
 function Navbar() {
   const navigate = useNavigate();
+  const { locale, t, changeLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem("theme") === "dark" || 
@@ -55,7 +57,6 @@ function Navbar() {
     setMobileMenuOpen(false);
     if (window.location.pathname !== "/") {
       navigate("/");
-      // Wait for navigation transition before scrolling
       setTimeout(() => {
         const element = document.getElementById(sectionId);
         if (element) {
@@ -80,7 +81,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-white/90 backdrop-blur-md sticky top-0 z-50 px-8 py-4 border-b border-slate-100/50 shadow-sm font-sans">
+    <nav className="bg-white/90 backdrop-blur-md sticky top-0 z-50 px-8 py-4 border-b border-slate-100/50 shadow-sm font-sans text-left">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* Brand Link */}
@@ -89,39 +90,66 @@ function Navbar() {
           className="text-2xl font-black text-blue-600 tracking-tight"
           onClick={() => setMobileMenuOpen(false)}
         >
-          MedFlow AI
+          {t("nav.brand")}
         </Link>
 
         {/* Desktop Navigation Links */}
         <div className="hidden md:flex items-center gap-8">
-          <Link to="/" className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Home</Link>
+          <Link to="/" className="font-semibold text-sm text-slate-500 hover:text-blue-600 transition">
+            {t("nav.home")}
+          </Link>
           <button
             onClick={() => handleNavClick("features")}
-            className="font-medium text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
+            className="font-semibold text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
           >
-            Features
+            {t("nav.features")}
           </button>
-          <Link to={getDashboardLink()} className="font-medium text-sm text-slate-500 hover:text-blue-600 transition">Dashboard</Link>
+          <Link to={getDashboardLink()} className="font-semibold text-sm text-slate-500 hover:text-blue-600 transition">
+            {t("nav.dashboard")}
+          </Link>
           <button
             onClick={() => handleNavClick("about")}
-            className="font-medium text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
+            className="font-semibold text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
           >
-            About
+            {t("nav.about")}
           </button>
           <button
             onClick={() => handleNavClick("contact")}
-            className="font-medium text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
+            className="font-semibold text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
           >
-            Contact
+            {t("nav.contact")}
           </button>
         </div>
 
-        {/* Right side: Login button or User Menu */}
+        {/* Right side controls */}
         <div className="hidden md:flex items-center gap-4">
-          {/* Dark Mode Toggle (Task 13) */}
+          
+          {/* Multilingual Selector */}
+          <div className="relative group z-50">
+            <button className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200/60 rounded-xl text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer">
+              <Globe size={14} className="text-slate-500" />
+              <span>{locale === "en" ? "🇮🇳 English" : "🇮🇳 తెలుగు"}</span>
+            </button>
+            <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-white border border-slate-100 rounded-xl shadow-xl p-1 w-28 text-left z-50">
+              <button
+                onClick={() => changeLanguage("en")}
+                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${locale === "en" ? "bg-blue-50 text-blue-600" : "hover:bg-slate-50 text-slate-700"}`}
+              >
+                🇮🇳 English
+              </button>
+              <button
+                onClick={() => changeLanguage("te")}
+                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${locale === "te" ? "bg-blue-50 text-blue-600" : "hover:bg-slate-50 text-slate-700"}`}
+              >
+                🇮🇳 తెలుగు
+              </button>
+            </div>
+          </div>
+
+          {/* Dark Mode Toggle */}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+            className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/30 hover:bg-slate-100 text-slate-600 transition cursor-pointer"
             title="Toggle theme"
           >
             {isDarkMode ? <Sun size={16} className="text-yellow-500" /> : <Moon size={16} />}
@@ -130,11 +158,13 @@ function Navbar() {
           {token ? (
             <div className="flex items-center gap-3">
               <div className="flex flex-col text-right">
-                <span className="text-[10px] font-black text-blue-600 block mb-0.5 tracking-wider">Showcase Switcher</span>
+                <span className="text-[9px] font-black text-blue-600 block mb-0.5 tracking-wider">
+                  {t("nav.showcase")}
+                </span>
                 <select
                   value={role || "Patient"}
                   onChange={(e) => handleRoleSwitch(e.target.value)}
-                  className="border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] font-bold text-slate-700 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="border border-slate-200 rounded-lg px-2 py-0.5 text-[9px] font-bold text-slate-700 bg-slate-50 focus:outline-none"
                 >
                   <option value="Patient">Patient</option>
                   <option value="Doctor">Doctor</option>
@@ -148,8 +178,8 @@ function Navbar() {
               </div>
               <button
                 onClick={handleLogout}
-                className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition"
-                title="Sign Out"
+                className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition cursor-pointer"
+                title={t("nav.logout")}
               >
                 <LogOut size={14} />
               </button>
@@ -159,12 +189,12 @@ function Navbar() {
               to="/login" 
               className="bg-blue-600 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-md shadow-blue-500/10 text-sm"
             >
-              Login
+              {t("nav.login")}
             </Link>
           )}
         </div>
 
-        {/* Mobile Toggle */}
+        {/* Mobile menu trigger */}
         <button 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="md:hidden p-2 text-slate-600 hover:text-slate-800 transition"
@@ -181,26 +211,51 @@ function Navbar() {
           animate={{ opacity: 1, y: 0 }}
           className="md:hidden mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3 text-left"
         >
-          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Home</Link>
+          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">
+            {t("nav.home")}
+          </Link>
           <button
             onClick={() => handleNavClick("features")}
-            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm text-left w-full"
+            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm text-left w-full cursor-pointer"
           >
-            Features
+            {t("nav.features")}
           </button>
-          <Link to={getDashboardLink()} onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">Dashboard</Link>
+          <Link to={getDashboardLink()} onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm">
+            {t("nav.dashboard")}
+          </Link>
           <button
             onClick={() => handleNavClick("about")}
-            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm text-left w-full"
+            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm text-left w-full cursor-pointer"
           >
-            About
+            {t("nav.about")}
           </button>
           <button
             onClick={() => handleNavClick("contact")}
-            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm text-left w-full"
+            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm text-left w-full cursor-pointer"
           >
-            Contact
+            {t("nav.contact")}
           </button>
+          
+          <div className="border-t border-slate-100 my-1"></div>
+
+          {/* Mobile Language Switches */}
+          <div className="px-4 py-2 flex items-center justify-between">
+            <span className="font-semibold text-slate-600 text-sm">Language</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { changeLanguage("en"); setMobileMenuOpen(false); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${locale === "en" ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white text-slate-600"}`}
+              >
+                English
+              </button>
+              <button
+                onClick={() => { changeLanguage("te"); setMobileMenuOpen(false); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${locale === "te" ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white text-slate-600"}`}
+              >
+                తెలుగు
+              </button>
+            </div>
+          </div>
           
           <div className="border-t border-slate-100 my-1"></div>
           
@@ -210,7 +265,7 @@ function Navbar() {
               setIsDarkMode(!isDarkMode);
               setMobileMenuOpen(false);
             }}
-            className="px-4 py-2 flex items-center justify-between text-slate-600 hover:bg-slate-50 rounded-xl text-sm"
+            className="px-4 py-2 flex items-center justify-between text-slate-600 hover:bg-slate-50 rounded-xl text-sm cursor-pointer"
           >
             <span className="font-medium">Dark Mode</span>
             {isDarkMode ? <Sun size={16} className="text-yellow-500" /> : <Moon size={16} />}
@@ -224,7 +279,9 @@ function Navbar() {
                   <User size={16} />
                 </div>
                 <div>
-                  <span className="text-[9px] font-black text-blue-600 uppercase tracking-wider block mb-0.5">Showcase Switcher</span>
+                  <span className="text-[9px] font-black text-blue-600 uppercase tracking-wider block mb-0.5">
+                    {t("nav.showcase")}
+                  </span>
                   <select
                     value={role || "Patient"}
                     onChange={(e) => {
@@ -236,12 +293,14 @@ function Navbar() {
                     <option value="Patient">Patient</option>
                     <option value="Doctor">Doctor</option>
                     <option value="Hospital Admin">Admin</option>
+                    <option value="Pharmacist">Pharmacist</option>
+                    <option value="Clinic Owner">Clinic Owner</option>
                   </select>
                 </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition"
+                className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition cursor-pointer"
               >
                 <LogOut size={16} />
               </button>
@@ -252,7 +311,7 @@ function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="mx-4 bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700 transition text-center text-sm shadow-md"
             >
-              Login
+              {t("nav.login")}
             </Link>
           )}
         </motion.div>

@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import api from "../api/api";
 import { toast } from "sonner";
+import { useLanguage } from "../context/LanguageContext";
 
 function Hero() {
   const navigate = useNavigate();
+  const { t, locale } = useLanguage();
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [loggingIn, setLoggingIn] = useState(false);
@@ -34,41 +36,40 @@ function Hero() {
 
   const demoSlides = [
     {
-      title: "1. Remote Booking & Live Join",
-      description: "Patients book an appointment today and join the live virtual queue from the safety of their homes, eliminating physical waiting rooms entirely.",
-      badge: "Step 1 • Patients",
+      title: locale === "te" ? "1. రిమోట్ బుకింగ్ & లైవ్ జాయిన్" : "1. Remote Booking & Live Join",
+      description: t("how.step1_desc"),
+      badge: locale === "te" ? "దశ 1 • రోగులు" : "Step 1 • Patients",
       icon: "📱",
       image: "/images/booking.jpg"
     },
     {
-      title: "2. Real-Time AI Predictions",
-      description: "Our proprietary machine learning engine calculates the exact waiting time along with a dynamic certainty probability score.",
-      badge: "Step 2 • Predictive AI",
+      title: locale === "te" ? "2. రియల్-టైమ్ AI అంచనాలు" : "2. Real-Time AI Predictions",
+      description: t("how.step3_desc"),
+      badge: locale === "te" ? "దశ 2 • ప్రెడిక్టివ్ AI" : "Step 2 • Predictive AI",
       icon: "🎯",
       image: "/images/predictions.jpg",
       link: "https://1drv.ms/i/c/706529691FE03F4A/IQAyKtrbbud_Qqo2hor5iSURAaQpMgytRmtGbSyQ1pYjh0Q?e=shEXtG"
     },
     {
-      title: "3. Live Commute Traffic Sync",
-      description: "Integrates simulated Google Maps traffic feeds. If heavy traffic blocks the route, the system updates travel ETAs and notifies the doctor.",
-      badge: "Step 3 • Commute Sync",
+      title: locale === "te" ? "3. లైవ్ ప్రయాణ ఆలస్యాల సింక్" : "3. Live Commute Sync",
+      description: locale === "te" ? "గూగుల్ మ్యాప్స్ ట్రాఫిక్ ఫీడ్‌లను అనుసంధానిస్తుంది. ట్రాఫిక్ ఎక్కువగా ఉంటే సమయాలను అప్‌డేట్ చేస్తుంది." : "Integrates simulated Google Maps traffic feeds. If heavy traffic blocks the route, the system updates travel ETAs and notifies the doctor.",
+      badge: locale === "te" ? "దశ 3 • ప్రయాణ మార్గం" : "Step 3 • Commute Sync",
       icon: "🗺️",
       image: "/images/commute.jpg",
       link: "https://chatgpt.com/s/m_6a5a55df70088191a141c6d48bf7cd98"
     },
     {
-      title: "4. Contactless QR Check-in",
-      description: "Upon arrival, patients scan their digital token QR code at the reception desk to instantly check in and alert the staff.",
-      badge: "Step 4 • Clinic Arrival",
+      title: locale === "te" ? "4. కాంటాక్ట్‌లెస్ QR చెక్-ఇన్" : "4. Contactless QR Check-in",
+      description: t("how.step4_desc"),
+      badge: locale === "te" ? "దశ 4 • క్లినిక్ రాక" : "Step 4 • Clinic Arrival",
       icon: "🎫",
       image: "/images/qr_checkin.jpg"
     }
   ];
 
   return (
-    <section id ="home" 
-    className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-100">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-20 grid md:grid-cols-2 items-center gap-12">
+    <section id="home" className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-100 font-sans">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 py-20 grid md:grid-cols-2 items-center gap-12 text-left">
 
         {/* Left Side */}
         <motion.div
@@ -77,21 +78,24 @@ function Hero() {
           transition={{ duration: 1 }}
         >
           <p className="text-blue-600 font-semibold mb-3">
-            🚑 AI-Powered Clinic Management Platform
+            {t("hero.sub")}
           </p>
 
           <motion.h1
-  initial={{ opacity: 0, y: -50 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.8 }}
-  className="text-5xl md:text-7xl font-extrabold leading-tight"
->
-            Skip the
-            <span className="text-blue-600"> Waiting Room</span>
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-5xl md:text-7xl font-extrabold leading-tight text-slate-800"
+          >
+            {locale === "te" ? (
+              <span>వేచి ఉండే గదిని <span className="text-blue-600">దాటవేయండి</span></span>
+            ) : (
+              <span>Skip the <span className="text-blue-600">Waiting Room</span></span>
+            )}
           </motion.h1>
 
-          <p className="mt-6 text-gray-600 text-lg">
-            MedFlow AI connects patients, doctors &amp; admins in real time — with autonomous AI agents, smart queue prediction, and commute-aware no-show prevention.
+          <p className="mt-6 text-slate-500 text-lg leading-relaxed font-medium">
+            {t("hero.desc")}
           </p>
 
           {/* Impact Stats Row */}
@@ -102,16 +106,16 @@ function Hero() {
             className="mt-6 flex flex-wrap gap-4"
           >
             {[
-              { icon: "⏱️", value: "2+ hrs", label: "Saved per patient" },
-              { icon: "📉", value: "20%", label: "No-show reduction" },
-              { icon: "💰", value: "₹1L/mo", label: "Revenue recovered" },
-              { icon: "🤖", value: "3 AI", label: "Custom engines" },
+              { icon: "⏱️", value: locale === "te" ? "2+ గంటలు" : "2+ hrs", label: t("hero.saved") },
+              { icon: "📉", value: "20%", label: t("hero.noshow") },
+              { icon: "💰", value: locale === "te" ? "₹1లక్ష/నెల" : "₹1L/mo", label: t("hero.revenue") },
+              { icon: "🤖", value: locale === "te" ? "3 AI" : "3 AI", label: t("hero.engines") },
             ].map((stat) => (
               <div key={stat.label} className="flex items-center gap-2 bg-white border border-slate-100 rounded-xl px-3 py-2 shadow-sm">
                 <span className="text-lg">{stat.icon}</span>
                 <div>
                   <p className="text-sm font-black text-slate-800 leading-none">{stat.value}</p>
-                  <p className="text-[10px] text-slate-500 font-semibold">{stat.label}</p>
+                  <p className="text-[10px] text-slate-500 font-bold mt-0.5">{stat.label}</p>
                 </div>
               </div>
             ))}
@@ -123,17 +127,17 @@ function Hero() {
               whileTap={{ scale: 0.95 }}
               onClick={handleTryDemo}
               disabled={loggingIn}
-              className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold px-6 py-3.5 rounded-xl hover:shadow-xl transition duration-300 shadow-md shadow-blue-500/10 text-sm flex items-center gap-2"
+              className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold px-6 py-3.5 rounded-xl hover:shadow-xl transition duration-300 shadow-md shadow-blue-500/10 text-sm flex items-center gap-2 cursor-pointer"
             >
-              ⚡ {loggingIn ? "Logging into Demo..." : "Try Live Demo"}
+              ⚡ {loggingIn ? t("hero.logging") : t("hero.tryDemo")}
             </motion.button>
 
             <Link to="/login">
               <motion.button
                 whileHover={{ scale: 1.05, y: -1 }}
-                className="border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 px-6 py-3.5 rounded-xl transition font-extrabold text-sm tracking-tight shadow-sm flex items-center gap-1"
+                className="border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 px-6 py-3.5 rounded-xl transition font-extrabold text-sm tracking-tight shadow-sm flex items-center gap-1 cursor-pointer"
               >
-                Get Started
+                {t("hero.getStarted")}
               </motion.button>
             </Link>
 
@@ -144,9 +148,9 @@ function Hero() {
                 setActiveSlide(0);
                 setShowDemoModal(true);
               }}
-              className="border border-slate-300 text-slate-500 px-6 py-3.5 rounded-xl hover:bg-slate-50 hover:text-slate-700 transition font-semibold text-sm"
+              className="border border-slate-300 text-slate-500 px-6 py-3.5 rounded-xl hover:bg-slate-50 hover:text-slate-700 transition font-semibold text-sm cursor-pointer"
             >
-              Watch Walkthrough
+              {t("hero.walkthrough")}
             </motion.button>
           </div>
         </motion.div>
@@ -158,18 +162,17 @@ function Hero() {
           transition={{ duration: 1 }}
           className="flex justify-center"
         >
-            <motion.img
-  whileHover={{
-    scale: 1.05,
-    rotate: 2,
-  }}
-  transition={{ duration: 0.5 }}
-  src={"/images/hero_doctor.jpg"}
-  className="rounded-3xl shadow-2xl"
-  alt="Doctor"
-  loading="lazy"
-/>
-          
+          <motion.img
+            whileHover={{
+              scale: 1.05,
+              rotate: 2,
+            }}
+            transition={{ duration: 0.5 }}
+            src="/images/hero_doctor.jpg"
+            className="rounded-3xl shadow-2xl"
+            alt="Doctor"
+            loading="lazy"
+          />
         </motion.div>
 
         {/* Watch Demo interactive slides modal */}
@@ -191,7 +194,7 @@ function Hero() {
                 <button
                   type="button"
                   onClick={() => setShowDemoModal(false)}
-                  className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition font-bold"
+                  className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition font-bold cursor-pointer"
                 >
                   ✕
                 </button>
@@ -216,7 +219,7 @@ function Hero() {
                         rel="noopener noreferrer" 
                         className="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-sm transition"
                       >
-                        🔗 Open Demo Link
+                        🔗 {locale === "te" ? "డెమో లింక్ ఓపెన్ చేయండి" : "Open Demo Link"}
                       </a>
                     )}
                   </div>
@@ -247,25 +250,25 @@ function Hero() {
                       type="button"
                       disabled={activeSlide === 0}
                       onClick={() => setActiveSlide(prev => Math.max(0, prev - 1))}
-                      className="px-4 py-2 border rounded-xl font-bold text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition"
+                      className="px-4 py-2 border rounded-xl font-bold text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30 transition cursor-pointer"
                     >
-                      Previous
+                      {locale === "te" ? "మునుపటిది" : "Previous"}
                     </button>
                     {activeSlide === demoSlides.length - 1 ? (
                       <button
                         type="button"
                         onClick={() => setShowDemoModal(false)}
-                        className="px-5 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition"
+                        className="px-5 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition cursor-pointer"
                       >
-                        Finish Walkthrough
+                        {locale === "te" ? "పూర్తి చేయండి" : "Finish Walkthrough"}
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => setActiveSlide(prev => Math.min(demoSlides.length - 1, prev + 1))}
-                        className="px-5 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition"
+                        className="px-5 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition cursor-pointer"
                       >
-                        Next Step
+                        {locale === "te" ? "తదుపరిది" : "Next"}
                       </button>
                     )}
                   </div>

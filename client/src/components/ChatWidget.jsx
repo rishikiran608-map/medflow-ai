@@ -1,144 +1,34 @@
-import { useState, useEffect, useRef } from "react";
-import api from "../api/api";
-import { Send, Sparkles, MessageSquare, Bot, Mic, Shield, User, HelpCircle } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { useChat } from "../context/ChatContext";
+import { useLanguage } from "../context/LanguageContext";
+import { Send, Mic, Sparkles } from "lucide-react";
 
 function ChatWidget() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
+  const { locale, t } = useLanguage();
+  const {
+    isOpen,
+    setIsOpen,
+    messages,
+    input,
+    setInput,
+    isLoading,
+    isListening,
+    handleVoiceInput,
+    handleSend,
+    config
+  } = useChat();
+
   const messagesEndRef = useRef(null);
-  const recognitionRef = useRef(null);
-
-  // Retrieve role and name from local storage
-  const role = localStorage.getItem("userRole") || "Patient";
-  const userName = localStorage.getItem("userName") || "User";
-
-  // Dynamic greetings and themes per dashboard role
-  const roleConfigs = {
-    "Patient": {
-      agentName: "Patient Health Assistant",
-      greeting: `👋 Hello ${userName}! I am your **Patient Health Assistant**.\n\nI can help you check your live wait times, review prescriptions, understand lab reports, or check symptoms. Try asking:\n\n1. 💊 *\"What is my tablet schedule?\"*\n2. 🟢 *\"Show my queue status and wait time\"*\n3. ⚠️ *\"Check drug interactions for Aspirin and Clopidogrel\"*`,
-      suggestions: ["Show my prescriptions", "Check my queue status", "Drug interaction check for Aspirin"],
-      themeColor: "from-blue-600 to-cyan-500",
-      accent: "bg-blue-600 text-white",
-      logo: "🤖"
-    },
-    "Doctor": {
-      agentName: "Doctor Clinical Assistant",
-      greeting: `🩺 Hello Doctor! I am your **Clinical Assistant**.\n\nI can search clinic treatment guidelines, compile patient history briefings, and draft SOAP clinical summaries. Try asking:\n\n1. 📊 *\"Summarize clinical history for patient@medflow.com\"*\n2. 📝 *\"Draft SOAP notes for Stage-2 Hypertension check\"*\n3. 🏥 *\"Check treatment guidelines for Type-2 Diabetes\"*`,
-      suggestions: ["Summarize history for patient@medflow.com", "Draft Hypertension SOAP notes", "Diabetes guidelines"],
-      themeColor: "from-teal-600 to-cyan-600",
-      accent: "bg-teal-600 text-white",
-      logo: "🩺"
-    },
-    "Hospital Admin": {
-      agentName: "Reception Assistant",
-      greeting: `📋 Hello! I am your **Receptionist AI Assistant**.\n\nI can schedule walk-in bookings, estimate active backlog queue wait times, or retrieve Twilio notification outbox logs. Try asking:\n\n1. 🎫 *\"Calculate queue backlog and backlog load\"*\n2. 📊 *\"Show active queue monitor report\"*\n3. 🚗 *\"Verify no-show classifier predictions\"*`,
-      suggestions: ["Calculate queue backlog", "Show admin monitor report", "Commute no-show checks"],
-      themeColor: "from-indigo-600 to-blue-600",
-      accent: "bg-indigo-600 text-white",
-      logo: "📋"
-    },
-    "Pharmacist": {
-      agentName: "Pharmacy Assistant",
-      greeting: `💊 Welcome to the Dispensary Hub. I am your **Pharmacy Assistant**.\n\nI can verify duplicate medications, audit drug combinations for warnings, or translate handwriting scans. Try asking:\n\n1. 🧪 *\"Audit Aspirin and Clopidogrel combination warnings\"*\n2. 📝 *\"Suggest generic alternatives for Lipitor\"*\n3. 📋 *\"Verify prescription dosage schedule Metformin\"*`,
-      suggestions: ["Audit Aspirin + Clopidogrel warnings", "Suggest generic for Lipitor", "Dosage schedule Metformin"],
-      themeColor: "from-amber-500 to-orange-500",
-      accent: "bg-amber-600 text-white",
-      logo: "💊"
-    },
-    "Clinic Owner": {
-      agentName: "Clinic Owner Assistant",
-      greeting: `💼 Good day, Director. I am your **Clinic Owner Assistant**.\n\nI can provide high-level summaries of business KPIs, revenue progress, doctor utilization loads, and AI adoption trends. Try asking:\n\n1. 📈 *\"Summarize clinic business KPIs and revenue\"*\n2. 🏥 *\"Show doctor utilization levels\"*\n3. 🤖 *\"Review AI queue optimization impact\"*`,
-      suggestions: ["Summarize clinic business KPIs", "Show doctor utilization levels", "AI optimization impact"],
-      themeColor: "from-rose-500 to-pink-500",
-      accent: "bg-rose-600 text-white",
-      logo: "💼"
-    }
-  };
-
-  const config = roleConfigs[role] || roleConfigs["Patient"];
-
-  // Initialize conversations
-  useEffect(() => {
-    setMessages([
-      { role: "assistant", content: config.greeting }
-    ]);
-  }, [role, config.greeting]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
-
-  // Voice Input using Web Speech API
-  const handleVoiceInput = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Voice input is not supported in this browser. Please use Chrome.");
-      return;
+    if (isOpen) {
+      scrollToBottom();
     }
-
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-IN";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognitionRef.current = recognition;
-
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      setTimeout(() => handleSend(transcript), 200);
-    };
-
-    recognition.start();
-  };
-
-  const handleSend = async (textToSend) => {
-    const messageText = textToSend || input;
-    if (!messageText.trim()) return;
-
-    if (!textToSend) setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: messageText }]);
-    setIsLoading(true);
-
-    try {
-      const response = await api.post("/orchestrate/chat", {
-        message: messageText,
-        conversationId: `chat-${role.toLowerCase().replace(" ", "-")}`
-      });
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: response.data.response },
-      ]);
-    } catch (err) {
-      console.error("Orchestrator chat widget error:", err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "⚠️ Sorry, I could not complete that query. Verify your connection or try again in a moment.",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [messages, isLoading, isOpen]);
 
   return (
     <div className="fixed bottom-6 right-6 z-[90] font-sans">
@@ -146,7 +36,7 @@ function ChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className={`w-14 h-14 bg-gradient-to-tr ${config.themeColor} rounded-full flex items-center justify-center text-white shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 relative group`}
+          className={`w-14 h-14 bg-gradient-to-tr ${config.themeColor} rounded-full flex items-center justify-center text-white shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 relative group cursor-pointer`}
         >
           <span className="text-2xl">{config.logo}</span>
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
@@ -178,7 +68,7 @@ function ChatWidget() {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-white/70 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center transition font-bold"
+              className="text-white/70 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center transition font-bold cursor-pointer"
             >
               ✕
             </button>
@@ -220,7 +110,7 @@ function ChatWidget() {
               <button
                 key={idx}
                 onClick={() => handleSend(sug)}
-                className="bg-white hover:bg-blue-50/50 text-slate-600 border border-slate-200 text-[10px] font-bold px-3 py-1.5 rounded-full transition shadow-sm flex-shrink-0"
+                className="bg-white hover:bg-blue-50/50 text-slate-600 border border-slate-200 text-[10px] font-bold px-3 py-1.5 rounded-full transition shadow-sm flex-shrink-0 cursor-pointer"
               >
                 {sug}
               </button>
@@ -228,18 +118,12 @@ function ChatWidget() {
           </div>
 
           {/* Input Footer */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend();
-            }}
-            className="p-3 bg-white border-t border-slate-100 flex gap-2 items-center"
-          >
+          <div className="p-3 bg-white border-t border-slate-100 flex gap-2 items-center">
             <button
               type="button"
               onClick={handleVoiceInput}
-              title={isListening ? "Stop listening" : "Speak message"}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition shrink-0 ${
+              title={isListening ? t("chat.stopSpeak") : t("chat.speak")}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition shrink-0 cursor-pointer ${
                 isListening
                   ? "bg-red-500 text-white animate-pulse shadow-md"
                   : "bg-slate-100 text-slate-500 hover:bg-slate-200"
@@ -256,21 +140,22 @@ function ChatWidget() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={isListening ? "Listening..." : "Ask AI Agent or query records..."}
+              placeholder={isListening ? t("chat.listening") : t("chat.askAI")}
               className={`flex-1 border text-slate-800 placeholder-slate-400 text-xs px-4 py-2.5 rounded-xl outline-none transition ${
                 isListening
                   ? "bg-red-50 border-red-300 focus:border-red-400"
                   : "bg-slate-50 border-slate-100 focus:border-blue-500 focus:bg-white"
               }`}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
             />
             
             <button
-              type="submit"
-              className={`bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl transition text-xs shadow-md active:scale-95`}
+              onClick={() => handleSend()}
+              className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl transition text-xs shadow-md active:scale-95 cursor-pointer"
             >
-              Send
+              {t("chat.send")}
             </button>
-          </form>
+          </div>
         </div>
       )}
     </div>

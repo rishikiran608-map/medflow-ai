@@ -1,59 +1,56 @@
 import { motion } from "framer-motion";
-
-const features = [
-  {
-    icon: "🤖",
-    title: "AI Symptom Triage",
-    description:
-      "NLP-powered engine maps patient symptoms to the right specialist — reducing misrouted appointments by matching keywords to medical specialties.",
-    badge: "Custom NLP Engine",
-    badgeColor: "bg-blue-100 text-blue-700",
-  },
-  {
-    icon: "⏱️",
-    title: "Live Queue Prediction",
-    description:
-      "Proprietary wait-time predictor gives patients an exact ETA (e.g. 24 ± 2 mins, 94% confidence) based on queue depth and consultation reason.",
-    badge: "Real-Time AI",
-    badgeColor: "bg-violet-100 text-violet-700",
-  },
-  {
-    icon: "📲",
-    title: "WhatsApp Reminders",
-    description:
-      "Autonomous daemon sends appointment reminders 30 minutes before every slot via Twilio — with zero human intervention required.",
-    badge: "Background Daemon",
-    badgeColor: "bg-green-100 text-green-700",
-  },
-  {
-    icon: "🚗",
-    title: "Commute-Aware No-Show AI",
-    description:
-      "Tracks patient travel mode (driving / transit / walking) and ETA. Predicts no-show risk and alerts the clinic before the patient is even marked absent.",
-    badge: "Unique in India",
-    badgeColor: "bg-orange-100 text-orange-700",
-  },
-  {
-    icon: "🎫",
-    title: "Contactless QR Check-In",
-    description:
-      "Patients scan a digital token QR code at reception. Admin webcam scanner confirms arrival and updates the live doctor queue instantly.",
-    badge: "Webcam Scanner",
-    badgeColor: "bg-cyan-100 text-cyan-700",
-  },
-  {
-    icon: "🔒",
-    title: "Secure Payments",
-    description:
-      "Razorpay integration with HMAC-SHA256 server-side signature verification. Payment status is confirmed before any queue token is issued.",
-    badge: "HMAC Verified",
-    badgeColor: "bg-red-100 text-red-700",
-  },
-];
+import { useLanguage } from "../context/LanguageContext";
 
 function Features() {
+  const { t, locale } = useLanguage();
+
+  const featuresList = [
+    {
+      icon: "🤖",
+      title: locale === "te" ? "AI లక్షణాల విశ్లేషణ" : "AI Symptom Triage",
+      description: t("how.step1_desc"),
+      badge: locale === "te" ? "కస్టమ్ NLP ఇంజన్" : "Custom NLP Engine",
+      badgeColor: "bg-blue-100 text-blue-700",
+    },
+    {
+      icon: "⏱️",
+      title: locale === "te" ? "లైవ్ క్యూ అంచనా" : "Live Queue Prediction",
+      description: locale === "te" ? "మెషిన్ లెర్నింగ్ ఇంజన్ రోగులు వేచి ఉండే కాలాన్ని 94% ఖచ్చితత్వంతో లెక్కిస్తుంది." : "Proprietary wait-time predictor gives patients an exact ETA based on queue depth and consultation reason.",
+      badge: locale === "te" ? "రియల్-టైమ్ AI" : "Real-Time AI",
+      badgeColor: "bg-violet-100 text-violet-700",
+    },
+    {
+      icon: "📲",
+      title: locale === "te" ? "వాట్సాప్ రిమాండర్లు" : "WhatsApp Reminders",
+      description: t("how.step3_desc"),
+      badge: locale === "te" ? "బ్యాక్‌గ్రౌండ్ రన్" : "Background Daemon",
+      badgeColor: "bg-green-100 text-green-700",
+    },
+    {
+      icon: "🚗",
+      title: locale === "te" ? "ప్రయాణ మార్గం & నో-షో AI" : "Commute-Aware No-Show AI",
+      description: locale === "te" ? "రోగి ప్రయాణ విధానాన్ని (డ్రైవింగ్ / నడక) గమనించి వారి నో-షో ప్రమాదాన్ని అంచనా వేస్తుంది." : "Tracks patient travel mode (driving / transit / walking) and ETA to predict no-show risk dynamically.",
+      badge: locale === "te" ? "ప్రత్యేక ఆవిష్కరణ" : "Unique in India",
+      badgeColor: "bg-orange-100 text-orange-700",
+    },
+    {
+      icon: "🎫",
+      title: locale === "te" ? "కాంటాక్ట్‌లెస్ QR చెక్-ఇన్" : "Contactless QR Check-In",
+      description: locale === "te" ? "రోగులు తమ డిజిటల్ టోకెన్ QR కోడ్‌ను రిసెప్షన్ వద్ద స్కాన్ చేసి వెంటనే చెక్-ఇన్ చేయవచ్చు." : "Patients scan a digital token QR code at reception. Admin webcam scanner confirms arrival instantly.",
+      badge: locale === "te" ? "వెబ్‌క్యామ్ స్కానర్" : "Webcam Scanner",
+      badgeColor: "bg-cyan-100 text-cyan-700",
+    },
+    {
+      icon: "🔒",
+      title: locale === "te" ? "సురక్షితమైన చెల్లింపులు" : "Secure Payments",
+      description: locale === "te" ? "రేజర్‌పే గేట్‌వే ఇంటిగ్రేషన్ మరియు సర్వర్-సైడ్ HMAC సంతకం ధృవీకరణ." : "Razorpay integration with HMAC-SHA256 server-side signature verification for full checkout safety.",
+      badge: locale === "te" ? "HMAC వెరిఫైడ్" : "HMAC Verified",
+      badgeColor: "bg-red-100 text-red-700",
+    },
+  ];
+
   return (
-    <section id="features" className="py-24 bg-white">
+    <section id="features" className="py-24 bg-white text-left">
       <div className="max-w-6xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -63,20 +60,19 @@ function Features() {
           className="text-center mb-16"
         >
           <span className="inline-block bg-blue-100 text-blue-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest mb-4">
-            Platform Features
+            {t("features.tag")}
           </span>
           <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">
-            Predict. Prepare.
-            <span className="text-blue-600"> Heal.</span>
+            {t("features.title")}
+            <span className="text-blue-600">{t("features.heal")}</span>
           </h2>
           <p className="mt-4 text-slate-500 text-lg max-w-2xl mx-auto">
-            3 custom AI engines, 2 background daemons, and a fully deployed
-            production system — not a Figma mockup.
+            {t("features.desc")}
           </p>
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
+          {featuresList.map((feature, index) => (
             <motion.div
               key={feature.title}
               initial={{ opacity: 0, y: 30 }}
@@ -100,7 +96,7 @@ function Features() {
                 <h3 className="text-lg font-extrabold text-slate-800 mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
+                <p className="text-slate-500 text-sm leading-relaxed font-semibold">
                   {feature.description}
                 </p>
               </div>
@@ -117,7 +113,7 @@ function Features() {
           className="mt-14 bg-slate-50 rounded-3xl border border-slate-100 p-6 text-center"
         >
           <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">
-            Full-Stack Architecture
+            {t("features.footer")}
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             {[

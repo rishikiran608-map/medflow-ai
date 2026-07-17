@@ -7,7 +7,7 @@ const { supabaseAdmin } = require("../config/supabase");
 
 // 1. Unified Agent Orchestrator Chat Endpoint
 router.post("/chat", authMiddleware, async (req, res) => {
-  const { message, conversationId } = req.body;
+  const { message, conversationId, language } = req.body;
   
   if (!message) {
     return res.status(400).json({ success: false, message: "Message is required" });
@@ -24,7 +24,8 @@ router.post("/chat", authMiddleware, async (req, res) => {
       message,
       userId,
       userRole,
-      conversationId: activeThread
+      conversationId: activeThread,
+      language: language || "en"
     });
     
     res.json({ success: true, ...response });

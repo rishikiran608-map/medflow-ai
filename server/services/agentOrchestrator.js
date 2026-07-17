@@ -223,7 +223,8 @@ const orchestratorTools = {
 };
 
 // Route and run Orchestrator
-const orchestrateChat = async ({ message, userId, userRole, conversationId }) => {
+// Route and run Orchestrator
+const orchestrateChat = async ({ message, userId, userRole, conversationId, language = "en" }) => {
   const memory = await getConversationMemory(conversationId);
   const userQuery = message.toLowerCase();
   
@@ -246,6 +247,67 @@ const orchestrateChat = async ({ message, userId, userRole, conversationId }) =>
     category: null
   });
 
+  // Determine specialty persona dynamically based on doctor's department or keyword context
+  let specialty = "General Practice";
+  let personaPrompt = "";
+  
+  const activeQueue = ragResult.patientLiveContext?.queue;
+  const docSpec = activeQueue?.doctors?.specialization || "";
+  
+  if (docSpec.toLowerCase().includes("derma") || userQuery.includes("skin") || userQuery.includes("cream") || userQuery.includes("rash") || userQuery.includes("ointment")) {
+    specialty = "Dermatology";
+    personaPrompt = `
+🏥 HOSPITAL SPECIALTY PERSONA: Dermatology Assistant (Skin Care Hospital)
+- You act as an experienced, professional dermatologist.
+- Focus heavily on skin care compliance: explain creams, ointments, sunscreen usage, skin application frequency, precautions, side effects, and follow-up dermatology care. 
+- Tone: Clinical, dermatological, and encouraging.`;
+  } else if (docSpec.toLowerCase().includes("ent") || userQuery.includes("ear") || userQuery.includes("nose") || userQuery.includes("throat") || userQuery.includes("spray") || userQuery.includes("drop")) {
+    specialty = "ENT (Otolaryngology)";
+    personaPrompt = `
+🏥 HOSPITAL SPECIALTY PERSONA: ENT Assistant (ENT Hospital)
+- You act as an experienced Otolaryngologist (ENT specialist).
+- Focus on hearing care and ENT compliance: explain ear drops, nasal sprays, sinus medications, antibiotics, hearing precautions, ear cleaning guidelines, and infection prevention.
+- Tone: Highly informative, professional ENT expert.`;
+  } else if (docSpec.toLowerCase().includes("eye") || docSpec.toLowerCase().includes("ophthal") || userQuery.includes("eye") || userQuery.includes("vision") || userQuery.includes("cataract")) {
+    specialty = "Ophthalmology (Eye Hospital)";
+    personaPrompt = `
+🏥 HOSPITAL SPECIALTY PERSONA: Eye Care Assistant (Eye Hospital)
+- You act as a precise, professional ophthalmologist.
+- Focus on eye health care: explain sterile eye drop administration, cataract recovery warnings, screen-time limitations, and visual safety.
+- Tone: Meticulous and protective of vision.`;
+  } else if (docSpec.toLowerCase().includes("dent") || docSpec.toLowerCase().includes("tooth") || userQuery.includes("dental") || userQuery.includes("gum") || userQuery.includes("braces")) {
+    specialty = "Dentistry (Dental Hospital)";
+    personaPrompt = `
+🏥 HOSPITAL SPECIALTY PERSONA: Dental Care Assistant (Dental Hospital)
+- You act as a dentist.
+- Focus on oral hygiene: explain brush/floss frequencies, mouthwash rules, pain control, post-extraction guidelines, and cleaning schedules.
+- Tone: Warm, dental-health oriented.`;
+  } else {
+    specialty = "General Physician";
+    personaPrompt = `
+🏥 HOSPITAL SPECIALTY PERSONA: General Physician Assistant (General Hospital)
+- You act as an expert general practitioner.
+- Focus on general health advice, standard medication schedules, lifestyle adjustments, and scheduling parameters.
+- Tone: Empathetic, generic clinical advisor.`;
+  }
+
+  // Determine translation language instructions
+  let translationInstruction = "";
+  if (language === "te") {
+    translationInstruction = `
+🌐 LANGUAGE REQUIREMENT:
+- The user has selected **TELUGU**.
+- You MUST formulate your entire response in clear, conversational, and natural Telugu (తెలుగు).
+- Translate medical terms into simple, easily understandable Telugu descriptions (e.g., explain "ointment" as "చర్మంపై పూసే క్రీమ్/మందు", "before food" as "భోజనానికి ముందు", "twice daily" as "రోజుకు రెండు సార్లు").
+- Do NOT mix heavy English phrases. Ensure an elderly native Telugu speaker can read or listen to your response easily.
+- Keep Telugu characters grammatically correct and beautifully phrased.
+- Remind the patient at the end to consult their doctor in Telugu: "ఏదైనా మార్పులకు ముందు మీ వైద్యుడిని సంప్రదించండి."`;
+  } else {
+    translationInstruction = `
+🌐 LANGUAGE REQUIREMENT:
+- Respond in clear, professional English.`;
+  }
+
   // 2. Setup System Prompt defining capabilities, memories, and constraints
   const systemPrompt = `You are the ${assigned.name} at MedFlow AI Clinic. 
 You communicate only through the MedFlow AI Orchestration Layer.
@@ -260,6 +322,9 @@ User Context:
 RAG Knowledge & Live Database Context:
 ${JSON.stringify(ragResult.patientLiveContext || {})}
 ${JSON.stringify(ragResult.vectorResults.map(r => ({ title: r.title, content: r.content })))}
+
+${personaPrompt}
+${translationInstruction}
 
 Strict Guidelines:
 1. SECURITY: Never leak confidential records across patient roles. Logged-in patients can ONLY access their own records.

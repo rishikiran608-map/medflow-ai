@@ -4,9 +4,11 @@ import api from "../api/api";
 import { supabase } from "../lib/supabaseClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, AlertCircle } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { t, locale } = useLanguage();
   const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -52,7 +54,6 @@ function LoginPage() {
     if (error) {
       setError(error.message || "Google sign-in failed. Please try again.");
     }
-    // On success, browser redirects to Google — no further action needed here
   };
 
   const handleLogin = async () => {
@@ -96,7 +97,7 @@ function LoginPage() {
     });
 
     if (res.data.success) {
-      setSuccess("✅ Account registered successfully! Please log in.");
+      setSuccess(locale === "te" ? "✅ ఖాతా విజయవంతంగా నమోదు చేయబడింది! దయచేసి లాగిన్ అవ్వండి." : "✅ Account registered successfully! Please log in.");
       setIsRegistering(false);
       setFormData((prev) => ({ ...prev, password: "" }));
     }
@@ -120,13 +121,13 @@ function LoginPage() {
         initial={{ opacity: 0, scale: 0.95, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-10 w-full max-w-md border border-white"
+        className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-10 w-full max-w-md border border-white text-left"
       >
         <h1 className="text-4xl font-black text-center text-blue-600 tracking-tight">
-          MedFlow AI
+          {t("nav.brand")}
         </h1>
-        <p className="text-center text-gray-500 mt-2 font-medium">
-          Smart Hospital Queue Management
+        <p className="text-center text-slate-400 mt-2 font-bold text-xs uppercase tracking-widest">
+          {t("hero.sub")}
         </p>
 
         <AnimatePresence mode="wait">
@@ -142,7 +143,7 @@ function LoginPage() {
               {/* Demo Account Quick Fill */}
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2.5">
-                  ⚡ Hackathon Demo Accounts
+                  {t("login.demo")}
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
@@ -156,7 +157,7 @@ function LoginPage() {
                       key={key}
                       type="button"
                       onClick={() => handleQuickFill(key)}
-                      className={`border font-extrabold py-2 px-1 rounded-xl text-[10px] transition ${cls}`}
+                      className={`border font-extrabold py-2 px-1 rounded-xl text-[10px] transition cursor-pointer ${cls}`}
                     >
                       {label}
                     </button>
@@ -164,12 +165,12 @@ function LoginPage() {
                 </div>
               </div>
 
-              <FormInput label="Email Address" name="email"    type="email"    placeholder="name@example.com" value={formData.email}    onChange={handleChange} />
-              <FormInput label="Password"      name="password" type="password" placeholder="••••••••"         value={formData.password} onChange={handleChange} />
+              <FormInput label={t("login.email")} name="email"    type="email"    placeholder="name@example.com" value={formData.email}    onChange={handleChange} />
+              <FormInput label={t("login.password")}      name="password" type="password" placeholder="••••••••"         value={formData.password} onChange={handleChange} />
 
               <SubmitButton
-                label="Sign In"
-                loadingLabel="Signing in..."
+                label={t("login.submit")}
+                loadingLabel={t("login.signing")}
                 onSubmit={handleLogin}
                 onError={handleError}
               />
@@ -177,7 +178,7 @@ function LoginPage() {
               {/* ── Divider ── */}
               <div className="flex items-center gap-3 my-1">
                 <div className="flex-1 h-px bg-slate-200" />
-                <span className="text-xs text-slate-400 font-semibold">OR</span>
+                <span className="text-xs text-slate-400 font-semibold">{locale === "te" ? "లేదా" : "OR"}</span>
                 <div className="flex-1 h-px bg-slate-200" />
               </div>
 
@@ -185,7 +186,7 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-3 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 py-3.5 rounded-xl font-bold transition shadow-sm hover:shadow-md active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-3 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 py-3.5 rounded-xl font-bold transition shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer text-xs"
               >
                 <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -193,14 +194,14 @@ function LoginPage() {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Continue with Google
+                {locale === "te" ? "గూగుల్ తో లాగిన్ అవ్వండి" : "Continue with Google"}
               </button>
 
               <button
                 onClick={() => { setError(""); setSuccess(""); setIsRegistering(true); }}
-                className="w-full border border-blue-600 text-blue-600 py-3.5 rounded-xl font-bold hover:bg-blue-50 transition"
+                className="w-full border border-blue-600 text-blue-600 py-3.5 rounded-xl font-bold hover:bg-blue-50 transition cursor-pointer text-xs"
               >
-                Create Account
+                {locale === "te" ? "ఖాతా సృష్టించండి" : "Create Account"}
               </button>
             </motion.div>
           ) : (
@@ -212,14 +213,27 @@ function LoginPage() {
               transition={{ duration: 0.3 }}
               className="mt-8 space-y-5"
             >
-              <FormInput label="Full Name"     name="full_name" type="text"     placeholder="John Doe"         value={formData.full_name} onChange={handleChange} />
-              <FormInput label="Phone Number"  name="phone"     type="text"     placeholder="10 digit number"  value={formData.phone}     onChange={handleChange} />
-              <FormInput label="Email Address" name="email"     type="email"    placeholder="name@example.com" value={formData.email}     onChange={handleChange} />
-              <FormInput label="Password"      name="password"  type="password" placeholder="••••••••"         value={formData.password}  onChange={handleChange} />
+              <FormInput label={locale === "te" ? "పూర్తి పేరు" : "Full Name"}     name="full_name" type="text"     placeholder="John Doe"         value={formData.full_name} onChange={handleChange} />
+              <FormInput label={locale === "te" ? "ఫోన్ నంబర్" : "Phone Number"}  name="phone"     type="text"     placeholder="10 digit number"  value={formData.phone}     onChange={handleChange} />
+              <FormInput label={t("login.email")} name="email"     type="email"    placeholder="name@example.com" value={formData.email}     onChange={handleChange} />
+              <FormInput label={t("login.password")}      name="password"  type="password" placeholder="••••••••"         value={formData.password}  onChange={handleChange} />
+
+              <div className="flex flex-col">
+                <label className="font-semibold text-slate-700 text-sm">{locale === "te" ? "ఖాతా రకం" : "Account Role"}</label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full mt-2 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-xs font-bold"
+                >
+                  <option value="Patient">{locale === "te" ? "రోగి (Patient)" : "Patient"}</option>
+                  <option value="Doctor">{locale === "te" ? "వైద్యుడు (Doctor)" : "Doctor"}</option>
+                </select>
+              </div>
 
               <SubmitButton
-                label="Register Account"
-                loadingLabel="Registering..."
+                label={locale === "te" ? "నమోదు చేయండి" : "Register Account"}
+                loadingLabel={locale === "te" ? "నమోదు చేయబడుతోంది..." : "Registering..."}
                 onSubmit={handleRegister}
                 onError={handleError}
               />
@@ -227,7 +241,7 @@ function LoginPage() {
               {/* ── Divider ── */}
               <div className="flex items-center gap-3 my-1">
                 <div className="flex-1 h-px bg-slate-200" />
-                <span className="text-xs text-slate-400 font-semibold">OR</span>
+                <span className="text-xs text-slate-400 font-semibold">{locale === "te" ? "లేదా" : "OR"}</span>
                 <div className="flex-1 h-px bg-slate-200" />
               </div>
 
@@ -235,7 +249,7 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-3 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 py-3.5 rounded-xl font-bold transition shadow-sm hover:shadow-md active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-3 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 py-3.5 rounded-xl font-bold transition shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer text-xs"
               >
                 <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -243,14 +257,14 @@ function LoginPage() {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Sign up with Google
+                {locale === "te" ? "గూగుల్ తో సైన్ అప్ అవ్వండి" : "Sign up with Google"}
               </button>
 
               <button
                 onClick={() => { setError(""); setSuccess(""); setIsRegistering(false); }}
-                className="w-full border border-slate-300 text-slate-600 py-3.5 rounded-xl font-bold hover:bg-slate-50 transition"
+                className="w-full border border-slate-300 text-slate-600 py-3.5 rounded-xl font-bold hover:bg-slate-50 transition cursor-pointer text-xs text-center"
               >
-                Back to Sign In
+                {locale === "te" ? "తిరిగి లాగిన్ పేజీకి" : "Back to Sign In"}
               </button>
             </motion.div>
           )}
@@ -297,19 +311,18 @@ function FormInput({ label, name, type, placeholder, value, onChange }) {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="w-full mt-2 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium"
+        className="w-full mt-2 border border-slate-200 rounded-xl p-3 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium text-xs"
       />
     </div>
   );
 }
 
 // ─── Submit button with self-contained loading guard ──────────────────────────
-// Immediately disables on first click → prevents double-submit lag.
 function SubmitButton({ label, loadingLabel, onSubmit, onError }) {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
-    if (loading) return;       // hard guard against rapid re-clicks
+    if (loading) return;
     setLoading(true);
     try {
       await onSubmit();
@@ -324,7 +337,7 @@ function SubmitButton({ label, loadingLabel, onSubmit, onError }) {
     <button
       onClick={handleClick}
       disabled={loading}
-      className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 mt-2 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 mt-2 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-xs cursor-pointer"
     >
       {loading && (
         <svg
