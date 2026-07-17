@@ -34,6 +34,19 @@ function Navbar() {
     navigate("/login");
   };
 
+  const handleRoleSwitch = (newRole) => {
+    localStorage.setItem("userRole", newRole);
+    localStorage.setItem("userName", `${newRole} Demo`);
+    if (newRole === "Patient") {
+      navigate("/book-appointment");
+    } else if (newRole === "Doctor") {
+      navigate("/doctor-dashboard");
+    } else {
+      navigate("/admin-dashboard");
+    }
+    window.location.reload();
+  };
+
   const getDashboardLink = () => {
     if (!token) return "/login";
     if (role === "Patient") return "/patient-dashboard";
@@ -77,8 +90,16 @@ function Navbar() {
           {token ? (
             <div className="flex items-center gap-3">
               <div className="flex flex-col text-right">
-                <span className="text-xs font-bold text-slate-800">{userName}</span>
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{role}</span>
+                <span className="text-[10px] font-black text-blue-600 block mb-0.5 tracking-wider">Showcase Switcher</span>
+                <select
+                  value={role || "Patient"}
+                  onChange={(e) => handleRoleSwitch(e.target.value)}
+                  className="border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] font-bold text-slate-700 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="Patient">Patient</option>
+                  <option value="Doctor">Doctor</option>
+                  <option value="Hospital Admin">Admin</option>
+                </select>
               </div>
               <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600" title={`${userName} (${role})`}>
                 <User size={16} />
@@ -146,8 +167,19 @@ function Navbar() {
                   <User size={16} />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-800 block">{userName}</span>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{role}</span>
+                  <span className="text-[9px] font-black text-blue-600 uppercase tracking-wider block mb-0.5">Showcase Switcher</span>
+                  <select
+                    value={role || "Patient"}
+                    onChange={(e) => {
+                      handleRoleSwitch(e.target.value);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] font-bold text-slate-700 bg-slate-50 focus:outline-none"
+                  >
+                    <option value="Patient">Patient</option>
+                    <option value="Doctor">Doctor</option>
+                    <option value="Hospital Admin">Admin</option>
+                  </select>
                 </div>
               </div>
               <button
