@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Award, UsersRound, Timer, ShieldAlert, BarChart3, Activity, PlusCircle, Zap, Camera, TrendingUp } from "lucide-react";
+import { Users, Award, UsersRound, Timer, ShieldAlert, BarChart3, Activity, PlusCircle, Zap, Camera, TrendingUp, Send, Sparkles } from "lucide-react";
 import { getPatients } from "../services/patientService";
 import { getDoctors } from "../services/doctorService";
 import { getQueue } from "../services/queueService";
@@ -25,6 +25,39 @@ function AdminDashboard() {
   const [scanning, setScanning] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [scannerInstance, setScannerInstance] = useState(null);
+
+  // Admin AI RAG Chat
+  const [chatMessages, setChatMessages] = useState([
+    { role: "assistant", content: "👋 Hello, Admin! I am your **Hospital Admin Assistant**.\n\nI can help you with clinic SOPs, cancellation policies, operational reports, queue predictions, and staff scheduling insights. What do you need?" }
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+
+  const handleSendChat = async (textToSend) => {
+    const msg = typeof textToSend === "string" ? textToSend : chatInput;
+    if (!msg.trim()) return;
+    if (typeof textToSend !== "string") setChatInput("");
+    setChatMessages(prev => [...prev, { role: "user", content: msg }]);
+    setChatLoading(true);
+    try {
+      const res = await api.post("/orchestrate/chat", {
+        message: msg,
+        conversationId: "admin-workspace-chat",
+        language: locale || "en"
+      });
+      if (res.data.success) {
+        setChatMessages(prev => [
+          ...prev,
+          { role: "assistant", content: res.data.response, citations: res.data.citations }
+        ]);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("AI Assistant failed to respond.");
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const startCameraScan = async () => {
     setShowScanner(true);
@@ -467,6 +500,7 @@ function AdminDashboard() {
           {[
             { id: "monitor", label: "Live Queue Monitor", icon: BarChart3 },
             { id: "aiinsights", label: "🤖 AI Insights", icon: Activity },
+            { id: "admin-ai", label: "✨ Admin AI Assistant", icon: Sparkles },
             { id: "analytics", label: "SaaS Analytics", icon: Activity },
             { id: "doctors", label: "Doctors Directory", icon: Award },
             { id: "patients", label: "Registered Patients", icon: Users },
@@ -492,7 +526,99 @@ function AdminDashboard() {
 
         {/* Tab Contents */}
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden p-8">
-          
+
+          {/* TAB: ✨ Admin AI RAG Assistant */}
+          {activeTab === "admin-ai" && (
+            <div className="flex flex-col h-[600px]">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Sparkles className="text-white" size={18} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-800">Hospital Admin AI Assistant</h3>
+                  <p className="text-xs text-slate-400 font-semibold">RAG-powered • SOP & Clinical knowledge base active</p>
+                </div>
+                <span className="ml-auto flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  Live RAG
+                </span>
+              </div>
+
+              {/* Suggested Questions */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {[
+                  "What is the cancellation policy?",
+                  "Generate an admin operational report",
+                  "What are the Hypertension guidelines?",
+                  "Drug interactions for Aspirin?",
+                  "How does no-show detection work?"
+                ].map((sug, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSendChat(sug)}
+                    className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-full border border-blue-200 transition"
+                  >
+                    {sug}
+                  </button>
+                ))}
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto space-y-4 pr-1 mb-4">
+                {chatMessages.map((msg, idx) => (
+                  <div key={idx} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
+                    {msg.role === "assistant" && (
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xs font-black">AI</div>
+                    )}
+                    <div className={`max-w-[80%] ${ msg.role === "user" ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm" : "bg-slate-50 border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm" } px-4 py-3`}>
+                      <p className="text-sm font-medium whitespace-pre-wrap">{msg.content}</p>
+                      {msg.citations && msg.citations.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-slate-200">
+                          {(Array.isArray(msg.citations) ? msg.citations : [msg.citations]).map((c, ci) => (
+                            <span key={ci} className="inline-flex items-center gap-1 text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full border border-blue-200">
+                              📖 {c.title} [{Math.round((c.confidence || 0.8) * 100)}% Match]
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {chatLoading && (
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center text-white text-xs font-black">AI</div>
+                    <div className="bg-slate-50 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay:"0ms"}} />
+                        <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay:"150ms"}} />
+                        <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay:"300ms"}} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Input */}
+              <div className="flex gap-2 pt-4 border-t border-slate-100">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendChat()}
+                  placeholder="Ask about SOPs, clinical protocols, staff reports..."
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  onClick={handleSendChat}
+                  disabled={chatLoading || !chatInput.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl px-4 py-2.5 transition shadow-md shadow-blue-500/20"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* TAB: 🤖 AI Insights */}
           {activeTab === "aiinsights" && (() => {
             // Compute no-show risk for each active queue patient inline

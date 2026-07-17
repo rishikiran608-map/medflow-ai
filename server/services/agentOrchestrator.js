@@ -232,7 +232,7 @@ const orchestrateChat = async ({ message, userId, userRole, conversationId, lang
     const allowedAgents = {
       "Patient": { name: "Patient Health Assistant", category: "Patient Records" },
       "Doctor": { name: "Doctor Clinical Assistant", category: "Clinical Protocols" },
-      "Hospital Admin": { name: "Reception Assistant", category: "Clinic SOPs" },
+      "Hospital Admin": { name: "Hospital Admin Assistant", category: "Clinic SOPs" },
       "Pharmacist": { name: "Pharmacy Assistant", category: "Medicine Database" },
       "Clinic Owner": { name: "Clinic Owner Assistant", category: "Business KPIs" }
     };
