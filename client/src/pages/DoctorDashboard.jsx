@@ -9,9 +9,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_QUEUE } from "../data/demoData";
+import { useLanguage } from "../context/LanguageContext";
 
 function DoctorDashboard() {
   const navigate = useNavigate();
+  const { t, locale } = useLanguage();
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -189,8 +191,8 @@ function DoctorDashboard() {
         <div className="flex items-center gap-3">
           <span className="text-3xl">🩺</span>
           <div>
-            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Clinical Doctor Panel</h1>
-            <p className="text-slate-500 text-sm font-medium">Manage queue check-ins, prepare patient summaries, and finalize SOAP prescriptions.</p>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t("doctor.title")}</h1>
+            <p className="text-slate-500 text-sm font-medium">{t("doctor.sub")}</p>
           </div>
         </div>
 
@@ -206,20 +208,20 @@ function DoctorDashboard() {
                 <div className="absolute top-0 right-0 w-48 h-48 bg-teal-50 rounded-full blur-3xl -z-10"></div>
                 <h3 className="text-sm font-black text-teal-600 uppercase tracking-wider flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-500" />
-                  AI Pre-Consultation Preparation Briefing
+                  {t("doctor.briefingHeader")}
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-700">
                   <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Recent Complaints</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">{t("doctor.recentComplaints")}</span>
                     <p>{briefing.complaints}</p>
                   </div>
                   <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Chronic Diseases</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">{t("doctor.chronicDiseases")}</span>
                     <p>{briefing.chronicDiseases}</p>
                   </div>
                   <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Allergies flagged</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">{t("doctor.allergiesFlagged")}</span>
                     <p className="text-red-600 font-extrabold">{briefing.allergies}</p>
                   </div>
                   <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
@@ -362,29 +364,29 @@ function DoctorDashboard() {
                 {/* Diagnosis and prescription paddings */}
                 <div className="space-y-5">
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">Diagnosis Summary</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">{t("doctor.diagnosisLabel")}</label>
                     <input
                       type="text"
                       value={diagnosis}
                       onChange={(e) => setDiagnosis(e.target.value)}
-                      placeholder="e.g. Acute Cardiac Strain check, Hypertension Stage 2..."
+                      placeholder={t("doctor.diagnosisPlaceholder") || "e.g. Acute Cardiac Strain check, Hypertension Stage 2..."}
                       className="w-full border border-slate-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500/20 bg-white font-semibold text-slate-800"
                     />
                   </div>
 
                   <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-semibold">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Add Medicine</h4>
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">{t("doctor.addMed")}</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <input 
                         type="text" 
-                        placeholder="Medicine Name" 
+                        placeholder={t("doctor.medName") || "Medicine Name"} 
                         value={medName} 
                         onChange={(e) => setMedName(e.target.value)}
                         className="border border-slate-200 rounded-xl p-2.5 text-xs bg-white"
                       />
                       <input 
                         type="text" 
-                        placeholder="Dosage (e.g. 5mg)" 
+                        placeholder={t("doctor.dosage") || "Dosage (e.g. 5mg)"} 
                         value={medDosage} 
                         onChange={(e) => setMedDosage(e.target.value)}
                         className="border border-slate-200 rounded-xl p-2.5 text-xs bg-white"
@@ -404,7 +406,7 @@ function DoctorDashboard() {
                       onClick={handleAddMed}
                       className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-xl mt-3 text-xs transition"
                     >
-                      Add Medication to Rx Pad
+                      {t("doctor.addRxButton")}
                     </button>
                   </div>
 
@@ -430,7 +432,7 @@ function DoctorDashboard() {
                       className="bg-green-600 hover:bg-green-700 text-white font-black px-6 py-3.5 rounded-xl transition text-xs shadow-lg shadow-green-500/10 flex items-center gap-2"
                     >
                       <CheckSquare size={14} />
-                      {completing ? "Submitting Summary..." : "Complete Consultation & Log Rx"}
+                      {completing ? "Submitting Summary..." : t("doctor.completeButton")}
                     </button>
                   </div>
                 </div>
@@ -438,14 +440,14 @@ function DoctorDashboard() {
             ) : (
               <div className="bg-white rounded-3xl p-10 text-center shadow-sm border border-slate-100 py-20 flex flex-col items-center">
                 <Smile className="w-16 h-16 text-slate-300 mb-4 animate-bounce" />
-                <h3 className="text-2xl font-black text-slate-800">No Patient In Chamber</h3>
-                <p className="text-slate-400 text-xs mt-1 max-w-sm">Use the buttons to call the next checked-in patient from the wait queue line.</p>
+                <h3 className="text-2xl font-black text-slate-800">{t("doctor.emptySession")}</h3>
+                <p className="text-slate-400 text-xs mt-1 max-w-sm">{t("doctor.emptySessionDesc")}</p>
                 <button
                   onClick={handleCallNext}
                   disabled={callingNext || waitingQueue.length === 0}
                   className="bg-teal-600 hover:bg-teal-700 text-white font-black px-6 py-3.5 rounded-xl transition text-xs mt-6 flex items-center gap-2"
                 >
-                  <Play size={14} /> Call Next Patient
+                  <Play size={14} /> {t("doctor.callNext")}
                 </button>
               </div>
             )}

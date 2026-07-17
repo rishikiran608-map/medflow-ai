@@ -9,9 +9,11 @@ import { loadScript } from "../utils/loadScript";
 import api from "../api/api";
 import { toast } from "sonner";
 import { DEMO_PATIENTS, DEMO_DOCTORS, DEMO_QUEUE, DEMO_NOTIFICATIONS } from "../data/demoData";
+import { useLanguage } from "../context/LanguageContext";
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const { t, locale } = useLanguage();
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [queue, setQueue] = useState([]);
@@ -363,8 +365,8 @@ function AdminDashboard() {
         {/* Header Block */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
           <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Hospital Administration Console</h2>
-            <p className="text-xs font-semibold text-slate-400 mt-1">Live queue operations monitoring, directories, and analytical insights.</p>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t("admin.title")}</h2>
+            <p className="text-xs font-semibold text-slate-400 mt-1">{t("admin.sub")}</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.03 }}
@@ -373,14 +375,14 @@ function AdminDashboard() {
             disabled={seeding}
             className="w-full sm:w-auto bg-blue-600 text-white font-extrabold px-5 py-3 rounded-xl hover:bg-blue-700 transition shadow-md shadow-blue-500/10 text-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
           >
-            <Zap size={14} className={seeding ? "animate-spin" : ""} /> {seeding ? "Seeding..." : "Seed Showcase Data"}
+            <Zap size={14} className={seeding ? "animate-spin" : ""} /> {seeding ? "Seeding..." : t("admin.seedingButton")}
           </motion.button>
         </div>
 
         {/* 🤖 AI Impact Banner */}
         <div className="mb-6 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-3xl p-5 text-white shadow-xl shadow-blue-500/20">
           <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2 flex items-center gap-1.5">
-            🤖 Today's AI Impact — Live
+            🤖 {t("admin.impactHeader")}
             <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping inline-block" />
           </p>
           <div className="flex flex-wrap gap-6 items-center">
@@ -388,14 +390,14 @@ function AdminDashboard() {
               <p className="text-2xl font-black">
                 {Math.max(1, queue.filter(q => ["No Show", "Cancelled"].includes(q.queue_status)).length + 2)}
               </p>
-              <p className="text-xs font-semibold opacity-80">No-Shows Prevented</p>
+              <p className="text-xs font-semibold opacity-80">{t("admin.prevented")}</p>
             </div>
             <div className="w-px h-8 bg-white/30" />
             <div>
               <p className="text-2xl font-black">
                 ₹{(Math.max(1, queue.filter(q => ["No Show", "Cancelled"].includes(q.queue_status)).length + 2) * 2000).toLocaleString()}
               </p>
-              <p className="text-xs font-semibold opacity-80">Est. Revenue Saved</p>
+              <p className="text-xs font-semibold opacity-80">{t("admin.savedRevenue")}</p>
             </div>
             <div className="w-px h-8 bg-white/30" />
             <div>

@@ -3,8 +3,10 @@ import { TrendingUp, Users, Activity, Heart, ArrowUpRight, CheckCircle, MessageS
 import api from "../api/api";
 import { toast } from "sonner";
 import { DEMO_CLINIC_KPIS, DEMO_DOCTORS } from "../data/demoData";
+import { useLanguage } from "../context/LanguageContext";
 
 function ClinicOwnerDashboard() {
+  const { t, locale } = useLanguage();
   // Chat state
   const [chatMessages, setChatMessages] = useState([
     { role: "assistant", content: "💼 Welcome back, Director. I am your **Clinic Owner Assistant**.\n\nI can analyze your clinical performance, track revenue trends, monitor doctor utilization rates, and review AI adoption stats." }
@@ -60,8 +62,8 @@ function ClinicOwnerDashboard() {
         <div className="flex items-center gap-3">
           <span className="text-3xl">💼</span>
           <div>
-            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Clinic Director Panel</h1>
-            <p className="text-slate-500 text-sm font-medium">Analyze overall hospital growth, doctor utilization, and AI orchestration adoption.</p>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t("owner.title")}</h1>
+            <p className="text-slate-500 text-sm font-medium">{t("owner.sub")}</p>
           </div>
         </div>
 
@@ -70,7 +72,7 @@ function ClinicOwnerDashboard() {
           {/* Revenue */}
           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-start">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Gross revenue</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-wider">{t("owner.revenue")}</span>
               <span className="p-2 bg-green-50 text-green-600 rounded-xl"><TrendingUp size={16} /></span>
             </div>
             <div className="mt-4">
@@ -85,7 +87,7 @@ function ClinicOwnerDashboard() {
           {/* Retention */}
           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-start">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Patient Retention</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-wider">{t("owner.retention")}</span>
               <span className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Users size={16} /></span>
             </div>
             <div className="mt-4">

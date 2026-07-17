@@ -4,8 +4,10 @@ import api from "../api/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { DEMO_PRESCRIPTIONS, DEMO_PHARMA_PENDING } from "../data/demoData";
+import { useLanguage } from "../context/LanguageContext";
 
 function PharmacistDashboard() {
+  const { t, locale } = useLanguage();
   // Prescription OCR Vision state
   const [image, setImage] = useState(null);
   const [base64, setBase64] = useState("");
@@ -180,8 +182,8 @@ function PharmacistDashboard() {
         <div className="flex items-center gap-3">
           <span className="text-3xl">💊</span>
           <div>
-            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Pharmacist Workspace</h1>
-            <p className="text-slate-500 text-sm font-medium">Verify handwritten prescriptions, audit interactions, and schedule dispenses.</p>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t("pharmacist.title")}</h1>
+            <p className="text-slate-500 text-sm font-medium">{t("pharmacist.sub")}</p>
           </div>
         </div>
 
@@ -189,7 +191,7 @@ function PharmacistDashboard() {
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-md">
           <h2 className="text-xl font-extrabold text-slate-800 flex items-center gap-2 mb-5">
             <Sparkles className="w-5 h-5 text-amber-500" />
-            AI Handwritten Prescription Reader
+            {t("pharmacist.uploadHeader")}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

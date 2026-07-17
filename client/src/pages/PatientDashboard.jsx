@@ -9,9 +9,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_APPOINTMENTS, DEMO_TIMELINE, DEMO_QUEUE_ENTRY } from "../data/demoData";
+import { useLanguage } from "../context/LanguageContext";
 
 function PatientDashboard() {
   const navigate = useNavigate();
+  const { t, locale } = useLanguage();
   
   // Tab states for 15 sections
   // 'overview' (appointments, notifications, contacts)
@@ -287,12 +289,12 @@ function PatientDashboard() {
 
         <div className="flex flex-col gap-1">
           {[
-            { id: "overview", label: "Overview & Vitals", icon: <Activity className="w-4 h-4" /> },
-            { id: "timeline", label: "Medical Timeline", icon: <History className="w-4 h-4" /> },
-            { id: "prescriptions", label: "Medication Vault", icon: <Sparkles className="w-4 h-4" /> },
-            { id: "reports", label: "Reports & Images", icon: <FileText className="w-4 h-4" /> },
-            { id: "billing", label: "Billing & Insurance", icon: <CreditCard className="w-4 h-4" /> },
-            { id: "settings", label: "Consents & Profile", icon: <Settings className="w-4 h-4" /> },
+            { id: "overview", label: t("patient.tabOverview") || "Overview & Vitals", icon: <Activity className="w-4 h-4" /> },
+            { id: "timeline", label: t("patient.tabTimeline") || "Medical Timeline", icon: <History className="w-4 h-4" /> },
+            { id: "prescriptions", label: t("patient.tabPrescriptions") || "Medication Vault", icon: <Sparkles className="w-4 h-4" /> },
+            { id: "reports", label: t("patient.tabImages") || "Reports & Images", icon: <FileText className="w-4 h-4" /> },
+            { id: "billing", label: t("patient.tabInvoices") || "Billing & Insurance", icon: <CreditCard className="w-4 h-4" /> },
+            { id: "settings", label: t("patient.tabSettings") || "Consents & Profile", icon: <Settings className="w-4 h-4" /> },
           ].map(tab => (
             <button
               key={tab.id}

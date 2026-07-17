@@ -87,11 +87,11 @@ function ChatPanel({ showHeader = false, className = "" }) {
           <div>
             <p className="font-extrabold text-sm tracking-tight flex items-center gap-1.5">
               {config.agentName}
-              <span className="text-[9px] bg-green-400 text-slate-950 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                Live
+              <span className="text-[8px] bg-green-400 text-slate-950 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5">
+                ⚡ RAG ACTIVE
               </span>
             </p>
-            <p className="text-[10px] text-white/80 font-semibold">MedFlow OS Orchestration Layer</p>
+            <p className="text-[10px] text-white/80 font-semibold">MedFlow pgvector RAG & GPT-4o</p>
           </div>
         </div>
       )}
