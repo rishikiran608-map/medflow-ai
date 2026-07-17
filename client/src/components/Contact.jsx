@@ -1,56 +1,30 @@
+/**
+ * Contact section — landing page.
+ *
+ * Desktop/Tablet (≥768px):
+ *   Shows the embedded ChatPanel directly inline (no floating button).
+ *
+ * Mobile (<768px):
+ *   Hides the embedded chat entirely — ChatWidget FAB handles it instead.
+ *   Shows a simple "Open AI Chat" CTA button that triggers the FAB modal.
+ *
+ * Single source of truth: all state lives in ChatContext.
+ */
 import { useChat } from "../context/ChatContext";
 import { useLanguage } from "../context/LanguageContext";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send, Sparkles, AlertTriangle } from "lucide-react";
+import { Mail, Phone, MapPin, Sparkles, AlertTriangle, MessageSquare } from "lucide-react";
+import ChatPanel from "./ChatPanel";
 
 function Contact() {
   const { t, locale } = useLanguage();
-  const {
-    setIsOpen,
-    input,
-    setInput,
-    handleSend,
-    config
-  } = useChat();
-
-  const handleSuggestionClick = async (suggestion) => {
-    setIsOpen(true);
-    await handleSend(suggestion);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    setIsOpen(true);
-    handleSend();
-  };
-
-  // Specialty suggestion questions list
-  const quickActions = locale === "te" ? [
-    "నా ప్రిస్క్రిప్షన్లు చూపించు",
-    "నేను ఏ మందులు వేసుకుంటున్నాను?",
-    "నా క్యూ స్థితి తనిఖీ చేయి",
-    "ఈరోజు అపాయింట్‌మెంట్ చూపించు",
-    "నా రక్త నివేదికను వివరించు",
-    "మందుల రిమైండర్లు",
-    "డ్రగ్ ఇంటరాక్షన్ తనిఖీ",
-    "వైద్యుడిని సంప్రదించండి"
-  ] : [
-    "Show my prescriptions",
-    "What medicines am I taking?",
-    "Check my queue status",
-    "Show today's appointment",
-    "Explain my blood report",
-    "Medicine reminders",
-    "Drug interaction check",
-    "Contact my doctor"
-  ];
+  const { setIsOpen, config } = useChat();
 
   return (
     <section id="contact" className="py-24 bg-gradient-to-br from-blue-50 via-white to-cyan-50 font-sans text-left relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 md:px-12 grid md:grid-cols-5 gap-16 items-start">
-        
-        {/* Left: Contact Info (Col Span 2) */}
+
+        {/* ── Left column: contact info ── */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -101,87 +75,68 @@ function Contact() {
               </div>
             </div>
           </div>
+
+          {/* Mobile CTA — only shown on screens <768px where embedded chat is hidden */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsOpen(true)}
+              className={`w-full flex items-center justify-center gap-2.5 bg-gradient-to-r ${config.themeColor} text-white font-extrabold py-4 rounded-2xl shadow-xl text-sm transition active:scale-95 cursor-pointer`}
+            >
+              <MessageSquare size={18} />
+              {locale === "te" ? "AI ఆరోగ్య సహాయకుడిని తెరవండి" : "Open AI Health Assistant"}
+            </button>
+            <p className="text-[10px] text-slate-400 font-semibold text-center mt-2">
+              {locale === "te" ? "ట్యాప్ చేసి మీ AI తో మాట్లాడండి" : "Tap to chat with your AI assistant"}
+            </p>
+          </div>
         </motion.div>
 
-        {/* Right: Embedded Chatbot Card (Col Span 3) */}
+        {/* ── Right column: embedded ChatPanel (desktop/tablet only) ── */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="md:col-span-3 bg-white p-8 md:p-10 rounded-3xl border border-slate-100 shadow-xl space-y-6 text-left relative overflow-hidden"
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="md:col-span-3 hidden md:block"
         >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-2xl -z-10"></div>
-          
-          <div>
-            <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-2.5 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1.5 w-fit">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-              {locale === "te" ? "మెడ్‌ఫ్లో AI హెల్త్ అసిస్టెంట్" : "MedFlow AI Health Assistant"}
-            </span>
-            <h3 className="text-xl font-extrabold text-slate-800 mt-3.5">
-              {locale === "te" ? "హలో 👋 నేను మీ మెడ్‌ఫ్లో AI ఆరోగ్య సహాయకుడిని." : "Hello 👋 I am your MedFlow AI Health Assistant."}
-            </h3>
-            <p className="text-xs text-slate-400 font-semibold mt-1">
-              {locale === "te" ? "నేను మీకు వీటిలో సహాయపడగలను:" : "I can help you with:"}
-            </p>
-          </div>
-
-          {/* List of assistant jobs */}
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-semibold text-slate-600 pl-1 list-disc list-inside">
-            <li>{locale === "te" ? "ప్రిస్క్రిప్షన్లు చూడండి" : "View prescriptions"}</li>
-            <li>{locale === "te" ? "మందుల షెడ్యూల్స్" : "Medicine schedules"}</li>
-            <li>{locale === "te" ? "అపాయింట్‌మెంట్ స్థితి" : "Appointment status"}</li>
-            <li>{locale === "te" ? "క్యూ ట్రాకింగ్" : "Queue tracking"}</li>
-            <li>{locale === "te" ? "ల్యాబ్ రిపోర్ట్ వివరణ" : "Lab report explanation"}</li>
-            <li>{locale === "te" ? "వైద్య చరిత్ర" : "Medical history"}</li>
-            <li>{locale === "te" ? "ఆరోగ్య సారాంశాలు" : "Health summaries"}</li>
-            <li>{locale === "te" ? "డ్రగ్ ఇంటరాక్షన్ సమాచారం" : "Drug interaction info"}</li>
-          </ul>
-
-          <div className="bg-amber-50 border border-amber-100 text-amber-800 rounded-2xl p-4 flex gap-2.5 items-start">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-            <p className="text-[10px] leading-relaxed font-bold">
-              {locale === "te" 
-                ? "గమనిక: ఈ AI ఆరోగ్య సహాయం కోసం మాత్రమే మరియు ఇది వైద్యుడి చికిత్సకు ప్రత్యామ్నాయం కాదు."
-                : "Please note: This AI provides healthcare assistance only and is not a substitute for professional medical advice."}
-            </p>
-          </div>
-
-          {/* Suggested Quick Actions */}
-          <div className="space-y-2">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
-              {locale === "te" ? "సూచించిన ప్రశ్నలు" : "Suggested Queries"}
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {quickActions.map((act) => (
-                <button
-                  key={act}
-                  onClick={() => handleSuggestionClick(act)}
-                  className="bg-slate-50 hover:bg-blue-50/50 text-slate-600 border border-slate-100 text-[10px] font-bold px-3 py-1.5 rounded-full transition shadow-sm cursor-pointer"
-                >
-                  {act}
-                </button>
-              ))}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl overflow-hidden">
+            {/* Card header */}
+            <div className={`bg-gradient-to-r ${config.themeColor} px-6 py-4 flex items-center justify-between`}>
+              <div className="flex items-center gap-3 text-white">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner">
+                  {config.logo}
+                </div>
+                <div>
+                  <p className="font-extrabold text-sm flex items-center gap-1.5">
+                    {config.agentName}
+                    <span className="text-[9px] bg-green-400 text-slate-950 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                      Live
+                    </span>
+                  </p>
+                  <p className="text-[10px] text-white/80 font-semibold">MedFlow OS Orchestration Layer</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className="text-amber-300 animate-pulse" />
+                <span className="text-[10px] font-black text-white/80 uppercase tracking-wider">
+                  {locale === "te" ? "AI శక్తితో" : "AI Powered"}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Form Input */}
-          <form onSubmit={handleSubmit} className="border-t border-slate-100 pt-5 flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={locale === "te" ? "ఆరోగ్య సహాయకుడిని అడగండి..." : "Ask your health assistant..."}
-              className="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-600 bg-slate-50 focus:bg-white font-semibold text-slate-800"
-            />
-            <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-5 py-3 rounded-xl text-xs transition shadow-md shadow-blue-500/10 cursor-pointer flex items-center gap-1.5 shrink-0"
-            >
-              <Send size={12} />
-              <span>{t("chat.send")}</span>
-            </button>
-          </form>
+            {/* Medical disclaimer strip */}
+            <div className="flex items-start gap-2.5 bg-amber-50 border-b border-amber-100 px-5 py-3">
+              <AlertTriangle size={13} className="text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-[10px] text-amber-700 font-semibold leading-relaxed">
+                {locale === "te"
+                  ? "గమనిక: ఈ AI ఆరోగ్య సహాయం కోసం మాత్రమే మరియు ఇది వైద్యుడి చికిత్సకు ప్రత్యామ్నాయం కాదు."
+                  : "This AI provides healthcare assistance only and is not a substitute for professional medical advice."}
+              </p>
+            </div>
+
+            {/* The single shared chat panel — fixed height so it doesn't push page */}
+            <ChatPanel className="h-[480px]" />
+          </div>
         </motion.div>
 
       </div>
