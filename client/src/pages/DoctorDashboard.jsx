@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, Clipboard, RefreshCw, AlertCircle, Clock, Play, CheckSquare, 
   Smile, Phone, Activity, Sparkles, Send, ShieldAlert, Heart,
-  ScanLine, ShieldCheck, FlaskConical, Eye, Stethoscope
+  ScanLine, ShieldCheck, FlaskConical, Eye, Stethoscope, TrendingUp
 } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_QUEUE } from "../data/demoData";
@@ -28,6 +28,13 @@ function DoctorDashboard() {
   const [medName, setMedName] = useState("");
   const [medDosage, setMedDosage] = useState("");
   const [medFreq, setMedFreq] = useState("1 tablet • Daily");
+
+  // Health Progress Trend variables recorded by doctor
+  const [diseaseSeverity, setDiseaseSeverity] = useState(2);
+  const [recoveryScore, setRecoveryScore] = useState(50);
+  const [treatmentStatus, setTreatmentStatus] = useState("Improving");
+  const [followUpDate, setFollowUpDate] = useState("");
+  const [clinicalNotes, setClinicalNotes] = useState("");
 
   // Doctor AI Chat Assistant states
   const [chatMessages, setChatMessages] = useState([
@@ -135,11 +142,21 @@ function DoctorDashboard() {
     try {
       await api.put(`/queue/complete/${queueId}`, {
         prescription: medsList,
-        diagnosis: diagnosis || "General Checkup"
+        diagnosis: diagnosis || "General Checkup",
+        diseaseSeverity: parseInt(diseaseSeverity),
+        recoveryScore: parseInt(recoveryScore),
+        treatmentStatus: treatmentStatus,
+        followUpDate: followUpDate || new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString().split('T')[0],
+        clinicalNotes: clinicalNotes || "Routine clinic consultation completed."
       });
       toast.success("Consultation completed successfully!");
       setMedsList([]);
       setDiagnosis("");
+      setDiseaseSeverity(2);
+      setRecoveryScore(50);
+      setTreatmentStatus("Improving");
+      setFollowUpDate("");
+      setClinicalNotes("");
       setBriefing(null);
       await loadDoctorQueue();
     } catch (err) {
@@ -432,6 +449,83 @@ function DoctorDashboard() {
                       ))}
                     </div>
                   )}
+
+                  {/* Health Progress Trend Analytics */}
+                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 text-xs font-semibold space-y-4">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <TrendingUp size={12} className="text-teal-600 animate-pulse" />
+                      Disease Progress & Recovery Analytics
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1.5">Disease Severity</label>
+                        <select
+                          value={diseaseSeverity}
+                          onChange={(e) => setDiseaseSeverity(Number(e.target.value))}
+                          className="w-full border border-slate-200 rounded-xl p-2.5 bg-white text-xs font-bold"
+                        >
+                          <option value={1}>1 - Very Mild</option>
+                          <option value={2}>2 - Mild</option>
+                          <option value={3}>3 - Moderate</option>
+                          <option value={4}>4 - Severe</option>
+                          <option value={5}>5 - Critical</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1.5">Recovery Score: {recoveryScore}%</label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={recoveryScore}
+                            onChange={(e) => setRecoveryScore(Number(e.target.value))}
+                            className="w-full accent-teal-600 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                          />
+                          <span className="font-extrabold text-[10px] text-teal-600 bg-teal-50 border border-teal-100 px-2 py-1 rounded">
+                            {recoveryScore}%
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1.5">Treatment Status</label>
+                        <select
+                          value={treatmentStatus}
+                          onChange={(e) => setTreatmentStatus(e.target.value)}
+                          className="w-full border border-slate-200 rounded-xl p-2.5 bg-white text-xs font-bold"
+                        >
+                          <option value="Improving">Improving</option>
+                          <option value="Stable">Stable</option>
+                          <option value="Resolved">Resolved</option>
+                          <option value="Worsening">Worsening</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1.5">Follow-up Date</label>
+                        <input
+                          type="date"
+                          value={followUpDate}
+                          onChange={(e) => setFollowUpDate(e.target.value)}
+                          className="w-full border border-slate-200 rounded-xl p-2 bg-white text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1.5">Clinical Notes & Recommendations</label>
+                      <textarea
+                        rows="2"
+                        value={clinicalNotes}
+                        onChange={(e) => setClinicalNotes(e.target.value)}
+                        placeholder="e.g. Skin rash showing positive resolution. Instructed to maintain daily moisturizers..."
+                        className="w-full border border-slate-200 rounded-xl p-2.5 bg-white text-xs font-semibold focus:outline-none"
+                      />
+                    </div>
+                  </div>
 
                   <div className="flex justify-end gap-3 border-t border-slate-100 pt-5 mt-5">
                     <button

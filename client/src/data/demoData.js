@@ -146,6 +146,53 @@ export const DEMO_PRESCRIPTIONS = [
   },
 ];
 
+export const DEMO_HEALTH_CONSULTATIONS = [
+  {
+    id: "visit-1",
+    date: FMT_DATE(-35),
+    doctorName: "Dr. Emily Watson",
+    department: "Dermatology",
+    diagnosis: "Severe Atopic Dermatitis",
+    prescription: "Hydrocortisone 1% cream + Cetirizine 10mg",
+    recoveryScore: 30,
+    severityScore: 4, // Severe
+    notes: "Patient presented with widespread dry skin, severe itching, and sleep loss. Started steroid ointment."
+  },
+  {
+    id: "visit-2",
+    date: FMT_DATE(-20),
+    doctorName: "Dr. Emily Watson",
+    department: "Dermatology",
+    diagnosis: "Atopic Dermatitis (Improving)",
+    prescription: "Hydrocortisone 1% (tapering) + Moisturizing Cream",
+    recoveryScore: 55,
+    severityScore: 3, // Moderate
+    notes: "Inflammation decreased. Starting barrier moisturization routine daily."
+  },
+  {
+    id: "visit-3",
+    date: FMT_DATE(-7),
+    doctorName: "Dr. Emily Watson",
+    department: "Dermatology",
+    diagnosis: "Mild Atopic Dermatitis",
+    prescription: "Moisturizing Cream daily",
+    recoveryScore: 78,
+    severityScore: 2, // Mild
+    notes: "Rash resolved. Safe to stop steroid. Keep skin hydrated with moisturizers."
+  },
+  {
+    id: "visit-4",
+    date: FMT_DATE(-2),
+    doctorName: "Dr. Emily Watson",
+    department: "Dermatology",
+    diagnosis: "Atopic Dermatitis (In Remission)",
+    prescription: "Moisturizing Cream daily",
+    recoveryScore: 92,
+    severityScore: 1, // Very Mild
+    notes: "Skin barrier restored. High compliance score. Follow-up consultation scheduled in 6 months."
+  }
+];
+
 // ─── Medical Timeline ─────────────────────────────────────────────────────────
 export const DEMO_TIMELINE = [
   { type: "Consultation", date: FMT_DATE(-2),  desc: "Cardiology review with Dr. Rajesh Kumar. BP: 138/86. ECG: Normal sinus rhythm. LDL elevated — statin adjusted.", icon: "🩺" },

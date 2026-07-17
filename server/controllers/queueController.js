@@ -345,6 +345,30 @@ const completeConsultation = async (req, res) => {
       });
     }
 
+    // Save detailed clinical progress data in the appointment record
+    if (appointment_id) {
+      try {
+        const notesObj = {
+          prescription: prescription || [],
+          diagnosis: diagnosis || "General Checkup",
+          diseaseSeverity: req.body.diseaseSeverity || 2,
+          recoveryScore: req.body.recoveryScore || 50,
+          treatmentStatus: req.body.treatmentStatus || "Improving",
+          followUpDate: req.body.followUpDate || null,
+          clinicalNotes: req.body.clinicalNotes || ""
+        };
+        await supabaseAdmin
+          .from("appointments")
+          .update({ 
+            status: "Completed",
+            notes: JSON.stringify(notesObj)
+          })
+          .eq("id", appointment_id);
+      } catch (appErr) {
+        console.error("Failed to update completed appointment details:", appErr.message);
+      }
+    }
+
     // Trigger WhatsApp notification for Completed Consultation
     const patientPhone = queueEntry.patients?.phone || "9988776655";
     const patientName = queueEntry.patients?.full_name || "Patient";
@@ -1017,6 +1041,56 @@ const registerWalkIn = async (req, res) => {
   }
 };
 
+// 13. Get AI Health Progress analytics for patient
+const getHealthProgress = async (req, res) => {
+  const patient_id = req.user.id;
+  try {
+    const { data: appointments, error } = await supabaseAdmin
+      .from("appointments")
+      .select("*, doctors(full_name, specialization)")
+      .eq("patient_id", patient_id)
+      .eq("status", "Completed")
+      .order("appointment_date", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching health progress from Supabase:", error.message);
+      return res.status(500).json({ success: false, message: "Error loading consultation records." });
+    }
+
+    const parsedConsultations = (appointments || []).map(app => {
+      let notesData = {};
+      try {
+        notesData = JSON.parse(app.notes || "{}");
+      } catch (e) {
+        notesData = { diagnosis: app.notes || "General Checkup" };
+      }
+
+      // Handle simple text structures or full JSON structures safely
+      return {
+        id: app.id,
+        date: app.appointment_date,
+        doctorName: app.doctors?.full_name || notesData.physician_name || "Clinic Specialist",
+        department: app.doctors?.specialization || "General Medicine",
+        diagnosis: notesData.diagnosis || "General Checkup",
+        prescription: Array.isArray(notesData.prescription)
+          ? notesData.prescription.map(p => `${p.name} (${p.dosage})`).join(", ")
+          : (typeof notesData.prescription === "string" ? notesData.prescription : "None"),
+        recoveryScore: notesData.recoveryScore !== undefined ? Number(notesData.recoveryScore) : 50,
+        severityScore: notesData.diseaseSeverity !== undefined ? Number(notesData.diseaseSeverity) : 2,
+        notes: notesData.clinicalNotes || notesData.diagnosis || "Routine consultation completed."
+      };
+    });
+
+    res.json({
+      success: true,
+      consultations: parsedConsultations
+    });
+  } catch (err) {
+    console.error("getHealthProgress exception:", err.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getQueue,
   addToQueue,
@@ -1030,4 +1104,5 @@ module.exports = {
   getDoctorQueue,
   seedDemoData,
   registerWalkIn,
+  getHealthProgress,
 };
