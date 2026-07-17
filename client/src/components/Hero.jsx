@@ -42,17 +42,19 @@ function Hero() {
     },
     {
       title: "2. Real-Time AI Predictions",
-      description: "Our proprietary machine learning engine calculates the exact waiting time (e.g., 24 ± 4 mins) along with a dynamic certainty probability score.",
+      description: "Our proprietary machine learning engine calculates the exact waiting time along with a dynamic certainty probability score.",
       badge: "Step 2 • Predictive AI",
       icon: "🎯",
-      image: "/images/predictions.jpg"
+      image: "/images/predictions.jpg",
+      link: "https://1drv.ms/i/c/706529691FE03F4A/IQAyKtrbbud_Qqo2hor5iSURAaQpMgytRmtGbSyQ1pYjh0Q?e=shEXtG"
     },
     {
       title: "3. Live Commute Traffic Sync",
       description: "Integrates simulated Google Maps traffic feeds. If heavy traffic blocks the route, the system updates travel ETAs and notifies the doctor.",
       badge: "Step 3 • Commute Sync",
       icon: "🗺️",
-      image: "/images/commute.jpg"
+      image: "/images/commute.jpg",
+      link: "https://chatgpt.com/s/m_6a5a55df70088191a141c6d48bf7cd98"
     },
     {
       title: "4. Contactless QR Check-in",
@@ -207,6 +209,16 @@ function Hero() {
                     <p className="text-slate-500 text-sm mt-4 leading-relaxed font-semibold">
                       {demoSlides[activeSlide].description}
                     </p>
+                    {demoSlides[activeSlide].link && (
+                      <a 
+                        href={demoSlides[activeSlide].link} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-sm transition"
+                      >
+                        🔗 Open Demo Link
+                      </a>
+                    )}
                   </div>
 
                   <div className="h-48 w-full bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
