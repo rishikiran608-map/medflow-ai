@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/api";
+import { loadScript } from "../utils/loadScript";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreditCard, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Zap } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +16,10 @@ function PaymentPage() {
   const [paymentId, setPaymentId] = useState(null);
 
   useEffect(() => {
+    // Load Razorpay script dynamically
+    loadScript("https://checkout.razorpay.com/v1/checkout.js")
+      .catch((err) => console.error("Razorpay script load error:", err));
+
     const fetchAppointmentDetails = async () => {
       try {
         const res = await api.get("/queue/active");

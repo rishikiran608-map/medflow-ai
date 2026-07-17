@@ -5,6 +5,7 @@ import { Users, Award, UsersRound, Timer, ShieldAlert, BarChart3, Activity, Plus
 import { getPatients } from "../services/patientService";
 import { getDoctors } from "../services/doctorService";
 import { getQueue } from "../services/queueService";
+import { loadScript } from "../utils/loadScript";
 import api from "../api/api";
 import { toast } from "sonner";
 
@@ -22,8 +23,17 @@ function AdminDashboard() {
   const [showScanner, setShowScanner] = useState(false);
   const [scannerInstance, setScannerInstance] = useState(null);
 
-  const startCameraScan = () => {
+  const startCameraScan = async () => {
     setShowScanner(true);
+    try {
+      await loadScript("https://unpkg.com/html5-qrcode");
+    } catch (err) {
+      console.error("Failed to load html5-qrcode script:", err);
+      toast.error("Failed to load QR scanner library.");
+      setShowScanner(false);
+      return;
+    }
+
     setTimeout(() => {
       try {
         const html5QrcodeScanner = new window.Html5QrcodeScanner(
