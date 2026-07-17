@@ -223,78 +223,78 @@ const orchestratorTools = {
 };
 
 // Route and run Orchestrator
-// Route and run Orchestrator
 const orchestrateChat = async ({ message, userId, userRole, conversationId, language = "en" }) => {
-  const memory = await getConversationMemory(conversationId);
-  const userQuery = message.toLowerCase();
-  
-  // 1. Enforce Role & Load Retrieval Layer
-  const allowedAgents = {
-    "Patient": { name: "Patient Health Assistant", category: "Patient Records" },
-    "Doctor": { name: "Doctor Clinical Assistant", category: "Clinical Protocols" },
-    "Hospital Admin": { name: "Reception Assistant", category: "Clinic SOPs" },
-    "Pharmacist": { name: "Pharmacy Assistant", category: "Medicine Database" },
-    "Clinic Owner": { name: "Clinic Owner Assistant", category: "Business KPIs" }
-  };
-  
-  const assigned = allowedAgents[userRole] || { name: "General AI Assistant", category: null };
-  
-  // RAG database vector + SQL data retrieval
-  const ragResult = await performHybridSearch({
-    query: message,
-    patientId: userRole === "Patient" ? userId : null,
-    role: userRole,
-    category: null
-  });
+  try {
+    const memory = await getConversationMemory(conversationId);
+    const userQuery = message.toLowerCase();
+    
+    // 1. Enforce Role & Load Retrieval Layer
+    const allowedAgents = {
+      "Patient": { name: "Patient Health Assistant", category: "Patient Records" },
+      "Doctor": { name: "Doctor Clinical Assistant", category: "Clinical Protocols" },
+      "Hospital Admin": { name: "Reception Assistant", category: "Clinic SOPs" },
+      "Pharmacist": { name: "Pharmacy Assistant", category: "Medicine Database" },
+      "Clinic Owner": { name: "Clinic Owner Assistant", category: "Business KPIs" }
+    };
+    
+    const assigned = allowedAgents[userRole] || { name: "General AI Assistant", category: null };
+    
+    // RAG database vector + SQL data retrieval
+    const ragResult = await performHybridSearch({
+      query: message,
+      patientId: userRole === "Patient" ? userId : null,
+      role: userRole,
+      category: null
+    });
 
-  // Determine specialty persona dynamically based on doctor's department or keyword context
-  let specialty = "General Practice";
-  let personaPrompt = "";
-  
-  const activeQueue = ragResult.patientLiveContext?.queue;
-  const docSpec = activeQueue?.doctors?.specialization || "";
-  
-  if (docSpec.toLowerCase().includes("derma") || userQuery.includes("skin") || userQuery.includes("cream") || userQuery.includes("rash") || userQuery.includes("ointment")) {
-    specialty = "Dermatology";
-    personaPrompt = `
+    // Determine specialty persona dynamically based on doctor's department or keyword context
+    let specialty = "General Practice";
+    let personaPrompt = "";
+    
+    const activeQueue = ragResult.patientLiveContext?.queue;
+    const docSpec = activeQueue?.doctors?.specialization || "";
+    
+    if (docSpec.toLowerCase().includes("derma") || userQuery.includes("skin") || userQuery.includes("cream") || userQuery.includes("rash") || userQuery.includes("ointment")) {
+      specialty = "Dermatology";
+      personaPrompt = `
 🏥 HOSPITAL SPECIALTY PERSONA: Dermatology Assistant (Skin Care Hospital)
 - You act as an experienced, professional dermatologist.
 - Focus heavily on skin care compliance: explain creams, ointments, sunscreen usage, skin application frequency, precautions, side effects, and follow-up dermatology care. 
 - Tone: Clinical, dermatological, and encouraging.`;
-  } else if (docSpec.toLowerCase().includes("ent") || userQuery.includes("ear") || userQuery.includes("nose") || userQuery.includes("throat") || userQuery.includes("spray") || userQuery.includes("drop")) {
-    specialty = "ENT (Otolaryngology)";
-    personaPrompt = `
+    } else if (docSpec.toLowerCase().includes("ent") || userQuery.includes("ear") || userQuery.includes("nose") || userQuery.includes("throat") || userQuery.includes("spray") || userQuery.includes("drop")) {
+      specialty = "ENT (Otolaryngology)";
+      personaPrompt = `
 🏥 HOSPITAL SPECIALTY PERSONA: ENT Assistant (ENT Hospital)
 - You act as an experienced Otolaryngologist (ENT specialist).
 - Focus on hearing care and ENT compliance: explain ear drops, nasal sprays, sinus medications, antibiotics, hearing precautions, ear cleaning guidelines, and infection prevention.
 - Tone: Highly informative, professional ENT expert.`;
-  } else if (docSpec.toLowerCase().includes("eye") || docSpec.toLowerCase().includes("ophthal") || userQuery.includes("eye") || userQuery.includes("vision") || userQuery.includes("cataract")) {
-    specialty = "Ophthalmology (Eye Hospital)";
-    personaPrompt = `
+    } else if (docSpec.toLowerCase().includes("eye") || docSpec.toLowerCase().includes("ophthal") || userQuery.includes("eye") || userQuery.includes("vision") || userQuery.includes("cataract")) {
+      specialty = "Ophthalmology (Eye Hospital)";
+      personaPrompt = `
 🏥 HOSPITAL SPECIALTY PERSONA: Eye Care Assistant (Eye Hospital)
 - You act as a precise, professional ophthalmologist.
 - Focus on eye health care: explain sterile eye drop administration, cataract recovery warnings, screen-time limitations, and visual safety.
 - Tone: Meticulous and protective of vision.`;
-  } else if (docSpec.toLowerCase().includes("dent") || docSpec.toLowerCase().includes("tooth") || userQuery.includes("dental") || userQuery.includes("gum") || userQuery.includes("braces")) {
-    specialty = "Dentistry (Dental Hospital)";
-    personaPrompt = `
+    } else if (docSpec.toLowerCase().includes("dent") || docSpec.toLowerCase().includes("tooth") || userQuery.includes("dental") || userQuery.includes("gum") || userQuery.includes("braces")) {
+      specialty = "Dentistry (Dental Hospital)";
+      personaPrompt = `
 🏥 HOSPITAL SPECIALTY PERSONA: Dental Care Assistant (Dental Hospital)
 - You act as a dentist.
 - Focus on oral hygiene: explain brush/floss frequencies, mouthwash rules, pain control, post-extraction guidelines, and cleaning schedules.
 - Tone: Warm, dental-health oriented.`;
-  } else {
-    specialty = "General Physician";
-    personaPrompt = `
+    } else {
+      specialty = "General Physician";
+      personaPrompt = `
 🏥 HOSPITAL SPECIALTY PERSONA: General Physician Assistant (General Hospital)
 - You act as an expert general practitioner.
 - Focus on general health advice, standard medication schedules, lifestyle adjustments, and scheduling parameters.
 - Tone: Empathetic, generic clinical advisor.`;
-  }
+    }
 
-  // Determine translation language instructions
-  let translationInstruction = "";
-  if (language === "te") {
-    translationInstruction = `
+    // Determine translation language instructions
+    let translationInstruction = "";
+    if (language === "te") {
+      translationInstruction = `
 🌐 LANGUAGE REQUIREMENT:
 - The user has selected **TELUGU**.
 - You MUST formulate your entire response in clear, conversational, and natural Telugu (తెలుగు).
@@ -302,14 +302,14 @@ const orchestrateChat = async ({ message, userId, userRole, conversationId, lang
 - Do NOT mix heavy English phrases. Ensure an elderly native Telugu speaker can read or listen to your response easily.
 - Keep Telugu characters grammatically correct and beautifully phrased.
 - Remind the patient at the end to consult their doctor in Telugu: "ఏదైనా మార్పులకు ముందు మీ వైద్యుడిని సంప్రదించండి."`;
-  } else {
-    translationInstruction = `
+    } else {
+      translationInstruction = `
 🌐 LANGUAGE REQUIREMENT:
 - Respond in clear, professional English.`;
-  }
+    }
 
-  // 2. Setup System Prompt defining capabilities, memories, and constraints
-  const systemPrompt = `You are the ${assigned.name} at MedFlow AI Clinic. 
+    // 2. Setup System Prompt defining capabilities, memories, and constraints
+    const systemPrompt = `You are the ${assigned.name} at MedFlow AI Clinic. 
 You communicate only through the MedFlow AI Orchestration Layer.
 
 User Context:
@@ -332,220 +332,227 @@ Strict Guidelines:
 3. CONCISE: Be short, professional, and directly state options or structured cards.
 4. STRUCTURED: Provide JSON cards for UI parsing when executing actions (booking, schedules, audits).`;
 
-  // 3. Fallback Engine or OpenAI API call
-  let reply = "";
-  let confidence = ragResult.confidenceScore;
-  let toolOutput = null;
+    // 3. Fallback Engine or OpenAI API call
+    let reply = "";
+    let confidence = ragResult.confidenceScore;
+    let toolOutput = null;
 
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      
-      // Define tools for OpenAI API
-      const toolsConfig = [
-        {
-          type: "function",
-          function: {
-            name: "get_patient_prescriptions",
-            description: "Gets active medications and prescriptions for current patient.",
-            parameters: { type: "object", properties: {} }
-          }
-        },
-        {
-          type: "function",
-          function: {
-            name: "get_queue_status",
-            description: "Feteks live clinic queue token, position, and wait duration.",
-            parameters: { type: "object", properties: {} }
-          }
-        },
-        {
-          type: "function",
-          function: {
-            name: "get_available_slots",
-            description: "Finds free time slots for a doctor.",
-            parameters: {
-              type: "object",
-              properties: { doctorName: { type: "string" } }
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        
+        // Define tools for OpenAI API
+        const toolsConfig = [
+          {
+            type: "function",
+            function: {
+              name: "get_patient_prescriptions",
+              description: "Gets active medications and prescriptions for current patient.",
+              parameters: { type: "object", properties: {} }
             }
-          }
-        },
-        {
-          type: "function",
-          function: {
-            name: "book_appointment",
-            description: "Books an appointment slot for the patient.",
-            parameters: {
-              type: "object",
-              properties: {
-                doctorName: { type: "string" },
-                timeSlot: { type: "string" }
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_queue_status",
+              description: "Feteks live clinic queue token, position, and wait duration.",
+              parameters: { type: "object", properties: {} }
+            }
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_available_slots",
+              description: "Finds free time slots for a doctor.",
+              parameters: {
+                type: "object",
+                properties: { doctorName: { type: "string" } }
               }
             }
-          }
-        },
-        {
-          type: "function",
-          function: {
-            name: "check_drug_interactions",
-            description: "Checks combination of drug inputs for warnings and duplicate medicines.",
-            parameters: {
-              type: "object",
-              properties: {
-                medicines: { type: "array", items: { type: "string" } }
-              },
-              required: ["medicines"]
+          },
+          {
+            type: "function",
+            function: {
+              name: "book_appointment",
+              description: "Books an appointment slot for the patient.",
+              parameters: {
+                type: "object",
+                properties: {
+                  doctorName: { type: "string" },
+                  timeSlot: { type: "string" }
+                }
+              }
+            }
+          },
+          {
+            type: "function",
+            function: {
+              name: "check_drug_interactions",
+              description: "Checks combination of drug inputs for warnings and duplicate medicines.",
+              parameters: {
+                type: "object",
+                properties: {
+                  medicines: { type: "array", items: { type: "string" } }
+                },
+                required: ["medicines"]
+              }
+            }
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_operational_report",
+              description: "Admin report including queue delays, busiest hour, and staffing requirements.",
+              parameters: { type: "object", properties: {} }
+            }
+          },
+          {
+            type: "function",
+            function: {
+              name: "get_business_kpis",
+              description: "Clinic owner overview detailing clinic revenue, doc load, and AI adoption.",
+              parameters: { type: "object", properties: {} }
             }
           }
-        },
-        {
-          type: "function",
-          function: {
-            name: "get_operational_report",
-            description: "Admin report including queue delays, busiest hour, and staffing requirements.",
-            parameters: { type: "object", properties: {} }
-          }
-        },
-        {
-          type: "function",
-          function: {
-            name: "get_business_kpis",
-            description: "Clinic owner overview detailing clinic revenue, doc load, and AI adoption.",
-            parameters: { type: "object", properties: {} }
-          }
-        }
-      ];
+        ];
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...memory,
-          { role: "user", content: message }
-        ],
-        tools: toolsConfig,
-        tool_choice: "auto"
-      });
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...memory,
+            { role: "user", content: message }
+          ],
+          tools: toolsConfig,
+          tool_choice: "auto"
+        });
 
-      const responseMessage = completion.choices[0].message;
+        const responseMessage = completion.choices[0].message;
 
-      if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
-        const call = responseMessage.tool_calls[0];
-        const toolName = call.function.name;
-        const toolArgs = JSON.parse(call.function.arguments);
-        
-        console.log(`[Orchestrator] Agent selected tool: ${toolName}`);
-        
-        if (orchestratorTools[toolName]) {
-          toolOutput = await orchestratorTools[toolName](toolArgs, userId);
+        if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+          const call = responseMessage.tool_calls[0];
+          const toolName = call.function.name;
+          const toolArgs = JSON.parse(call.function.arguments);
           
-          // Log Audit for action
-          await logAudit(userId, userRole, `Tool Call: ${toolName}`, "database", toolArgs, confidence);
+          console.log(`[Orchestrator] Agent selected tool: ${toolName}`);
+          
+          if (orchestratorTools[toolName]) {
+            toolOutput = await orchestratorTools[toolName](toolArgs, userId);
+            
+            // Log Audit for action
+            await logAudit(userId, userRole, `Tool Call: ${toolName}`, "database", toolArgs, confidence);
 
-          // Get final LLM response with tool output integrated
-          const secondCompletion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-              { role: "system", content: systemPrompt },
-              ...memory,
-              { role: "user", content: message },
-              responseMessage,
-              {
-                role: "tool",
-                tool_call_id: call.id,
-                name: toolName,
-                content: JSON.stringify(toolOutput)
-              }
-            ]
-          });
-          reply = secondCompletion.choices[0].message.content;
+            // Get final LLM response with tool output integrated
+            const secondCompletion = await openai.chat.completions.create({
+              model: "gpt-4o-mini",
+              messages: [
+                { role: "system", content: systemPrompt },
+                ...memory,
+                { role: "user", content: message },
+                responseMessage,
+                {
+                  role: "tool",
+                  tool_call_id: call.id,
+                  name: toolName,
+                  content: JSON.stringify(toolOutput)
+                }
+              ]
+            });
+            reply = secondCompletion.choices[0].message.content;
+          } else {
+            reply = "Tool defined but executor not found.";
+          }
         } else {
-          reply = "Tool defined but executor not found.";
+          reply = responseMessage.content;
         }
-      } else {
-        reply = responseMessage.content;
+        
+      } catch (err) {
+        console.error("OpenAI orchestrator failed, falling back to local NLP rules:", err.message);
       }
-      
+    }
+
+    // NLP rule fallback engine if API key is missing or failed
+    if (!reply) {
+      // 1. RAG vector/keyword search matches take first priority
+      if (ragResult.vectorResults && ragResult.vectorResults.length > 0) {
+        const bestMatch = ragResult.vectorResults[0];
+        if (language === "te") {
+          reply = `📖 **మెడ్‌ఫ్లో RAG నాలెడ్జ్ బేస్ [${bestMatch.category}]:**\n\n` +
+            `**${bestMatch.title}**\n` +
+            `${bestMatch.content}\n\n` +
+            `*(ఆధారపడే రేటు: ${ragResult.confidenceScore} • RAG ఆటో-ఫాల్‌బ్యాక్)*`;
+        } else {
+          reply = `📖 **MedFlow RAG Knowledge Base [${bestMatch.category}]:**\n\n` +
+            `**${bestMatch.title}**\n` +
+            `${bestMatch.content}\n\n` +
+            `*(Confidence Score: ${ragResult.confidenceScore} • RAG Auto-Fallback)*`;
+        }
+      }
+      // 2. Fall back to key word matches
+      else if (userQuery.includes("prescription") || userQuery.includes("medicine") || userQuery.includes("tablet") || userQuery.includes("take")) {
+        const rx = await orchestratorTools.get_patient_prescriptions({}, userId);
+        toolOutput = rx;
+        reply = (rx.prescriptions && rx.prescriptions.length > 0)
+          ? `💊 **Active Prescriptions:**\n${rx.prescriptions.map(p => `• **${p.medicine_name}**: ${p.dosage}`).join("\n")}`
+          : "💊 No active prescriptions found in your medical records folder.";
+      } 
+      else if (userQuery.includes("queue") || userQuery.includes("status") || userQuery.includes("token") || userQuery.includes("wait")) {
+        const q = await orchestratorTools.get_queue_status({}, userId);
+        toolOutput = q;
+        reply = q.queue
+          ? `🟢 **Active Queue Ticket:**\n• **Token:** #${q.queue.token_number}\n• **Doctor:** Dr. ${q.queue.doctors?.full_name || "General Doctor"}\n• **Status:** ${q.queue.queue_status}\n• **Wait:** ${q.queue.estimated_wait} mins`
+          : "🟢 You do not have any active appointments or check-ins today.";
+      } 
+      else if (userQuery.includes("slot") || userQuery.includes("time") || userQuery.includes("avail")) {
+        const slotsResult = await orchestratorTools.get_available_slots({ doctorName: userQuery });
+        toolOutput = slotsResult;
+        reply = `📅 **Available Slots for Dr. ${slotsResult.doctor} (${slotsResult.specialty}):**\n` +
+          slotsResult.availableSlots.map(s => `• **${s}**`).join("\n") +
+          "\n\nYou can book by asking me to schedule a slot.";
+      } 
+      else if (userQuery.includes("book") || userQuery.includes("schedule")) {
+        const bookResult = await orchestratorTools.book_appointment({ timeSlot: "10:30" }, userId);
+        toolOutput = bookResult;
+        reply = bookResult.success
+          ? `✅ **Appointment Booked!** ${bookResult.message}`
+          : `❌ **Booking failed:** ${bookResult.message}`;
+      }
+      else if (userQuery.includes("interaction") || userQuery.includes("warning") || userQuery.includes("conflict")) {
+        const medicines = [];
+        if (userQuery.includes("aspirin")) medicines.push("Aspirin");
+        if (userQuery.includes("clopidogrel")) medicines.push("Clopidogrel");
+        if (userQuery.includes("metformin")) medicines.push("Metformin");
+        if (userQuery.includes("contrast")) medicines.push("Contrast Dye");
+        if (medicines.length === 0) medicines.push("Aspirin", "Clopidogrel");
+
+        const check = await orchestratorTools.check_drug_interactions({ medicines });
+        toolOutput = check;
+        reply = `💊 **Drug Interaction Scan (Medicines: ${medicines.join(", ")}):**\n\n` +
+          check.warnings.join("\n");
+      }
+      else if (userRole === "Hospital Admin" && (userQuery.includes("report") || userQuery.includes("admin") || userQuery.includes("load"))) {
+        const report = await orchestratorTools.get_operational_report();
+        toolOutput = report;
+        reply = `📊 **Admin Operational Report:**\n- **Active Queue Load:** ${report.activeLoad} patients\n- **Completed Consults:** ${report.throughput}\n- **No-Show Ratio:** ${report.noShowRate}\n- **Busiest Hours:** ${report.busiestHours}\n- **Staffing Advice:** ${report.staffingAlerts}`;
+      }
+      else if (userRole === "Clinic Owner" && (userQuery.includes("kpi") || userQuery.includes("business") || userQuery.includes("revenue"))) {
+        const kpis = await orchestratorTools.get_business_kpis();
+        toolOutput = kpis;
+        reply = `💼 **Clinic Business KPI Summary:**\n- **Revenue Trend:** ${kpis.revenueEstimated}\n- **Total Bookings:** ${kpis.totalBookings}\n- **Doctor Utilization:** ${kpis.doctorUtilization}\n- **AI Adoption Rate:** ${kpis.aiAdoptionRate}\n- **Patient Retention:** ${kpis.retentionRate}`;
+      }
+      else {
+        reply = `👋 Hello! I am the **${assigned.name}**.\n\nI am connected to the shared MedFlow RAG platform. I can execute tools matching your **${userRole}** permissions scope.\n\nTry asking me to check appointments, medication interaction warnings, queue predictions, or operational reports.`;
+      }
+    }
+
+    // 4. Save interactions to chat history in Supabase
+    try {
+      await supabaseAdmin.from("chat_messages").insert([
+        { conversation_id: conversationId, sender_role: userRole, message, agent_role: assigned.name },
+        { conversation_id: conversationId, sender_role: "assistant", message: reply, agent_role: assigned.name }
+      ]);
+      await logAudit(userId, userRole, `Agent chat response`, "chat_messages", { characterCount: reply.length }, confidence);
     } catch (err) {
-      console.error("OpenAI orchestrator failed, falling back to local NLP rules:", err.message);
-    }
-  }
-
-  // NLP rule fallback engine if API key is missing or failed
-  if (!reply) {
-    if (userQuery.includes("prescription") || userQuery.includes("medicine") || userQuery.includes("tablet") || userQuery.includes("take")) {
-      const rx = await orchestratorTools.get_patient_prescriptions({}, userId);
-      toolOutput = rx;
-      reply = rx.prescriptions.length > 0
-        ? `💊 **Active Prescriptions:**\n${rx.prescriptions.map(p => `• **${p.medicine_name}**: ${p.dosage}`).join("\n")}`
-        : "💊 No active prescriptions found in your medical records folder.";
-    } 
-    else if (userQuery.includes("queue") || userQuery.includes("status") || userQuery.includes("token") || userQuery.includes("wait")) {
-      const q = await orchestratorTools.get_queue_status({}, userId);
-      toolOutput = q;
-      reply = q.queue
-        ? `🟢 **Active Queue Ticket:**\n• **Token:** #${q.queue.token_number}\n• **Doctor:** Dr. ${q.queue.doctors?.full_name || "General Doctor"}\n• **Status:** ${q.queue.queue_status}\n• **Wait:** ${q.queue.estimated_wait} mins`
-        : "🟢 You do not have any active appointments or check-ins today.";
-    } 
-    else if (userQuery.includes("slot") || userQuery.includes("time") || userQuery.includes("avail")) {
-      const slotsResult = await orchestratorTools.get_available_slots({ doctorName: userQuery });
-      toolOutput = slotsResult;
-      reply = `📅 **Available Slots for Dr. ${slotsResult.doctor} (${slotsResult.specialty}):**\n` +
-        slotsResult.availableSlots.map(s => `• **${s}**`).join("\n") +
-        "\n\nYou can book by asking me to schedule a slot.";
-    } 
-    else if (userQuery.includes("book") || userQuery.includes("schedule")) {
-      const bookResult = await orchestratorTools.book_appointment({ timeSlot: "10:30" }, userId);
-      toolOutput = bookResult;
-      reply = bookResult.success
-        ? `✅ **Appointment Booked!** ${bookResult.message}`
-        : `❌ **Booking failed:** ${bookResult.message}`;
-    }
-    else if (userQuery.includes("interaction") || userQuery.includes("warning") || userQuery.includes("conflict")) {
-      // Gather meds from input or presets
-      const medicines = [];
-      if (userQuery.includes("aspirin")) medicines.push("Aspirin");
-      if (userQuery.includes("clopidogrel")) medicines.push("Clopidogrel");
-      if (userQuery.includes("metformin")) medicines.push("Metformin");
-      if (userQuery.includes("contrast")) medicines.push("Contrast Dye");
-      if (medicines.length === 0) medicines.push("Aspirin", "Clopidogrel"); // default alert showcase
-
-      const check = await orchestratorTools.check_drug_interactions({ medicines });
-      toolOutput = check;
-      reply = `💊 **Drug Interaction Scan (Medicines: ${medicines.join(", ")}):**\n\n` +
-        check.warnings.join("\n");
-    }
-    else if (userRole === "Hospital Admin" && (userQuery.includes("report") || userQuery.includes("admin") || userQuery.includes("load"))) {
-      const report = await orchestratorTools.get_operational_report();
-      toolOutput = report;
-      reply = `📊 **Admin Operational Report:**\n- **Active Queue Load:** ${report.activeLoad} patients\n- **Completed Consults:** ${report.throughput}\n- **No-Show Ratio:** ${report.noShowRate}\n- **Busiest Hours:** ${report.busiestHours}\n- **Staffing Advice:** ${report.staffingAlerts}`;
-    }
-    else if (userRole === "Clinic Owner" && (userQuery.includes("kpi") || userQuery.includes("business") || userQuery.includes("revenue"))) {
-      const kpis = await orchestratorTools.get_business_kpis();
-      toolOutput = kpis;
-      reply = `💼 **Clinic Business KPI Summary:**\n- **Revenue Trend:** ${kpis.revenueEstimated}\n- **Total Bookings:** ${kpis.totalBookings}\n- **Doctor Utilization:** ${kpis.doctorUtilization}\n- **AI Adoption Rate:** ${kpis.aiAdoptionRate}\n- **Patient Retention:** ${kpis.retentionRate}`;
-    }
-    else {
-      // Default fallback dialog
-      reply = `👋 Hello! I am the **${assigned.name}**.\n\nI am connected to the shared MedFlow RAG platform. I can execute tools matching your **${userRole}** permissions scope.\n\nTry asking me to check appointments, medication interaction warnings, queue predictions, or operational reports.`;
-    }
-  }
-
-  // 4. Save interactions to chat history in Supabase
-  try {
-    await supabaseAdmin.from("chat_messages").insert([
-      { conversation_id: conversationId, sender_role: userRole, message, agent_role: assigned.name },
-      { conversation_id: conversationId, sender_role: "assistant", message: reply, agent_role: assigned.name }
-    ]);
-    
-    // Log final audit
-    await logAudit(userId, userRole, `Agent chat response`, "chat_messages", { characterCount: reply.length }, confidence);
-  } catch (err) {
-    console.error("Failed to persist conversation history:", err.message);
-  }
-
-  return {
-    response: reply,
     role: assigned.name,
     confidence,
     citations: ragResult.citations,
