@@ -1,4 +1,29 @@
 @import "tailwindcss";
-html{
+
+/* ── MedFlow AI — Single Light Theme ────────────────────────────────────────
+   Healthcare SaaS design system. Dark mode has been permanently removed.
+   All dark: CSS variants have been stripped from the codebase.
+   ─────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --color-background:     #F8FAFC;
+  --color-surface:        #FFFFFF;
+  --color-primary:        #2563EB;
+  --color-primary-hover:  #1D4ED8;
+  --color-text:           #0F172A;
+  --color-text-secondary: #64748B;
+  --color-border:         #E2E8F0;
+  --color-success:        #22C55E;
+  --color-warning:        #F59E0B;
+  --color-error:          #EF4444;
+}
+
+html {
   scroll-behavior: smooth;
+  color-scheme: light only;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
 }
