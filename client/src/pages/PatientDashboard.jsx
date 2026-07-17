@@ -236,17 +236,18 @@ function PatientDashboard() {
   };
 
   // Workspace Chat handler
-  const handleSendChat = async () => {
-    if (!chatInput.trim()) return;
-    const msg = chatInput;
-    setChatInput("");
+  const handleSendChat = async (textToSend) => {
+    const msg = typeof textToSend === "string" ? textToSend : chatInput;
+    if (!msg.trim()) return;
+    if (typeof textToSend !== "string") setChatInput("");
     setChatMessages(prev => [...prev, { role: "user", content: msg }]);
     setChatLoading(true);
 
     try {
       const res = await api.post("/orchestrate/chat", {
         message: msg,
-        conversationId: "patient-workspace-chat"
+        conversationId: "patient-workspace-chat",
+        language: locale || "en"
       });
       if (res.data.success) {
         setChatMessages(prev => [...prev, { role: "assistant", content: res.data.response }]);
@@ -761,6 +762,22 @@ function PatientDashboard() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Suggested Quick RAG Queries */}
+        <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex gap-1.5 overflow-x-auto scrollbar-none whitespace-nowrap shrink-0">
+          {(locale === "te"
+            ? ["నా ప్రిస్క్రిప్షన్లు చూపించు", "నా క్యూ స్థితి తనిఖీ చేయి", "డ్రగ్ ఇంటరాక్షన్ తనిఖీ చేయి"]
+            : ["Show my prescriptions", "Check my queue status", "Drug interaction check for Aspirin"]
+          ).map((sug, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleSendChat(sug)}
+              className="bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-full transition shadow-sm cursor-pointer flex-shrink-0"
+            >
+              {sug}
+            </button>
+          ))}
         </div>
 
         {/* Chat Input */}

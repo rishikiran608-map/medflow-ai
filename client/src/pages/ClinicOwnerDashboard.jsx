@@ -27,18 +27,18 @@ function ClinicOwnerDashboard() {
   ];
 
   // AI Chat Handler
-  const handleSendChat = async () => {
-    if (!chatInput.trim()) return;
-
-    const userMsg = chatInput;
-    setChatInput("");
-    setChatMessages(prev => [...prev, { role: "user", content: userMsg }]);
+  const handleSendChat = async (textToSend) => {
+    const msg = typeof textToSend === "string" ? textToSend : chatInput;
+    if (!msg.trim()) return;
+    if (typeof textToSend !== "string") setChatInput("");
+    setChatMessages(prev => [...prev, { role: "user", content: msg }]);
     setChatLoading(true);
 
     try {
       const res = await api.post("/orchestrate/chat", {
-        message: userMsg,
-        conversationId: "owner-assistant-chat"
+        message: msg,
+        conversationId: "owner-assistant-chat",
+        language: locale || "en"
       });
 
       if (res.data.success) {
@@ -219,6 +219,22 @@ function ClinicOwnerDashboard() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Suggested Quick RAG Queries */}
+        <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex gap-1.5 overflow-x-auto scrollbar-none whitespace-nowrap shrink-0">
+          {(locale === "te"
+            ? ["క్లినిక్ బిజినెస్ KPIs", "వైద్యుల వినియోగ స్థాయిలు", "AI ఆప్టిమైజేషన్ ప్రభావం"]
+            : ["Summarize clinic business KPIs", "Show doctor utilization levels", "AI optimization impact", "Late cancellation rules"]
+          ).map((sug, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleSendChat(sug)}
+              className="bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-full transition shadow-sm cursor-pointer flex-shrink-0"
+            >
+              {sug}
+            </button>
+          ))}
         </div>
 
         {/* Chat Input */}

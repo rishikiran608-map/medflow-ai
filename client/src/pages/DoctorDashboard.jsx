@@ -151,17 +151,18 @@ function DoctorDashboard() {
   };
 
   // Chat with Doctor Clinical Assistant
-  const handleSendChat = async () => {
-    if (!chatInput.trim()) return;
-    const msg = chatInput;
-    setChatInput("");
+  const handleSendChat = async (textToSend) => {
+    const msg = typeof textToSend === "string" ? textToSend : chatInput;
+    if (!msg.trim()) return;
+    if (typeof textToSend !== "string") setChatInput("");
     setChatMessages(prev => [...prev, { role: "user", content: msg }]);
     setChatLoading(true);
 
     try {
       const res = await api.post("/orchestrate/chat", {
         message: msg,
-        conversationId: "doctor-workspace-chat"
+        conversationId: "doctor-workspace-chat",
+        language: locale || "en"
       });
 
       if (res.data.success) {
@@ -528,6 +529,22 @@ function DoctorDashboard() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Suggested Quick RAG Queries */}
+              <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex gap-1.5 overflow-x-auto scrollbar-none whitespace-nowrap shrink-0">
+                {(locale === "te"
+                  ? ["రోగి వివరాలు aarav@example.com", "రక్తపోటు నివేదిక సారాంశం", "డయాబెటిస్ గైడ్‌లైన్స్", "వైద్య మార్గదర్శకాలు"]
+                  : ["Summarize history for patient@example.com", "Draft Hypertension SOAP notes", "Diabetes guidelines", "Appointment Late Policies"]
+                ).map((sug, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendChat(sug)}
+                    className="bg-white hover:bg-teal-50 text-slate-600 hover:text-teal-700 border border-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-full transition shadow-sm cursor-pointer flex-shrink-0"
+                  >
+                    {sug}
+                  </button>
+                ))}
               </div>
 
               {/* Chat Input */}
