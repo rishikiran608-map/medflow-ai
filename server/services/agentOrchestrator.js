@@ -471,38 +471,37 @@ Strict Guidelines:
       }
     }
 
-    // NLP rule fallback engine if API key is missing or failed
     if (!reply) {
-      // 1. Tool-specific keyword matches take FIRST priority over RAG
-      if (userQuery.includes("prescription") || userQuery.includes("medicine") || userQuery.includes("my tablet") || userQuery.includes("my medication") || userQuery.includes("my drugs")) {
+      // 1. Tool-specific keyword matches take FIRST priority over RAG (Bilingual support for English & Telugu)
+      if (userQuery.includes("prescription") || userQuery.includes("medicine") || userQuery.includes("my tablet") || userQuery.includes("my medication") || userQuery.includes("my drugs") || userQuery.includes("ప్రిస్క్రిప్షన్") || userQuery.includes("మందులు") || userQuery.includes("టాబ్లెట్") || userQuery.includes("ఔషధం")) {
         const rx = await orchestratorTools.get_patient_prescriptions({}, userId);
         toolOutput = rx;
         reply = (rx.prescriptions && rx.prescriptions.length > 0)
           ? `💊 **Your Active Prescriptions:**\n${rx.prescriptions.map(p => `• **${p.medicine_name}**: ${p.dosage}`).join("\n")}\n\n_Last updated from your verified medical records._`
           : "💊 No active prescriptions found in your medical records. Please consult your doctor for an updated prescription.";
       }
-      else if (userQuery.includes("queue") || userQuery.includes("status") || userQuery.includes("token") || userQuery.includes("wait") || userQuery.includes("my turn")) {
+      else if (userQuery.includes("queue") || userQuery.includes("status") || userQuery.includes("token") || userQuery.includes("wait") || userQuery.includes("my turn") || userQuery.includes("క్యూ") || userQuery.includes("స్థితి") || userQuery.includes("టోకెన్") || userQuery.includes("వేచి") || userQuery.includes("సమయం")) {
         const q = await orchestratorTools.get_queue_status({}, userId);
         toolOutput = q;
         reply = q.queue
           ? `🟢 **Active Queue Ticket:**\n• **Token:** #${q.queue.token_number}\n• **Doctor:** Dr. ${q.queue.doctors?.full_name || "General Doctor"}\n• **Status:** ${q.queue.queue_status}\n• **Wait:** ${q.queue.estimated_wait} mins`
           : "🟢 You do not have any active appointments or check-ins today.";
       }
-      else if (userQuery.includes("slot") || userQuery.includes("available time") || userQuery.includes("avail")) {
+      else if (userQuery.includes("slot") || userQuery.includes("available time") || userQuery.includes("avail") || userQuery.includes("స్లాట్") || userQuery.includes("సమయం")) {
         const slotsResult = await orchestratorTools.get_available_slots({ doctorName: userQuery });
         toolOutput = slotsResult;
         reply = `📅 **Available Slots for Dr. ${slotsResult.doctor} (${slotsResult.specialty}):**\n` +
           slotsResult.availableSlots.map(s => `• **${s}**`).join("\n") +
           "\n\nYou can book by asking me to schedule a slot.";
       }
-      else if (userQuery.includes("book") || userQuery.includes("schedule appointment")) {
+      else if (userQuery.includes("book") || userQuery.includes("schedule appointment") || userQuery.includes("బుక్") || userQuery.includes("అపాయింట్‌మెంట్")) {
         const bookResult = await orchestratorTools.book_appointment({ timeSlot: "10:30" }, userId);
         toolOutput = bookResult;
         reply = bookResult.success
           ? `✅ **Appointment Booked!** ${bookResult.message}`
           : `❌ **Booking failed:** ${bookResult.message}`;
       }
-      else if (userQuery.includes("interaction") || userQuery.includes("drug warning") || userQuery.includes("conflict") || userQuery.includes("combine")) {
+      else if (userQuery.includes("interaction") || userQuery.includes("drug warning") || userQuery.includes("conflict") || userQuery.includes("combine") || userQuery.includes("ఇంటరాక్షన్") || userQuery.includes("హెచ్చరిక") || userQuery.includes("వ్యతిరేక")) {
         const medicines = [];
         if (userQuery.includes("aspirin")) medicines.push("Aspirin");
         if (userQuery.includes("clopidogrel")) medicines.push("Clopidogrel");
@@ -515,12 +514,12 @@ Strict Guidelines:
         toolOutput = check;
         reply = `💊 **Drug Interaction Scan (Medicines: ${medicines.join(", ")}):**\n\n` + check.warnings.join("\n");
       }
-      else if (userRole === "Hospital Admin" && (userQuery.includes("report") || userQuery.includes("admin") || userQuery.includes("load") || userQuery.includes("operational"))) {
+      else if (userRole === "Hospital Admin" && (userQuery.includes("report") || userQuery.includes("admin") || userQuery.includes("load") || userQuery.includes("operational") || userQuery.includes("రిపోర్ట్") || userQuery.includes("కార్యాచరణ"))) {
         const report = await orchestratorTools.get_operational_report();
         toolOutput = report;
         reply = `📊 **Admin Operational Report:**\n- **Active Queue Load:** ${report.activeLoad} patients\n- **Completed Consults:** ${report.throughput}\n- **No-Show Ratio:** ${report.noShowRate}\n- **Busiest Hours:** ${report.busiestHours}\n- **Staffing Advice:** ${report.staffingAlerts}`;
       }
-      else if (userRole === "Clinic Owner" && (userQuery.includes("kpi") || userQuery.includes("business") || userQuery.includes("revenue") || userQuery.includes("clinic performance"))) {
+      else if (userRole === "Clinic Owner" && (userQuery.includes("kpi") || userQuery.includes("business") || userQuery.includes("revenue") || userQuery.includes("clinic performance") || userQuery.includes("ఆదాయం") || userQuery.includes("వినియోగ"))) {
         const kpis = await orchestratorTools.get_business_kpis();
         toolOutput = kpis;
         reply = `💼 **Clinic Business KPI Summary:**\n- **Revenue Trend:** ${kpis.revenueEstimated}\n- **Total Bookings:** ${kpis.totalBookings}\n- **Doctor Utilization:** ${kpis.doctorUtilization}\n- **AI Adoption Rate:** ${kpis.aiAdoptionRate}\n- **Patient Retention:** ${kpis.retentionRate}`;

@@ -141,7 +141,8 @@ const FALLBACK_KNOWLEDGE_BASE = [
 // Keyword-based search fallback (extremely useful for offline presentation or missing pgvector)
 const keywordFallbackSearch = async ({ query, role, category = null, limit = 5 }) => {
   try {
-    const terms = query.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const cleanQuery = query.replace(/[?.,!:\-\/()]/g, " ");
+    const terms = cleanQuery.toLowerCase().split(/\s+/).filter(w => w.length > 2);
     if (terms.length === 0) return [];
     
     let documents = [];
