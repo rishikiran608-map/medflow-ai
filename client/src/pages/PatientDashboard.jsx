@@ -1199,7 +1199,7 @@ function PatientDashboard() {
                     actions.push({
                       label: "📅 Book Doctor Consult",
                       onClick: () => {
-                        navigate("/book");
+                        navigate("/book-appointment");
                       }
                     });
                   }

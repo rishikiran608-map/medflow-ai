@@ -19,9 +19,18 @@ function Hero() {
         email: "admin@medflow.com",
         password: "admin123"
       });
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("userRole", res.data.role);
-      localStorage.setItem("userEmail", "admin@medflow.com");
+      const data = res.data;
+      if (data.session) {
+        localStorage.setItem("token", data.session.access_token);
+      }
+      if (data.user) {
+        localStorage.setItem("userId", data.user.id);
+        localStorage.setItem("userEmail", "admin@medflow.com");
+        localStorage.setItem("userName", data.user?.user_metadata?.full_name || "Admin Demo");
+      }
+      const role = data.user?.user_metadata?.role || "Hospital Admin";
+      localStorage.setItem("userRole", role);
+      
       toast.success("Welcome back! Redirecting to the Live Demo Admin Console...");
       setTimeout(() => {
         navigate("/admin-dashboard");
