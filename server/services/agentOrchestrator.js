@@ -472,34 +472,64 @@ Strict Guidelines:
     }
 
     if (!reply) {
+      const isTe = language === "te";
+      
       // 1. Tool-specific keyword matches take FIRST priority over RAG (Bilingual support for English & Telugu)
       if (userQuery.includes("prescription") || userQuery.includes("medicine") || userQuery.includes("my tablet") || userQuery.includes("my medication") || userQuery.includes("my drugs") || userQuery.includes("ప్రిస్క్రిప్షన్") || userQuery.includes("మందులు") || userQuery.includes("టాబ్లెట్") || userQuery.includes("ఔషధం")) {
         const rx = await orchestratorTools.get_patient_prescriptions({}, userId);
         toolOutput = rx;
-        reply = (rx.prescriptions && rx.prescriptions.length > 0)
-          ? `💊 **Your Active Prescriptions:**\n${rx.prescriptions.map(p => `• **${p.medicine_name}**: ${p.dosage}`).join("\n")}\n\n_Last updated from your verified medical records._`
-          : "💊 No active prescriptions found in your medical records. Please consult your doctor for an updated prescription.";
+        
+        if (isTe) {
+          reply = (rx.prescriptions && rx.prescriptions.length > 0)
+            ? `💊 **మీ క్రియాశీల ప్రిస్క్రిప్షన్లు:**\n${rx.prescriptions.map(p => `• **${p.medicine_name}**: ${p.dosage}`).join("\n")}\n\n_మీ ధృవీకరించబడిన వైద్య రికార్డుల నుండి చివరిసారిగా నవీకరించబడింది._`
+            : "💊 మీ వైద్య రికార్డులలో క్రియాశీల ప్రిస్క్రిప్షన్లు ఏవీ కనుగొనబడలేదు. దయచేసి అప్‌డేట్ చేసిన ప్రిస్క్రిప్షన్ కోసం మీ వైద్యుడిని సంప్రదించండి.";
+        } else {
+          reply = (rx.prescriptions && rx.prescriptions.length > 0)
+            ? `💊 **Your Active Prescriptions:**\n${rx.prescriptions.map(p => `• **${p.medicine_name}**: ${p.dosage}`).join("\n")}\n\n_Last updated from your verified medical records._`
+            : "💊 No active prescriptions found in your medical records. Please consult your doctor for an updated prescription.";
+        }
       }
       else if (userQuery.includes("queue") || userQuery.includes("status") || userQuery.includes("token") || userQuery.includes("wait") || userQuery.includes("my turn") || userQuery.includes("క్యూ") || userQuery.includes("స్థితి") || userQuery.includes("టోకెన్") || userQuery.includes("వేచి") || userQuery.includes("సమయం")) {
         const q = await orchestratorTools.get_queue_status({}, userId);
         toolOutput = q;
-        reply = q.queue
-          ? `🟢 **Active Queue Ticket:**\n• **Token:** #${q.queue.token_number}\n• **Doctor:** Dr. ${q.queue.doctors?.full_name || "General Doctor"}\n• **Status:** ${q.queue.queue_status}\n• **Wait:** ${q.queue.estimated_wait} mins`
-          : "🟢 You do not have any active appointments or check-ins today.";
+        
+        if (isTe) {
+          reply = q.queue
+            ? `🟢 **యాక్టివ్ క్యూ టికెట్:**\n• **టోకెన్:** #${q.queue.token_number}\n• **వైద్యుడు:** డాక్టర్ ${q.queue.doctors?.full_name || "జనరల్ డాక్టర్"}\n• **స్థితి:** ${q.queue.queue_status}\n• **వేచి ఉండే సమయం:** ${q.queue.estimated_wait} నిమిషాలు`
+            : "🟢 మీకు ఈరోజు ఎలాంటి యాక్టివ్ అపాయింట్‌మెంట్‌లు లేదా చెక్-ఇన్‌లు లేవు.";
+        } else {
+          reply = q.queue
+            ? `🟢 **Active Queue Ticket:**\n• **Token:** #${q.queue.token_number}\n• **Doctor:** Dr. ${q.queue.doctors?.full_name || "General Doctor"}\n• **Status:** ${q.queue.queue_status}\n• **Wait:** ${q.queue.estimated_wait} mins`
+            : "🟢 You do not have any active appointments or check-ins today.";
+        }
       }
       else if (userQuery.includes("slot") || userQuery.includes("available time") || userQuery.includes("avail") || userQuery.includes("స్లాట్") || userQuery.includes("సమయం")) {
         const slotsResult = await orchestratorTools.get_available_slots({ doctorName: userQuery });
         toolOutput = slotsResult;
-        reply = `📅 **Available Slots for Dr. ${slotsResult.doctor} (${slotsResult.specialty}):**\n` +
-          slotsResult.availableSlots.map(s => `• **${s}**`).join("\n") +
-          "\n\nYou can book by asking me to schedule a slot.";
+        
+        if (isTe) {
+          reply = `📅 **డాక్టర్ ${slotsResult.doctor} (${slotsResult.specialty}) కోసం అందుబాటులో ఉన్న స్లాట్‌లు:**\n` +
+            slotsResult.availableSlots.map(s => `• **${s}**`).join("\n") +
+            "\n\nమీరు నన్ను స్లాట్ బుక్ చేయమని అడగడం ద్వారా బుక్ చేసుకోవచ్చు.";
+        } else {
+          reply = `📅 **Available Slots for Dr. ${slotsResult.doctor} (${slotsResult.specialty}):**\n` +
+            slotsResult.availableSlots.map(s => `• **${s}**`).join("\n") +
+            "\n\nYou can book by asking me to schedule a slot.";
+        }
       }
       else if (userQuery.includes("book") || userQuery.includes("schedule appointment") || userQuery.includes("బుక్") || userQuery.includes("అపాయింట్‌మెంట్")) {
         const bookResult = await orchestratorTools.book_appointment({ timeSlot: "10:30" }, userId);
         toolOutput = bookResult;
-        reply = bookResult.success
-          ? `✅ **Appointment Booked!** ${bookResult.message}`
-          : `❌ **Booking failed:** ${bookResult.message}`;
+        
+        if (isTe) {
+          reply = bookResult.success
+            ? `✅ **అపాయింట్‌మెంట్ బుక్ చేయబడింది!** ${bookResult.message}`
+            : `❌ **బుకింగ్ విఫలమైంది:** ${bookResult.message}`;
+        } else {
+          reply = bookResult.success
+            ? `✅ **Appointment Booked!** ${bookResult.message}`
+            : `❌ **Booking failed:** ${bookResult.message}`;
+        }
       }
       else if (userQuery.includes("interaction") || userQuery.includes("drug warning") || userQuery.includes("conflict") || userQuery.includes("combine") || userQuery.includes("ఇంటరాక్షన్") || userQuery.includes("హెచ్చరిక") || userQuery.includes("వ్యతిరేక")) {
         const medicines = [];
@@ -509,25 +539,40 @@ Strict Guidelines:
         if (userQuery.includes("amlodipine")) medicines.push("Amlodipine");
         if (userQuery.includes("atorvastatin")) medicines.push("Atorvastatin");
         if (userQuery.includes("contrast")) medicines.push("Contrast Dye");
-        if (medicines.length === 0) medicines.push("Aspirin", "Metformin"); // Better default pair
+        if (medicines.length === 0) medicines.push("Aspirin", "Metformin");
         const check = await orchestratorTools.check_drug_interactions({ medicines });
         toolOutput = check;
-        reply = `💊 **Drug Interaction Scan (Medicines: ${medicines.join(", ")}):**\n\n` + check.warnings.join("\n");
+        
+        if (isTe) {
+          reply = `💊 **డ్రగ్ ఇంటరాక్షన్ స్కాన్ (మందులు: ${medicines.join(", ")}):**\n\n` + check.warnings.join("\n");
+        } else {
+          reply = `💊 **Drug Interaction Scan (Medicines: ${medicines.join(", ")}):**\n\n` + check.warnings.join("\n");
+        }
       }
       else if (userRole === "Hospital Admin" && (userQuery.includes("report") || userQuery.includes("admin") || userQuery.includes("load") || userQuery.includes("operational") || userQuery.includes("రిపోర్ట్") || userQuery.includes("కార్యాచరణ"))) {
         const report = await orchestratorTools.get_operational_report();
         toolOutput = report;
-        reply = `📊 **Admin Operational Report:**\n- **Active Queue Load:** ${report.activeLoad} patients\n- **Completed Consults:** ${report.throughput}\n- **No-Show Ratio:** ${report.noShowRate}\n- **Busiest Hours:** ${report.busiestHours}\n- **Staffing Advice:** ${report.staffingAlerts}`;
+        
+        if (isTe) {
+          reply = `📊 **అడ్మిన్ కార్యాచరణ నివేదిక:**\n- **యాక్టివ్ క్యూ లోడ్:** ${report.activeLoad} రోగులు\n- **పూర్తయిన సంప్రదింపులు:** ${report.throughput}\n- **నో-షో నిష్పత్తి:** ${report.noShowRate}\n- **అత్యంత రద్దీ సమయం:** ${report.busiestHours}\n- **సిబ్బంది సలహా:** ${report.staffingAlerts}`;
+        } else {
+          reply = `📊 **Admin Operational Report:**\n- **Active Queue Load:** ${report.activeLoad} patients\n- **Completed Consults:** ${report.throughput}\n- **No-Show Ratio:** ${report.noShowRate}\n- **Busiest Hours:** ${report.busiestHours}\n- **Staffing Advice:** ${report.staffingAlerts}`;
+        }
       }
       else if (userRole === "Clinic Owner" && (userQuery.includes("kpi") || userQuery.includes("business") || userQuery.includes("revenue") || userQuery.includes("clinic performance") || userQuery.includes("ఆదాయం") || userQuery.includes("వినియోగ"))) {
         const kpis = await orchestratorTools.get_business_kpis();
         toolOutput = kpis;
-        reply = `💼 **Clinic Business KPI Summary:**\n- **Revenue Trend:** ${kpis.revenueEstimated}\n- **Total Bookings:** ${kpis.totalBookings}\n- **Doctor Utilization:** ${kpis.doctorUtilization}\n- **AI Adoption Rate:** ${kpis.aiAdoptionRate}\n- **Patient Retention:** ${kpis.retentionRate}`;
+        
+        if (isTe) {
+          reply = `💼 **క్లినిక్ బిజినెస్ KPI సారాంశం:**\n- **ఆదాయ ట్రెండ్:** ${kpis.revenueEstimated}\n- **మొత్తం బుకింగ్‌లు:** ${kpis.totalBookings}\n- **వైద్యుల వినియోగం:** ${kpis.doctorUtilization}\n- **AI దత్తత రేటు:** ${kpis.aiAdoptionRate}\n- **రోగుల నిలుపుదల:** ${kpis.retentionRate}`;
+        } else {
+          reply = `💼 **Clinic Business KPI Summary:**\n- **Revenue Trend:** ${kpis.revenueEstimated}\n- **Total Bookings:** ${kpis.totalBookings}\n- **Doctor Utilization:** ${kpis.doctorUtilization}\n- **AI Adoption Rate:** ${kpis.aiAdoptionRate}\n- **Patient Retention:** ${kpis.retentionRate}`;
+        }
       }
       // 2. RAG vector/keyword search for clinical knowledge queries
       else if (ragResult.vectorResults && ragResult.vectorResults.length > 0) {
         const bestMatch = ragResult.vectorResults[0];
-        if (language === "te") {
+        if (isTe) {
           reply = `📖 **మెడ్‌ఫ్లో RAG నాలెడ్జ్ బేస్ [${bestMatch.category}]:**\n\n` +
             `**${bestMatch.title}**\n` +
             `${bestMatch.content}\n\n` +
@@ -541,7 +586,11 @@ Strict Guidelines:
       }
       // 3. Generic greeting / fallback
       else {
-        reply = `👋 Hello! I am the **${assigned.name}**.\n\nI am connected to the shared MedFlow RAG platform. I can execute tools matching your **${userRole}** permissions scope.\n\nTry asking me to check appointments, medication interaction warnings, queue predictions, or operational reports.`;
+        if (isTe) {
+          reply = `👋 నమస్కారం! నేను మీ **${assigned.name}**.\n\nనేను షేర్డ్ మెడ్‌ఫ్లో RAG ప్లాట్‌ఫారమ్‌కు అనుసంధానించబడి ఉన్నాను. మీ **${userRole}** అనుమతుల పరిధికి సరిపోయే సాధనాలను నేను అమలు చేయగలను.\n\nఅపాయింట్‌మెంట్‌లు, డ్రగ్ ఇంటరాక్షన్ హెచ్చరికలు, క్యూ అంచనాలు లేదా కార్యాచరణ నివేదికల గురించి నన్ను అడగడానికి ప్రయత్నించండి.`;
+        } else {
+          reply = `👋 Hello! I am the **${assigned.name}**.\n\nI am connected to the shared MedFlow RAG platform. I can execute tools matching your **${userRole}** permissions scope.\n\nTry asking me to check appointments, medication interaction warnings, queue predictions, or operational reports.`;
+        }
       }
     }
 
