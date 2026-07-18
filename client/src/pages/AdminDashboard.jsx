@@ -529,18 +529,18 @@ function AdminDashboard() {
 
           {/* TAB: ✨ Admin AI RAG Assistant */}
           {activeTab === "admin-ai" && (
-            <div className="flex flex-col h-[600px]">
+            <div className="flex flex-col h-[600px] border-2 border-blue-500 shadow-xl shadow-blue-500/10 rounded-3xl p-6 ring-4 ring-blue-500/10 transition-all duration-300 hover:shadow-blue-500/20 hover:border-blue-600 bg-white">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <Sparkles className="text-white" size={18} />
                 </div>
                 <div>
                   <h3 className="text-lg font-extrabold text-slate-800">Hospital Admin AI Assistant</h3>
                   <p className="text-xs text-slate-400 font-semibold">RAG-powered • SOP & Clinical knowledge base active</p>
                 </div>
-                <span className="ml-auto flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                  Live RAG
+                <span className="ml-auto flex items-center gap-1.5 bg-amber-400 text-slate-900 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest animate-pulse shadow-sm border border-amber-500/20">
+                  <span className="w-1.5 h-1.5 bg-slate-900 rounded-full animate-ping" />
+                  ✨ AGENTIC RAG ACTIVE
                 </span>
               </div>
 

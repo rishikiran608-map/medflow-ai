@@ -385,18 +385,18 @@ function PharmacistDashboard() {
       </div>
 
       {/* RIGHT SIDE: Pharmacy AI Chat Assistant */}
-      <div className="bg-white rounded-3xl border-2 border-amber-500/20 shadow-xl shadow-amber-500/5 flex flex-col h-[650px] overflow-hidden ring-4 ring-amber-500/5">
+      <div className="bg-white rounded-3xl border-2 border-amber-500 shadow-xl shadow-amber-500/10 flex flex-col h-[650px] overflow-hidden ring-4 ring-amber-500/10 transition-all duration-300 hover:shadow-amber-500/20 hover:border-amber-600">
         {/* Assistant Header */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white flex items-center justify-between shadow-md">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner animate-pulse">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl shadow-inner animate-pulse">
               💊
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-extrabold text-sm">Pharmacy Assistant</h3>
-                <span className="text-[8px] bg-white text-amber-600 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5">
-                  ⚡ PHARMA RAG
+                <span className="text-[9px] bg-amber-400 text-slate-900 font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5 shadow-sm">
+                  ✨ AGENTIC PHARMA RAG ACTIVE
                 </span>
               </div>
               <p className="text-[9px] text-white/90 font-semibold tracking-wide">Interaction Vector Checker & GPT-4o</p>
@@ -455,18 +455,37 @@ function PharmacistDashboard() {
 
         {/* Suggested Quick RAG Queries */}
         <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex gap-1.5 overflow-x-auto scrollbar-none whitespace-nowrap shrink-0">
-          {(locale === "te"
-            ? ["ఆస్పిరిన్ + క్లోపిడోగ్రెల్ ఆడిట్", "లిపిటర్ ప్రత్యామ్నాయ మందులు", "మెట్‌ఫార్మిన్ మోతాదు షెడ్యూల్"]
-            : ["Audit Aspirin + Clopidogrel warnings", "Suggest generic for Lipitor", "Dosage schedule Metformin", "Prescription Late Policies"]
-          ).map((sug, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSendChat(sug)}
-              className="bg-white hover:bg-amber-50 text-slate-600 hover:text-amber-700 border border-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-full transition shadow-sm cursor-pointer flex-shrink-0"
-            >
-              {sug}
-            </button>
-          ))}
+          {(() => {
+            const patientName = editableResult?.patientName || "Aarav Mehta";
+            const firstMed = editableResult?.medicines?.[0]?.name || "Metformin";
+            const secondMed = editableResult?.medicines?.[1]?.name || "Amlodipine";
+            
+            let queries = [];
+            if (locale === "te") {
+              queries = [
+                `${firstMed} మరియు ${secondMed} డ్రగ్ ఇంటరాక్షన్ ఆడిట్`,
+                `${firstMed} మోతాదు షెడ్యూల్`,
+                `${patientName} ప్రిస్క్రిప్షన్ లేట్ పాలసీ`
+              ];
+            } else {
+              queries = [
+                `Audit ${firstMed} + ${secondMed} warnings`,
+                `Suggest generic alternatives for ${firstMed}`,
+                `Dosage schedule for ${firstMed}`,
+                `Late cancellation SOP for ${patientName}`
+              ];
+            }
+            
+            return queries.map((sug, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSendChat(sug)}
+                className="bg-white hover:bg-amber-50 text-slate-600 hover:text-amber-700 border border-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-full transition shadow-sm cursor-pointer flex-shrink-0"
+              >
+                {sug}
+              </button>
+            ));
+          })()}
         </div>
 
         {/* Chat Input */}

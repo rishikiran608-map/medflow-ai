@@ -584,17 +584,17 @@ function DoctorDashboard() {
             </div>
 
             {/* Doctor Assistant Chat widget */}
-            <div className="bg-white rounded-3xl border-2 border-teal-500/20 shadow-xl shadow-teal-500/5 flex flex-col h-[400px] overflow-hidden text-left ring-4 ring-teal-500/5">
-              <div className="bg-gradient-to-r from-teal-600 to-cyan-600 p-4 text-white flex items-center justify-between">
+            <div className="bg-white rounded-3xl border-2 border-teal-500 shadow-xl shadow-teal-500/10 flex flex-col h-[400px] overflow-hidden text-left ring-4 ring-teal-500/10 transition-all duration-300 hover:shadow-teal-500/20 hover:border-teal-600">
+              <div className="bg-gradient-to-r from-teal-600 to-cyan-600 p-4 text-white flex items-center justify-between shadow-md">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner animate-pulse">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl shadow-inner animate-pulse">
                     🩺
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
                       <h3 className="font-extrabold text-sm">Clinical Assistant</h3>
-                      <span className="text-[8px] bg-white text-teal-600 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5">
-                        ⚡ CLINICAL RAG
+                      <span className="text-[9px] bg-amber-400 text-slate-900 font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5 shadow-sm">
+                        ✨ AGENTIC CLINICAL RAG ACTIVE
                       </span>
                     </div>
                     <p className="text-[9px] text-white/90 font-semibold tracking-wide">EHR Vector Semantic Match & GPT-4o</p>
@@ -653,18 +653,37 @@ function DoctorDashboard() {
 
               {/* Suggested Quick RAG Queries */}
               <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex gap-1.5 overflow-x-auto scrollbar-none whitespace-nowrap shrink-0">
-                {(locale === "te"
-                  ? ["రోగి వివరాలు aarav@example.com", "రక్తపోటు నివేదిక సారాంశం", "డయాబెటిస్ గైడ్‌లైన్స్", "వైద్య మార్గదర్శకాలు"]
-                  : ["Summarize history for patient@example.com", "Draft Hypertension SOAP notes", "Diabetes guidelines", "Appointment Late Policies"]
-                ).map((sug, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSendChat(sug)}
-                    className="bg-white hover:bg-teal-50 text-slate-600 hover:text-teal-700 border border-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-full transition shadow-sm cursor-pointer flex-shrink-0"
-                  >
-                    {sug}
-                  </button>
-                ))}
+                {(() => {
+                  const patientEmail = activePatient?.patients?.email || "patient@medflow.com";
+                  const patientName = activePatient?.patients?.full_name || "Aarav Mehta";
+                  
+                  let queries = [];
+                  if (locale === "te") {
+                    queries = [
+                      `రోగి ${patientName} వివరాలు సారాంశం`,
+                      "రక్తపోటు నివేదిక సారాంశం",
+                      "డయాబెటిస్ గైడ్‌లైన్స్",
+                      "అపాయింట్‌మెంట్ లేట్ పాలసీ"
+                    ];
+                  } else {
+                    queries = [
+                      `Summarize history for ${patientEmail}`,
+                      `Draft Hypertension SOAP notes for ${patientName}`,
+                      "Diabetes treatment guidelines",
+                      "Appointment Cancellation SOP"
+                    ];
+                  }
+                  
+                  return queries.map((sug, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSendChat(sug)}
+                      className="bg-white hover:bg-teal-50 text-slate-600 hover:text-teal-700 border border-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-full transition shadow-sm cursor-pointer flex-shrink-0"
+                    >
+                      {sug}
+                    </button>
+                  ));
+                })()}
               </div>
 
               {/* Chat Input */}

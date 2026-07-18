@@ -179,18 +179,18 @@ function ClinicOwnerDashboard() {
       </div>
 
       {/* RIGHT SIDE: Owner AI Chat Assistant */}
-      <div className="bg-white rounded-3xl border-2 border-rose-500/20 shadow-xl shadow-rose-500/5 flex flex-col h-[650px] overflow-hidden ring-4 ring-rose-500/5">
+      <div className="bg-white rounded-3xl border-2 border-rose-500 shadow-xl shadow-rose-500/10 flex flex-col h-[650px] overflow-hidden ring-4 ring-rose-500/10 transition-all duration-300 hover:shadow-rose-500/20 hover:border-rose-600">
         {/* Assistant Header */}
-        <div className="bg-gradient-to-r from-rose-500 to-pink-500 p-4 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-r from-rose-500 to-pink-500 p-4 text-white flex items-center justify-between shadow-md">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner animate-pulse">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl shadow-inner animate-pulse">
               💼
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-extrabold text-sm">Owner Assistant</h3>
-                <span className="text-[8px] bg-white text-rose-600 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5">
-                  ⚡ ANALYTICS RAG
+                <span className="text-[9px] bg-amber-400 text-slate-900 font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5 shadow-sm">
+                  ✨ AGENTIC ANALYTICS RAG ACTIVE
                 </span>
               </div>
               <p className="text-[9px] text-white/90 font-semibold tracking-wide">Business Metrics Vector Feed & GPT-4o</p>

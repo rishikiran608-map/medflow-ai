@@ -1119,18 +1119,18 @@ function PatientDashboard() {
       </div>
 
       {/* ─── RIGHT PANEL: WORKSPACE AI CHAT WIDGET ─── */}
-      <div className="lg:col-span-1 bg-white rounded-3xl border-2 border-blue-500/20 shadow-xl shadow-blue-500/5 flex flex-col h-[650px] overflow-hidden ring-4 ring-blue-500/5">
+      <div className="lg:col-span-1 bg-white rounded-3xl border-2 border-blue-500 shadow-xl shadow-blue-500/10 flex flex-col h-[650px] overflow-hidden ring-4 ring-blue-500/10 transition-all duration-300 hover:shadow-blue-500/20 hover:border-blue-600">
         {/* Assistant Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-cyan-500 p-4 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-r from-blue-600 to-cyan-500 p-4 text-white flex items-center justify-between shadow-md">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner animate-pulse">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl shadow-inner animate-pulse">
               🤖
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-extrabold text-sm">Health Assistant</h3>
-                <span className="text-[8px] bg-white text-blue-600 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5">
-                  ⚡ RAG ACTIVE
+                <span className="text-[9px] bg-amber-400 text-slate-900 font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-0.5 shadow-sm">
+                  ✨ AGENTIC RAG ACTIVE
                 </span>
               </div>
               <p className="text-[9px] text-white/90 font-semibold tracking-wide">MedFlow pgvector RAG & GPT-4o</p>
@@ -1189,18 +1189,31 @@ function PatientDashboard() {
 
         {/* Suggested Quick RAG Queries */}
         <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex gap-1.5 overflow-x-auto scrollbar-none whitespace-nowrap shrink-0">
-          {(locale === "te"
-            ? ["నా ప్రిస్క్రిప్షన్లు చూపించు", "నా క్యూ స్థితి తనిఖీ చేయి", "డ్రగ్ ఇంటరాక్షన్ తనిఖీ చేయి"]
-            : ["Show my prescriptions", "Check my queue status", "Drug interaction check for Aspirin"]
-          ).map((sug, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSendChat(sug)}
-              className="bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-full transition shadow-sm cursor-pointer flex-shrink-0"
-            >
-              {sug}
-            </button>
-          ))}
+          {(() => {
+            let questions = [];
+            if (showcaseMode === "aarav") {
+              questions = locale === "te"
+                ? ["నా మెట్‌ఫార్మిన్ సైడ్ ఎఫెక్ట్స్ ఏమిటి?", "నా క్యూ స్థితి తనిఖీ చేయి", "అమ్లోడిపైన్ Grapefruit వార్నింగ్"]
+                : ["What are Metformin side effects?", "Check my queue status", "Amlodipine Grapefruit warnings"];
+            } else if (showcaseMode === "priya") {
+              questions = locale === "te"
+                ? ["నా రికవరీ ఎలా ఉంది?", "లేట్ పాలసీ గురించి చెప్పండి", "ఫాలో-అప్ అపాయింట్‌మెంట్ బుక్ చేయి"]
+                : ["How is my recovery status?", "Late cancellation policy?", "Book follow-up appointment"];
+            } else {
+              questions = locale === "te"
+                ? ["నా ప్రిస్క్రిప్షన్లు చూపించు", "నా క్యూ స్థితి తనిఖీ చేయి", "డ్రగ్ ఇంటరాక్షన్ తనిఖీ చేయి"]
+                : ["Show my prescriptions", "Check my queue status", "Drug interaction check for Aspirin"];
+            }
+            return questions.map((sug, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSendChat(sug)}
+                className="bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200 text-[10px] font-bold px-2.5 py-1.5 rounded-full transition shadow-sm cursor-pointer flex-shrink-0"
+              >
+                {sug}
+              </button>
+            ));
+          })()}
         </div>
 
         {/* Chat Input */}
