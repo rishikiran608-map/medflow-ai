@@ -1173,6 +1173,70 @@ function PatientDashboard() {
                     ))}
                   </div>
                 )}
+                {!isUser && (() => {
+                  const contentLower = msg.content.toLowerCase();
+                  const actions = [];
+                  
+                  if (contentLower.includes("prescription") || contentLower.includes("metformin") || contentLower.includes("amlodipine") || contentLower.includes("aspirin")) {
+                    actions.push({
+                      label: "📋 Track Prescriptions",
+                      onClick: () => {
+                        setActiveTab("prescriptions");
+                        toast.success("Switched to Prescriptions Vault!");
+                      }
+                    });
+                  }
+                  if (contentLower.includes("queue") || contentLower.includes("token") || contentLower.includes("status")) {
+                    actions.push({
+                      label: "🟢 View Queue Status",
+                      onClick: () => {
+                        setActiveTab("overview");
+                        toast.success("Switched to Active Queue Monitor!");
+                      }
+                    });
+                  }
+                  if (contentLower.includes("follow-up") || contentLower.includes("appointment") || contentLower.includes("book")) {
+                    actions.push({
+                      label: "📅 Book Doctor Consult",
+                      onClick: () => {
+                        navigate("/book");
+                      }
+                    });
+                  }
+                  if (contentLower.includes("warning") || contentLower.includes("side effect") || contentLower.includes("grapefruit")) {
+                    actions.push({
+                      label: "🛡️ Save Warning to Timeline",
+                      onClick: () => {
+                        setTimelineItems(prev => [
+                          {
+                            id: Date.now(),
+                            time: "Just Now",
+                            type: "AI Drug Alert",
+                            desc: "RAG scan logged critical interaction warning for active prescriptions list.",
+                            status: "Logged"
+                          },
+                          ...prev
+                        ]);
+                        toast.success("AI safety warning logged to your clinical timeline!");
+                      }
+                    });
+                  }
+
+                  if (actions.length === 0) return null;
+                  return (
+                    <div className="flex flex-wrap gap-1.5 mt-2 bg-blue-50/30 p-1.5 border border-dashed border-blue-200 rounded-xl max-w-[85%]">
+                      {actions.map((act, aIdx) => (
+                        <button
+                          key={aIdx}
+                          onClick={act.onClick}
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wide transition active:scale-95 cursor-pointer shadow-sm shadow-blue-600/10"
+                        >
+                          {act.label}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}

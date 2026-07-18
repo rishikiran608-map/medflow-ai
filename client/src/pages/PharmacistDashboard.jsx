@@ -439,6 +439,80 @@ function PharmacistDashboard() {
                     ))}
                   </div>
                 )}
+                {!isUser && (() => {
+                  const contentLower = msg.content.toLowerCase();
+                  const actions = [];
+                  
+                  if (contentLower.includes("atorvastatin") || contentLower.includes("lipitor")) {
+                    actions.push({
+                      label: "🔄 Substitute Lipitor with Atorvastatin 10mg",
+                      onClick: () => {
+                        setEditableResult(prev => {
+                          const idx = prev.medicines?.findIndex(m => m.name.toLowerCase().includes("lipitor") || m.name.toLowerCase().includes("atorvastatin"));
+                          let updatedMeds = [...(prev.medicines || [])];
+                          if (idx !== -1 && idx !== undefined) {
+                            updatedMeds[idx] = { name: "Atorvastatin", dosage: "10mg (Once daily - Night)" };
+                          } else {
+                            updatedMeds.push({ name: "Atorvastatin", dosage: "10mg (Once daily - Night)" });
+                          }
+                          return { ...prev, medicines: updatedMeds };
+                        });
+                        toast.success("Applied Atorvastatin substitution to prescription editor!");
+                      }
+                    });
+                  }
+                  if (contentLower.includes("metformin")) {
+                    actions.push({
+                      label: "🔄 Set Metformin to 500mg Twice Daily",
+                      onClick: () => {
+                        setEditableResult(prev => {
+                          const idx = prev.medicines?.findIndex(m => m.name.toLowerCase().includes("metformin"));
+                          let updatedMeds = [...(prev.medicines || [])];
+                          if (idx !== -1 && idx !== undefined) {
+                            updatedMeds[idx] = { name: "Metformin", dosage: "500mg (Twice daily after meals)" };
+                          } else {
+                            updatedMeds.push({ name: "Metformin", dosage: "500mg (Twice daily after meals)" });
+                          }
+                          return { ...prev, medicines: updatedMeds };
+                        });
+                        toast.success("Updated Metformin dosage in prescription editor!");
+                      }
+                    });
+                  }
+                  if (contentLower.includes("amlodipine")) {
+                    actions.push({
+                      label: "🔄 Set Amlodipine to 5mg Once Daily",
+                      onClick: () => {
+                        setEditableResult(prev => {
+                          const idx = prev.medicines?.findIndex(m => m.name.toLowerCase().includes("amlodipine"));
+                          let updatedMeds = [...(prev.medicines || [])];
+                          if (idx !== -1 && idx !== undefined) {
+                            updatedMeds[idx] = { name: "Amlodipine", dosage: "5mg (Once daily - Night)" };
+                          } else {
+                            updatedMeds.push({ name: "Amlodipine", dosage: "5mg (Once daily - Night)" });
+                          }
+                          return { ...prev, medicines: updatedMeds };
+                        });
+                        toast.success("Updated Amlodipine dosage in prescription editor!");
+                      }
+                    });
+                  }
+
+                  if (actions.length === 0) return null;
+                  return (
+                    <div className="flex flex-wrap gap-1.5 mt-2 bg-amber-50/30 p-1.5 border border-dashed border-amber-200 rounded-xl max-w-[85%]">
+                      {actions.map((act, aIdx) => (
+                        <button
+                          key={aIdx}
+                          onClick={act.onClick}
+                          className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wide transition active:scale-95 cursor-pointer shadow-sm shadow-amber-600/10"
+                        >
+                          {act.label}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}

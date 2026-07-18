@@ -637,6 +637,85 @@ function DoctorDashboard() {
                           ))}
                         </div>
                       )}
+                      {!isUser && (() => {
+                        const contentLower = msg.content.toLowerCase();
+                        const actions = [];
+                        
+                        if (contentLower.includes("amlodipine")) {
+                          actions.push({
+                            label: "➕ Prescribe Amlodipine 5mg",
+                            onClick: () => {
+                              if (!medsList.some(m => m.name.toLowerCase() === "amlodipine")) {
+                                setMedsList(prev => [...prev, { name: "Amlodipine", dosage: "5mg • Once daily (Night)" }]);
+                                toast.success("Prescribed Amlodipine 5mg via RAG Assistant!");
+                              } else {
+                                toast.warning("Amlodipine is already in the prescription pad.");
+                              }
+                            }
+                          });
+                        }
+                        if (contentLower.includes("metformin")) {
+                          actions.push({
+                            label: "➕ Prescribe Metformin 500mg",
+                            onClick: () => {
+                              if (!medsList.some(m => m.name.toLowerCase() === "metformin")) {
+                                setMedsList(prev => [...prev, { name: "Metformin", dosage: "500mg • Twice daily" }]);
+                                toast.success("Prescribed Metformin 500mg via RAG Assistant!");
+                              } else {
+                                toast.warning("Metformin is already in the prescription pad.");
+                              }
+                            }
+                          });
+                        }
+                        if (contentLower.includes("aspirin")) {
+                          actions.push({
+                            label: "➕ Prescribe Aspirin 75mg",
+                            onClick: () => {
+                              if (!medsList.some(m => m.name.toLowerCase() === "aspirin")) {
+                                setMedsList(prev => [...prev, { name: "Aspirin", dosage: "75mg • Once daily (Morning)" }]);
+                                toast.success("Prescribed Aspirin 75mg via RAG Assistant!");
+                              } else {
+                                toast.warning("Aspirin is already in the prescription pad.");
+                              }
+                            }
+                          });
+                        }
+                        if (contentLower.includes("hypertension")) {
+                          actions.push({
+                            label: "📝 Diagnose Hypertension",
+                            onClick: () => {
+                              setDiagnosis("Essential Hypertension");
+                              setDiseaseSeverity(3);
+                              toast.success("Diagnosis updated to Hypertension via RAG Assistant!");
+                            }
+                          });
+                        }
+                        if (contentLower.includes("diabetes")) {
+                          actions.push({
+                            label: "📝 Diagnose Type-2 Diabetes",
+                            onClick: () => {
+                              setDiagnosis("Type-2 Diabetes Mellitus");
+                              setDiseaseSeverity(2);
+                              toast.success("Diagnosis updated to Type-2 Diabetes via RAG Assistant!");
+                            }
+                          });
+                        }
+
+                        if (actions.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-1.5 mt-2 bg-teal-50/30 p-1.5 border border-dashed border-teal-200 rounded-xl max-w-[85%]">
+                            {actions.map((act, aIdx) => (
+                              <button
+                                key={aIdx}
+                                onClick={act.onClick}
+                                className="bg-teal-600 hover:bg-teal-700 text-white font-extrabold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wide transition active:scale-95 cursor-pointer shadow-sm shadow-teal-600/10"
+                              >
+                                {act.label}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}

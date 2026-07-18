@@ -581,6 +581,62 @@ function AdminDashboard() {
                           ))}
                         </div>
                       )}
+                      {!isUser && (() => {
+                        const contentLower = msg.content.toLowerCase();
+                        const actions = [];
+                        
+                        if (contentLower.includes("report") || contentLower.includes("kpi") || contentLower.includes("operational")) {
+                          actions.push({
+                            label: "📊 View SaaS Analytics",
+                            onClick: () => {
+                              setActiveTab("analytics");
+                              toast.success("Navigated to SaaS Analytics Center!");
+                            }
+                          });
+                        }
+                        if (contentLower.includes("no-show") || contentLower.includes("risk") || contentLower.includes("prediction") || contentLower.includes("detection")) {
+                          actions.push({
+                            label: "🧠 View AI Risk Predictions",
+                            onClick: () => {
+                              setActiveTab("aiinsights");
+                              toast.success("Navigated to AI Insights Center!");
+                            }
+                          });
+                        }
+                        if (contentLower.includes("cancellation") || contentLower.includes("policy") || contentLower.includes("sop") || contentLower.includes("late")) {
+                          actions.push({
+                            label: "⏱️ Open Live Queue Monitor",
+                            onClick: () => {
+                              setActiveTab("monitor");
+                              toast.success("Navigated to Live Queue Monitor!");
+                            }
+                          });
+                        }
+                        if (contentLower.includes("staffing") || contentLower.includes("physician") || contentLower.includes("doctor")) {
+                          actions.push({
+                            label: "➕ Onboard / Manage Doctors",
+                            onClick: () => {
+                              setActiveTab("doctors");
+                              toast.success("Navigated to Doctors Staff Directory!");
+                            }
+                          });
+                        }
+
+                        if (actions.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-1.5 mt-2 bg-blue-50/30 p-1.5 border border-dashed border-blue-200 rounded-xl max-w-[90%]">
+                            {actions.map((act, aIdx) => (
+                              <button
+                                key={aIdx}
+                                onClick={act.onClick}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wide transition active:scale-95 cursor-pointer shadow-sm shadow-blue-600/10"
+                              >
+                                {act.label}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}

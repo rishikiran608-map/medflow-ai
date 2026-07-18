@@ -7,6 +7,7 @@ import { useLanguage } from "../context/LanguageContext";
 
 function ClinicOwnerDashboard() {
   const { t, locale } = useLanguage();
+  const [aiForecastActive, setAiForecastActive] = useState(false);
   // Chat state
   const [chatMessages, setChatMessages] = useState([
     { role: "assistant", content: "💼 Welcome back, Director. I am your **Clinic Owner Assistant**.\n\nI can analyze your clinical performance, track revenue trends, monitor doctor utilization rates, and review AI adoption stats." }
@@ -74,6 +75,19 @@ function ClinicOwnerDashboard() {
           </div>
         </div>
 
+        {/* 1. AI Forecast Alert Banner */}
+        {aiForecastActive && (
+          <div className="mb-6 bg-gradient-to-r from-amber-500 to-rose-500 rounded-3xl p-5 text-white shadow-xl shadow-amber-500/20 animate-pulse border border-amber-400">
+            <h4 className="font-extrabold text-sm flex items-center gap-2">
+              <span>✨</span>
+              <span>AI Performance Forecast Applied (Active Control Loop)</span>
+            </h4>
+            <p className="text-[11px] text-white/90 font-medium mt-1">
+              Simulating 15% booking backfill rate, optimized doctor scheduling, and reduced no-show operational leaks.
+            </p>
+          </div>
+        )}
+
         {/* 1. KPIs Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Revenue */}
@@ -83,10 +97,12 @@ function ClinicOwnerDashboard() {
               <span className="p-2 bg-green-50 text-green-600 rounded-xl"><TrendingUp size={16} /></span>
             </div>
             <div className="mt-4">
-              <h3 className="text-3xl font-black text-slate-800 tracking-tight">{businessKpis.revenue}</h3>
+              <h3 className="text-3xl font-black text-slate-800 tracking-tight">
+                {aiForecastActive ? "₹4,00,775" : businessKpis.revenue}
+              </h3>
               <div className="flex items-center gap-1 text-xs font-bold text-green-600 mt-1">
                 <ArrowUpRight size={14} />
-                <span>{businessKpis.revenueChange} vs last month</span>
+                <span>{aiForecastActive ? "+23.5%" : businessKpis.revenueChange} vs last month</span>
               </div>
             </div>
           </div>
@@ -98,10 +114,12 @@ function ClinicOwnerDashboard() {
               <span className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Users size={16} /></span>
             </div>
             <div className="mt-4">
-              <h3 className="text-3xl font-black text-slate-800 tracking-tight">{businessKpis.retention}</h3>
+              <h3 className="text-3xl font-black text-slate-800 tracking-tight">
+                {aiForecastActive ? "91%" : businessKpis.retention}
+              </h3>
               <div className="flex items-center gap-1 text-xs font-bold text-green-600 mt-1">
                 <ArrowUpRight size={14} />
-                <span>{businessKpis.retentionChange} vs last month</span>
+                <span>{aiForecastActive ? "+6.2%" : businessKpis.retentionChange} vs last month</span>
               </div>
             </div>
           </div>
@@ -113,10 +131,12 @@ function ClinicOwnerDashboard() {
               <span className="p-2 bg-purple-50 text-purple-600 rounded-xl"><Activity size={16} /></span>
             </div>
             <div className="mt-4">
-              <h3 className="text-3xl font-black text-slate-800 tracking-tight">{businessKpis.utilization}</h3>
+              <h3 className="text-3xl font-black text-slate-800 tracking-tight">
+                {aiForecastActive ? "86%" : businessKpis.utilization}
+              </h3>
               <div className="flex items-center gap-1 text-xs font-bold text-green-600 mt-1">
                 <ArrowUpRight size={14} />
-                <span>{businessKpis.utilizationChange} vs last month</span>
+                <span>{aiForecastActive ? "+8.0%" : businessKpis.utilizationChange} vs last month</span>
               </div>
             </div>
           </div>
@@ -128,10 +148,12 @@ function ClinicOwnerDashboard() {
               <span className="p-2 bg-rose-50 text-rose-600 rounded-xl"><CheckCircle size={16} /></span>
             </div>
             <div className="mt-4">
-              <h3 className="text-3xl font-black text-slate-800 tracking-tight">{businessKpis.aiAdoption}</h3>
+              <h3 className="text-3xl font-black text-slate-800 tracking-tight">
+                {aiForecastActive ? "98%" : businessKpis.aiAdoption}
+              </h3>
               <div className="flex items-center gap-1 text-xs font-bold text-green-600 mt-1">
                 <ArrowUpRight size={14} />
-                <span>{businessKpis.aiAdoptionChange} vs last month</span>
+                <span>{aiForecastActive ? "+6.0%" : businessKpis.aiAdoptionChange} vs last month</span>
               </div>
             </div>
           </div>
@@ -233,6 +255,45 @@ function ClinicOwnerDashboard() {
                     ))}
                   </div>
                 )}
+                {!isUser && (() => {
+                  const contentLower = msg.content.toLowerCase();
+                  const actions = [];
+                  
+                  if (contentLower.includes("kpi") || contentLower.includes("utilization") || contentLower.includes("revenue") || contentLower.includes("performance") || contentLower.includes("clinic")) {
+                    if (!aiForecastActive) {
+                      actions.push({
+                        label: "📈 Apply AI Performance Forecast",
+                        onClick: () => {
+                          setAiForecastActive(true);
+                          toast.success("AI predictive growth model applied to KPIs!");
+                        }
+                      });
+                    } else {
+                      actions.push({
+                        label: "🔄 Revert to Standard View",
+                        onClick: () => {
+                          setAiForecastActive(false);
+                          toast.success("Returned to actual clinic records.");
+                        }
+                      });
+                    }
+                  }
+
+                  if (actions.length === 0) return null;
+                  return (
+                    <div className="flex flex-wrap gap-1.5 mt-2 bg-rose-50/30 p-1.5 border border-dashed border-rose-200 rounded-xl max-w-[85%]">
+                      {actions.map((act, aIdx) => (
+                        <button
+                          key={aIdx}
+                          onClick={act.onClick}
+                          className="bg-rose-600 hover:bg-rose-700 text-white font-extrabold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wide transition active:scale-95 cursor-pointer shadow-sm shadow-rose-600/10"
+                        >
+                          {act.label}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
