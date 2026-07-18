@@ -101,6 +101,14 @@ function Navbar() {
           >
             {t("nav.contact")}
           </button>
+          <a
+            href="/presentation.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-sm text-slate-500 hover:text-blue-600 transition flex items-center gap-1"
+          >
+            🎨 Pitch Slides
+          </a>
         </div>
 
         {/* Desktop Right Controls */}
@@ -223,7 +231,15 @@ function Navbar() {
           >
             {t("nav.contact")}
           </button>
-
+          <a
+            href="/presentation.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileMenuOpen(false)}
+            className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-50 rounded-xl text-sm block"
+          >
+            🎨 Pitch Slides
+          </a>
           <div className="border-t border-slate-100 my-1" />
 
           {/* Mobile Language Switcher */}
