@@ -565,81 +565,84 @@ function AdminDashboard() {
 
               {/* Chat Messages */}
               <div className="flex-1 overflow-y-auto space-y-4 pr-1 mb-4">
-                {chatMessages.map((msg, idx) => (
-                  <div key={idx} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
-                    {msg.role === "assistant" && (
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xs font-black">AI</div>
-                    )}
-                    <div className={`max-w-[80%] ${ msg.role === "user" ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm" : "bg-slate-50 border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm" } px-4 py-3`}>
-                      <p className="text-sm font-medium whitespace-pre-wrap">{msg.content}</p>
-                      {msg.citations && msg.citations.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-slate-200">
-                          {(Array.isArray(msg.citations) ? msg.citations : [msg.citations]).map((c, ci) => (
-                            <span key={ci} className="inline-flex items-center gap-1 text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full border border-blue-200">
-                              📖 {c.title} [{Math.round((c.confidence || 0.8) * 100)}% Match]
-                            </span>
-                          ))}
-                        </div>
+                {chatMessages.map((msg, idx) => {
+                  const isUser = msg.role === "user";
+                  return (
+                    <div key={idx} className={`flex gap-3 ${isUser ? "justify-end" : ""}`}>
+                      {msg.role === "assistant" && (
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xs font-black">AI</div>
                       )}
-                      {!isUser && (() => {
-                        const contentLower = msg.content.toLowerCase();
-                        const actions = [];
-                        
-                        if (contentLower.includes("report") || contentLower.includes("kpi") || contentLower.includes("operational")) {
-                          actions.push({
-                            label: "📊 View SaaS Analytics",
-                            onClick: () => {
-                              setActiveTab("analytics");
-                              toast.success("Navigated to SaaS Analytics Center!");
-                            }
-                          });
-                        }
-                        if (contentLower.includes("no-show") || contentLower.includes("risk") || contentLower.includes("prediction") || contentLower.includes("detection")) {
-                          actions.push({
-                            label: "🧠 View AI Risk Predictions",
-                            onClick: () => {
-                              setActiveTab("aiinsights");
-                              toast.success("Navigated to AI Insights Center!");
-                            }
-                          });
-                        }
-                        if (contentLower.includes("cancellation") || contentLower.includes("policy") || contentLower.includes("sop") || contentLower.includes("late")) {
-                          actions.push({
-                            label: "⏱️ Open Live Queue Monitor",
-                            onClick: () => {
-                              setActiveTab("monitor");
-                              toast.success("Navigated to Live Queue Monitor!");
-                            }
-                          });
-                        }
-                        if (contentLower.includes("staffing") || contentLower.includes("physician") || contentLower.includes("doctor")) {
-                          actions.push({
-                            label: "➕ Onboard / Manage Doctors",
-                            onClick: () => {
-                              setActiveTab("doctors");
-                              toast.success("Navigated to Doctors Staff Directory!");
-                            }
-                          });
-                        }
-
-                        if (actions.length === 0) return null;
-                        return (
-                          <div className="flex flex-wrap gap-1.5 mt-2 bg-blue-50/30 p-1.5 border border-dashed border-blue-200 rounded-xl max-w-[90%]">
-                            {actions.map((act, aIdx) => (
-                              <button
-                                key={aIdx}
-                                onClick={act.onClick}
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wide transition active:scale-95 cursor-pointer shadow-sm shadow-blue-600/10"
-                              >
-                                {act.label}
-                              </button>
+                      <div className={`max-w-[80%] ${ isUser ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm" : "bg-slate-50 border border-slate-100 text-slate-800 rounded-2xl rounded-tl-sm" } px-4 py-3`}>
+                        <p className="text-sm font-medium whitespace-pre-wrap">{msg.content}</p>
+                        {msg.citations && msg.citations.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-slate-200">
+                            {(Array.isArray(msg.citations) ? msg.citations : [msg.citations]).map((c, ci) => (
+                              <span key={ci} className="inline-flex items-center gap-1 text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full border border-blue-200">
+                                📖 {c.title} [{Math.round((c.confidence || 0.8) * 100)}% Match]
+                              </span>
                             ))}
                           </div>
-                        );
-                      })()}
+                        )}
+                        {!isUser && (() => {
+                          const contentLower = msg.content.toLowerCase();
+                          const actions = [];
+                          
+                          if (contentLower.includes("report") || contentLower.includes("kpi") || contentLower.includes("operational")) {
+                            actions.push({
+                              label: "📊 View SaaS Analytics",
+                              onClick: () => {
+                                setActiveTab("analytics");
+                                toast.success("Navigated to SaaS Analytics Center!");
+                              }
+                            });
+                          }
+                          if (contentLower.includes("no-show") || contentLower.includes("risk") || contentLower.includes("prediction") || contentLower.includes("detection")) {
+                            actions.push({
+                              label: "🧠 View AI Risk Predictions",
+                              onClick: () => {
+                                setActiveTab("aiinsights");
+                                toast.success("Navigated to AI Insights Center!");
+                              }
+                            });
+                          }
+                          if (contentLower.includes("cancellation") || contentLower.includes("policy") || contentLower.includes("sop") || contentLower.includes("late")) {
+                            actions.push({
+                              label: "⏱️ Open Live Queue Monitor",
+                              onClick: () => {
+                                setActiveTab("monitor");
+                                toast.success("Navigated to Live Queue Monitor!");
+                              }
+                            });
+                          }
+                          if (contentLower.includes("staffing") || contentLower.includes("physician") || contentLower.includes("doctor")) {
+                            actions.push({
+                              label: "➕ Onboard / Manage Doctors",
+                              onClick: () => {
+                                setActiveTab("doctors");
+                                toast.success("Navigated to Doctors Staff Directory!");
+                              }
+                            });
+                          }
+
+                          if (actions.length === 0) return null;
+                          return (
+                            <div className="flex flex-wrap gap-1.5 mt-2 bg-blue-50/30 p-1.5 border border-dashed border-blue-200 rounded-xl max-w-[90%]">
+                              {actions.map((act, aIdx) => (
+                                <button
+                                  key={aIdx}
+                                  onClick={act.onClick}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-2 py-1 rounded-lg text-[9px] uppercase tracking-wide transition active:scale-95 cursor-pointer shadow-sm shadow-blue-600/10"
+                                >
+                                  {act.label}
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {chatLoading && (
                   <div className="flex gap-3">
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center text-white text-xs font-black">AI</div>
