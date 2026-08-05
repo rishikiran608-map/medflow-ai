@@ -46,6 +46,55 @@ function DoctorDashboard() {
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const toggleVoiceDictation = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Voice dictation is not supported in this browser. Try Chrome or Edge.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      toast.info("Voice dictation paused.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = locale === "te" ? "te-IN" : "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        toast.info("🎤 Listening to voice dictation...");
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setChatInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+        setIsListening(false);
+        toast.success("✨ Voice recognized!");
+      };
+
+      recognition.onerror = (err) => {
+        console.warn("Speech recognition error:", err);
+        setIsListening(false);
+        toast.warning("Could not recognize voice. Please try again.");
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.error("Speech recognition start failed:", err);
+      setIsListening(false);
+    }
+  };
 
   // Active Patient computed states
   const activePatient = queue.find(item => item.queue_status === "In Consultation");
@@ -556,6 +605,18 @@ function DoctorDashboard() {
 
                   <div className="flex justify-end gap-3 border-t border-slate-100 pt-5 mt-5">
                     <button
+                      type="button"
+                      onClick={() => {
+                        toast.info("🖨️ Opening Printable Prescription Document...");
+                        window.print();
+                      }}
+                      className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-5 py-3.5 rounded-xl transition text-xs shadow-md flex items-center gap-2"
+                    >
+                      <Printer size={14} />
+                      <span>Export PDF / Print Rx</span>
+                    </button>
+
+                    <button
                       onClick={() => handleComplete(activePatient.id)}
                       disabled={completing}
                       className="bg-green-600 hover:bg-green-700 text-white font-black px-6 py-3.5 rounded-xl transition text-xs shadow-lg shadow-green-500/10 flex items-center gap-2"
@@ -583,9 +644,78 @@ function DoctorDashboard() {
 
           </div>
 
-          {/* RIGHT column (Queue waitlist + AI assistant) */}
+          {/* RIGHT column (Doctor AI Assistant) */}
           <div className="space-y-8">
             
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-md flex flex-col overflow-hidden text-left h-[620px]">
+              <div className="p-4 bg-gradient-to-r from-teal-600 to-teal-800 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
+                    🩺
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm leading-tight">{t("doctor.copilotTitle")}</h3>
+                    <p className="text-[10px] text-teal-100 opacity-90">RAG Medical Intelligence Engine</p>
+                  </div>
+                </div>
+                <span className="bg-teal-500/40 text-teal-100 border border-teal-400/30 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full">
+                  Clinical RAG v2.5
+                </span>
+              </div>
+
+              {/* Chat messages stream */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50/50">
+                {chatMessages.map((msg, i) => {
+                  const isUser = msg.role === "user";
+                  return (
+                    <div key={i} className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}>
+                      <div
+                        className={`max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed ${
+                          isUser
+                            ? "bg-teal-600 text-white rounded-br-none shadow-md shadow-teal-600/10 font-medium"
+                            : "bg-white text-slate-800 border border-slate-100 rounded-bl-none shadow-sm font-medium"
+                        }`}
+                      >
+                        <div className="whitespace-pre-wrap">
+                          {msg.content}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Chat Input */}
+              <div className="p-3 border-t border-slate-100 flex gap-2">
+                <button
+                  type="button"
+                  onClick={toggleVoiceDictation}
+                  className={`p-2.5 rounded-xl border transition flex items-center justify-center shrink-0 ${
+                    isListening 
+                      ? "bg-red-50 text-red-600 border-red-200 animate-pulse" 
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200"
+                  }`}
+                  title="Voice Dictation Assistant"
+                >
+                  <Mic className={`w-4 h-4 ${isListening ? "animate-bounce" : ""}`} />
+                </button>
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder={isListening ? "Listening... Speak now..." : "Query guidelines or SOPs..."}
+                  className="flex-1 border border-slate-100 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-teal-600 bg-slate-50/50"
+                  onKeyDown={(e) => e.key === "Enter" && handleSendChat()}
+                />
+                <button
+                  onClick={handleSendChat}
+                  className="bg-teal-600 hover:bg-teal-700 text-white p-2.5 rounded-xl transition flex items-center justify-center shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
             {/* Queue Timeline Panel */}
             <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm text-left">
               <h3 className="font-extrabold text-slate-800 text-sm mb-4">Patient Waiting Queue ({waitingQueue.length})</h3>
