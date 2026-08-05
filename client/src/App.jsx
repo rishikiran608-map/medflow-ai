@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Navbar from "./components/Navbar";
@@ -28,6 +28,16 @@ function RouteLoader() {
   );
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 // Only show the floating ChatWidget on the home/landing page.
 // Dashboards each have their own embedded AI assistant panel.
 function ConditionalChatWidget() {
@@ -48,6 +58,7 @@ function ConditionalChatWidget() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Toaster richColors position="top-right" />
       <Navbar />
       <Suspense fallback={<RouteLoader />}>

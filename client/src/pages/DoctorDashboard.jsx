@@ -10,6 +10,8 @@ import {
 import { toast } from "sonner";
 import { DEMO_QUEUE } from "../data/demoData";
 import { useLanguage } from "../context/LanguageContext";
+import AgentReasoningTerminal from "../components/AgentReasoningTerminal";
+import PrescriptionScannerModal from "../components/PrescriptionScannerModal";
 
 function DoctorDashboard() {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ function DoctorDashboard() {
   const [callingNext, setCallingNext] = useState(false);
   const [selectedPatientHistory, setSelectedPatientHistory] = useState(null);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [showOCRModal, setShowOCRModal] = useState(false);
 
   // Form states
   const [diagnosis, setDiagnosis] = useState("");
@@ -213,13 +216,36 @@ function DoctorDashboard() {
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Title */}
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🩺</span>
-          <div>
-            <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t("doctor.title")}</h1>
-            <p className="text-slate-500 text-sm font-medium">{t("doctor.sub")}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🩺</span>
+            <div>
+              <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t("doctor.title")}</h1>
+              <p className="text-slate-500 text-sm font-medium">{t("doctor.sub")}</p>
+            </div>
           </div>
+
+          <button
+            onClick={() => setShowOCRModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-semibold text-xs shadow-lg shadow-blue-500/20 transition self-start sm:self-auto"
+          >
+            <ScanLine className="w-4 h-4" />
+            <span>Scan Prescription / Report (Vision OCR)</span>
+          </button>
         </div>
+
+        {/* Prescription Scanner Modal */}
+        <PrescriptionScannerModal
+          isOpen={showOCRModal}
+          onClose={() => setShowOCRModal(false)}
+          onExtracted={(extracted) => {
+            if (extracted.diagnosis) setDiagnosis(extracted.diagnosis);
+            if (extracted.medications) setMedsList(extracted.medications);
+          }}
+        />
+
+        {/* Autonomous Agentic Reasoning Terminal */}
+        <AgentReasoningTerminal className="shadow-xl" />
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

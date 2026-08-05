@@ -8,6 +8,7 @@ function Navbar() {
   const navigate = useNavigate();
   const { locale, t, changeLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
 
   const token = useMemo(() => localStorage.getItem("token"), []);
   const role = useMemo(() => localStorage.getItem("userRole"), []);
@@ -77,9 +78,12 @@ function Navbar() {
 
         {/* Desktop Nav Links */}
         <div className="hidden md:flex items-center gap-8">
-          <Link to="/" className="font-semibold text-sm text-slate-500 hover:text-blue-600 transition">
+          <button
+            onClick={() => handleNavClick("home")}
+            className="font-semibold text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
+          >
             {t("nav.home")}
-          </Link>
+          </button>
           <button
             onClick={() => handleNavClick("features")}
             className="font-semibold text-sm text-slate-500 hover:text-blue-600 transition cursor-pointer"
@@ -115,29 +119,40 @@ function Navbar() {
         <div className="hidden md:flex items-center gap-4">
 
           {/* Language Selector */}
-          <div className="relative group z-50">
-            <button className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200/60 rounded-xl text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer">
+          <div className="relative z-50">
+            <button
+              onClick={() => setLangMenuOpen(!langMenuOpen)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 border border-slate-200/60 rounded-xl text-xs font-extrabold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+            >
               <Globe size={14} className="text-slate-500" />
               <span>{locale === "en" ? "🇮🇳 English" : "🇮🇳 తెలుగు"}</span>
             </button>
-            <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-white border border-slate-100 rounded-xl shadow-xl p-1 w-28 text-left z-50">
-              <button
-                onClick={() => changeLanguage("en")}
-                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  locale === "en" ? "bg-blue-50 text-blue-600" : "hover:bg-slate-50 text-slate-700"
-                }`}
-              >
-                🇮🇳 English
-              </button>
-              <button
-                onClick={() => changeLanguage("te")}
-                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  locale === "te" ? "bg-blue-50 text-blue-600" : "hover:bg-slate-50 text-slate-700"
-                }`}
-              >
-                🇮🇳 తెలుగు
-              </button>
-            </div>
+            {langMenuOpen && (
+              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl p-1 w-28 text-left z-50">
+                <button
+                  onClick={() => {
+                    changeLanguage("en");
+                    setLangMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    locale === "en" ? "bg-blue-50 text-blue-600" : "hover:bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  🇮🇳 English
+                </button>
+                <button
+                  onClick={() => {
+                    changeLanguage("te");
+                    setLangMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    locale === "te" ? "bg-blue-50 text-blue-600" : "hover:bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  🇮🇳 తెలుగు
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Auth Area */}

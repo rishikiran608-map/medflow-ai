@@ -14,10 +14,8 @@ const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const orchestrationRoutes = require("./routes/orchestrationRoutes");
+const agentRoutes = require("./routes/agentRoutes");
 const errorHandler = require("./middleware/errorHandler");
-
-
-
 
 const app = express();
 
@@ -34,6 +32,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/orchestrate", orchestrationRoutes);
+app.use("/api/agent", agentRoutes);
 
 app.get("/", (req, res) => {
   res.json({

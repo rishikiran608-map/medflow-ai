@@ -10,6 +10,7 @@ import api from "../api/api";
 import { toast } from "sonner";
 import { DEMO_PATIENTS, DEMO_DOCTORS, DEMO_QUEUE, DEMO_NOTIFICATIONS } from "../data/demoData";
 import { useLanguage } from "../context/LanguageContext";
+import AgentReasoningTerminal from "../components/AgentReasoningTerminal";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -411,6 +412,9 @@ function AdminDashboard() {
             <Zap size={14} className={seeding ? "animate-spin" : ""} /> {seeding ? "Seeding..." : t("admin.seedingButton")}
           </motion.button>
         </div>
+
+        {/* 🤖 MedFlow Autonomous Agentic Reasoning Terminal */}
+        <AgentReasoningTerminal className="mb-6 shadow-xl" />
 
         {/* 🤖 AI Impact Banner */}
         <div className="mb-6 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-3xl p-5 text-white shadow-xl shadow-blue-500/20">
