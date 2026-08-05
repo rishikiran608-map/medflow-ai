@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, Clipboard, RefreshCw, AlertCircle, Clock, Play, CheckSquare, 
   Smile, Phone, Activity, Sparkles, Send, ShieldAlert, Heart,
-  ScanLine, ShieldCheck, FlaskConical, Eye, Stethoscope, TrendingUp
+  ScanLine, ShieldCheck, FlaskConical, Eye, Stethoscope, TrendingUp,
+  Printer, Mic
 } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_QUEUE } from "../data/demoData";
