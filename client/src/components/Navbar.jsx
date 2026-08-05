@@ -24,6 +24,7 @@ function Navbar() {
   };
 
   const handleRoleSwitch = (newRole) => {
+    localStorage.setItem("token", "demo-jwt-token-12345");
     localStorage.setItem("userRole", newRole);
     localStorage.setItem("userName", `${newRole} Demo`);
     if (newRole === "Patient") {
