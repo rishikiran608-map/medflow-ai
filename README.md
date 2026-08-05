@@ -1,18 +1,21 @@
-# 🩺 MedFlow AI — Smart AI-Clinic Queue & Patient Flow Management
+# 🩺 MedFlow AI — Smart AI-Clinic Queue & Agentic Workflow OS
+### 🚀 Official Submission for the **Build to Ship Hackathon** (NIAT / CDU)
+* **Primary Theme**: *Agentic AI & Intelligent Systems*
+* **Secondary Themes**: *Smart Automation* | *Intelligent Document Processing (IDP)* | *Multimodal AI*
 
-[![React](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
+[![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-green?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-teal?style=for-the-badge&logo=supabase)](https://supabase.com/)
-[![Razorpay](https://img.shields.io/badge/Razorpay-Payments-blue?style=for-the-badge)](https://razorpay.com/)
-[![Twilio](https://img.shields.io/badge/Twilio-WhatsApp-red?style=for-the-badge&logo=twilio)](https://twilio.com/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-purple?style=for-the-badge&logo=openai)](https://openai.com/)
+[![Gemini](https://img.shields.io/badge/Google_Gemini-1.5_Vision-purple?style=for-the-badge&logo=google)](https://aistudio.google.com/)
+[![n8n](https://img.shields.io/badge/n8n-Automation_Engine-orange?style=for-the-badge&logo=n8n)](https://n8n.io/)
 [![Vercel](https://img.shields.io/badge/Vercel-Frontend-black?style=for-the-badge&logo=vercel)](https://vercel.com/)
 [![Render](https://img.shields.io/badge/Render-Backend-darkviolet?style=for-the-badge)](https://render.com/)
 
-MedFlow AI is a smart, end-to-end, AI-powered healthcare platform designed to automate patient flow, eliminate clinic wait-time friction, predict no-shows using AI commute analysis, facilitate payments, and provide patients and doctors with real-time queue synchronization.
+MedFlow AI is a production-ready, full-stack AI platform designed to automate patient flow, eliminate clinic wait-time friction, predict patient no-shows using commute & weather intelligence, dispatch automated n8n webhooks, and provide doctors with Gemini Vision OCR and live Agentic Reasoning traces.
 
-🌐 **Live Website:** [medflow-ai-eight.vercel.app](https://medflow-ai-eight.vercel.app/)  
-⚡ **API Endpoint:** [medflow-ai.onrender.com/api](https://medflow-ai.onrender.com/api)
+🌐 **Live Deployed App:** [medflow-ai-eight.vercel.app](https://medflow-ai-eight.vercel.app/)  
+⚡ **API Endpoint:** [medflow-ai.onrender.com/api](https://medflow-ai.onrender.com/api)  
+🎨 **Interactive Pitch Slides:** [medflow-ai-eight.vercel.app/presentation.html](https://medflow-ai-eight.vercel.app/presentation.html)
 
 ---
 
