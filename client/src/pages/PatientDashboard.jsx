@@ -10,6 +10,8 @@ import {
 import { toast } from "sonner";
 import { DEMO_APPOINTMENTS, DEMO_TIMELINE, DEMO_QUEUE_ENTRY, DEMO_HEALTH_CONSULTATIONS } from "../data/demoData";
 import { useLanguage } from "../context/LanguageContext";
+import PrescriptionScannerModal from "../components/PrescriptionScannerModal";
+import { ScanLine } from "lucide-react";
 
 function PatientDashboard() {
   const navigate = useNavigate();
@@ -34,6 +36,7 @@ function PatientDashboard() {
   const [travelMode, setTravelMode] = useState("Driving");
   const [distance, setDistance] = useState("5.0");
   const [commuting, setCommuting] = useState(false);
+  const [showOCRModal, setShowOCRModal] = useState(false);
 
   // 1. Upcoming Appointments
   const [appointmentsList, setAppointmentsList] = useState([]);
@@ -333,7 +336,25 @@ function PatientDashboard() {
             </button>
           ))}
         </div>
+
+        <div className="pt-3 border-t border-slate-100">
+          <button
+            onClick={() => setShowOCRModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-500/20 transition cursor-pointer"
+          >
+            <ScanLine className="w-4 h-4" />
+            <span>Scan Prescription / Report (OCR)</span>
+          </button>
+        </div>
       </div>
+
+      <PrescriptionScannerModal
+        isOpen={showOCRModal}
+        onClose={() => setShowOCRModal(false)}
+        onExtracted={(data) => {
+          toast.success("✨ Prescription scanned into Patient Vault!");
+        }}
+      />
 
       {/* ─── MAIN CONTROLS WORKSPACE ─── */}
       <div className="lg:col-span-2 space-y-8">

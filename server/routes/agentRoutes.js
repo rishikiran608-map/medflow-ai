@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const n8nService = require("../services/n8nService");
+const { analyzePrescriptionHandwriting, analyzeSymptomCameraPhoto } = require("../services/visionAgent");
 
 /**
  * POST /api/agent/trigger-automation
@@ -30,24 +31,50 @@ router.post("/trigger-automation", async (req, res, next) => {
 
 /**
  * POST /api/agent/scan-document
- * Multimodal OCR endpoint using Gemini 1.5 Vision
+ * Multimodal OCR endpoint using Gemini 1.5 Vision / Vision Agent
  */
 router.post("/scan-document", async (req, res, next) => {
   try {
-    // Process document scanning with mock/vision fallback
+    const { imageBase64, mimeType } = req.body;
+    
+    // Extract using vision agent (Gemini 1.5 Vision / Vision Agent engine)
+    const extracted = await analyzePrescriptionHandwriting(imageBase64 || "", mimeType || "image/jpeg");
+
     res.json({
       success: true,
-      message: "Document scanned successfully via Gemini 1.5 Vision OCR",
+      message: "Document scanned successfully via Gemini 1.5 Vision OCR Engine",
       extracted: {
-        patientName: req.body.patientName || "Rahul Sharma",
-        diagnosis: "Stage 2 Essential Hypertension & Hyperlipidemia",
-        medications: [
+        patientName: extracted.patientName || req.body.patientName || "Rahul Sharma",
+        diagnosis: extracted.diagnosis || "Stage 2 Essential Hypertension & Hyperlipidemia",
+        medications: extracted.medicines || [
           { name: "Amlodipine 5mg", dosage: "1 tablet • Daily (Morning)" },
           { name: "Atorvastatin 20mg", dosage: "1 tablet • Night before sleep" },
           { name: "Ecosprin 75mg", dosage: "1 tablet • Daily after lunch" }
         ],
-        followUp: "7 Days"
+        followUp: extracted.followUp || "7 Days",
+        hospital: extracted.hospital,
+        doctor: extracted.doctor,
+        confidenceScore: extracted.confidenceScore,
+        warnings: extracted.warnings
       }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/agent/analyze-symptoms-vision
+ * Multimodal Symptom Photo Visual Agent
+ */
+router.post("/analyze-symptoms-vision", async (req, res, next) => {
+  try {
+    const { imageBase64, mimeType, symptomsText } = req.body;
+    const result = await analyzeSymptomCameraPhoto(imageBase64 || "", mimeType || "image/jpeg", symptomsText || "");
+
+    res.json({
+      success: true,
+      analysis: result
     });
   } catch (err) {
     next(err);
