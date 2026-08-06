@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MedFlow AI — Interactive Presentation Deck</title>
+  <title>MedFlow AI — Official Presentation Deck</title>
   <meta name="description" content="MedFlow AI Official Pitch Deck: Intelligent Healthcare Operating System." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
@@ -21,7 +21,7 @@
       --purple:  #065f46;
       --text:    #0f1a14;
       --muted:   #4b7a62;
-      --card-bg: rgba(255,255,255,0.85);
+      --card-bg: rgba(255,255,255,0.88);
       --card-border: rgba(16,185,129,0.25);
       --font-head: 'Outfit', sans-serif;
       --font-body: 'Inter', sans-serif;
@@ -98,7 +98,7 @@
       color: #3d6b55;
       text-align: center;
       font-weight: 500;
-      max-width: 680px;
+      max-width: 720px;
       line-height: 1.6;
     }
 
@@ -116,7 +116,7 @@
 
     .stat-number {
       font-family: var(--font-head);
-      font-size: 2.8rem;
+      font-size: 2.6rem;
       font-weight: 900;
       background: linear-gradient(135deg, #059669, #0d9488);
       -webkit-background-clip: text;
@@ -187,30 +187,35 @@
     <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <div class="pill pill-green">✨ Gemini 1.5 Vision OCR (< 0.5s)</div>
       <div class="pill pill-blue">🇮🇳 English & తెలుగు Multilingual</div>
-      <div class="pill pill-green">🤖 Dynamic Queue & No-Show AI</div>
+      <div class="pill pill-green">🤖 Agentic AI & RAG Intelligence</div>
     </div>
   </section>
 
-  <!-- ── SLIDE 2: Problem ── -->
+  <!-- ── SLIDE 2: Problem Statement ── -->
   <section class="slide" id="s2">
-    <div class="tag">The Problem</div>
-    <h2>Healthcare Workflows are Broken</h2>
-    <p class="subtitle" style="margin-bottom:28px;">Patients, Doctors, and Clinics all suffer from daily friction.</p>
-    <div class="grid-3" style="max-width:960px;">
-      <div class="card" style="text-align:center;">
-        <div class="stat-number">2-3 Hrs</div>
-        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Patient Wait Time</div>
-        <div style="font-size:12px;color:var(--muted);">Patients wait hours in crowded waiting rooms for a 5-minute checkup.</div>
+    <div class="tag">Problem Statement</div>
+    <h2>The 4 Critical Healthcare Friction Points</h2>
+    <p class="subtitle" style="margin-bottom:24px;">Traditional clinics and hospital portals are failing patients and doctors.</p>
+    <div class="grid-4" style="max-width:1050px;">
+      <div class="card" style="border-top:4px solid #ef4444;">
+        <div style="font-size:28px;margin-bottom:8px;">⏳</div>
+        <div style="font-weight:800;font-size:15px;color:#991b1b;margin-bottom:4px;">1. Long Waiting Lines</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Patients wait 1 to 3 hours in crowded waiting rooms for a 5-minute doctor consultation.</div>
       </div>
-      <div class="card" style="text-align:center;">
-        <div class="stat-number">50%+</div>
-        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Handwritten Prescriptions</div>
-        <div style="font-size:12px;color:var(--muted);">Hard to read doctor notes cause pharmacy delays & medication errors.</div>
+      <div class="card" style="border-top:4px solid #f59e0b;">
+        <div style="font-size:28px;margin-bottom:8px;">✍️</div>
+        <div style="font-weight:800;font-size:15px;color:#92400e;margin-bottom:4px;">2. Unreadable Rx Notes</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Over 50% of prescriptions are handwritten, causing pharmacy delays & dispensing errors.</div>
       </div>
-      <div class="card" style="text-align:center;">
-        <div class="stat-number">4 Mins</div>
-        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Manual Typing per Patient</div>
-        <div style="font-size:12px;color:var(--muted);">Doctors waste half their day typing notes instead of treating patients.</div>
+      <div class="card" style="border-top:4px solid #3b82f6;">
+        <div style="font-size:28px;margin-bottom:8px;">📊</div>
+        <div style="font-weight:800;font-size:15px;color:#1e40af;margin-bottom:4px;">3. Fragmented Systems</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Clinics use separate disconnected software for bookings, medical records, and billing.</div>
+      </div>
+      <div class="card" style="border-top:4px solid #8b5cf6;">
+        <div style="font-size:28px;margin-bottom:8px;">🗣️</div>
+        <div style="font-weight:800;font-size:15px;color:#5b21b6;margin-bottom:4px;">4. Language Barriers</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">English-only portals isolate millions of rural and non-English speaking patients in India.</div>
       </div>
     </div>
   </section>
@@ -218,32 +223,66 @@
   <!-- ── SLIDE 3: Solution ── -->
   <section class="slide" id="s3">
     <div class="tag">The Solution</div>
-    <h2>Introducing MedFlow AI</h2>
-    <p class="subtitle" style="margin-bottom:28px;">An active AI OS that predicts what happens next and automates clinic flow.</p>
-    <div class="grid-3" style="max-width:980px;">
-      <div class="card" style="text-align:center;">
-        <div style="font-size:32px;margin-bottom:8px;">🔮</div>
-        <div style="font-weight:800;font-size:16px;margin-bottom:6px;">Smart Queue Prediction</div>
-        <div style="font-size:12px;color:var(--muted);">Calculates traffic delays, predicts no-shows, and auto-shifts token slots in real-time.</div>
+    <h2>How MedFlow AI Solves Each Problem</h2>
+    <p class="subtitle" style="margin-bottom:24px;">An active AI Operating System connecting Patients, Doctors, Admins, Pharmacists & Owners.</p>
+    <div class="grid-4" style="max-width:1050px;">
+      <div class="card" style="border-top:4px solid #10b981;">
+        <div style="font-size:28px;margin-bottom:8px;">🔮</div>
+        <div style="font-weight:800;font-size:15px;color:#047857;margin-bottom:4px;">Dynamic Queue AI</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Calculates traffic delays, predicts no-shows every 25s, and auto-shifts token slots to reduce wait times by 60%.</div>
       </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:32px;margin-bottom:8px;">✨</div>
-        <div style="font-weight:800;font-size:16px;margin-bottom:6px;">Gemini Vision OCR</div>
-        <div style="font-size:12px;color:var(--muted);">Scans handwritten doctor notes and lab reports into digital JSON in less than 0.5 seconds.</div>
+      <div class="card" style="border-top:4px solid #10b981;">
+        <div style="font-size:28px;margin-bottom:8px;">✨</div>
+        <div style="font-weight:800;font-size:15px;color:#047857;margin-bottom:4px;">Gemini Vision OCR</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Reads handwritten doctor notes and lab reports into digital JSON in < 0.5s with fail-safe accuracy.</div>
       </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:32px;margin-bottom:8px;">🇮🇳</div>
-        <div style="font-weight:800;font-size:16px;margin-bottom:6px;">Multilingual Telugu & English</div>
-        <div style="font-size:12px;color:var(--muted);">1-click language switcher ensuring non-English speaking patients understand care instructions.</div>
+      <div class="card" style="border-top:4px solid #10b981;">
+        <div style="font-size:28px;margin-bottom:8px;">🏥</div>
+        <div style="font-weight:800;font-size:15px;color:#047857;margin-bottom:4px;">Unified 5-Role Platform</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Connects Patient, Doctor, Admin, Pharmacist, and Owner workspaces on a single database.</div>
+      </div>
+      <div class="card" style="border-top:4px solid #10b981;">
+        <div style="font-size:28px;margin-bottom:8px;">🇮🇳</div>
+        <div style="font-weight:800;font-size:15px;color:#047857;margin-bottom:4px;">Multilingual Engine</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Instant 1-click toggle between English and Telugu (తెలుగు) for complete healthcare accessibility.</div>
       </div>
     </div>
   </section>
 
-  <!-- ── SLIDE 4: Real-Time Data Metrics ── -->
+  <!-- ── SLIDE 4: AI Models Used ── -->
   <section class="slide" id="s4">
-    <div class="tag">Real-Time Data & Performance</div>
-    <h2>Proven Speed & Live Metrics</h2>
-    <p class="subtitle" style="margin-bottom:28px;">Built and benchmarked on our live production application.</p>
+    <div class="tag">AI Stack & Technology</div>
+    <h2>Artificial Intelligence & Models Used</h2>
+    <p class="subtitle" style="margin-bottom:24px;">Powered by state-of-the-art AI vision models, vector RAG embeddings, and predictive daemons.</p>
+    <div class="grid-4" style="max-width:1050px;">
+      <div class="card">
+        <div class="pill pill-green" style="margin-bottom:10px;">Multimodal Vision OCR</div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:4px;">Google Gemini 1.5 Vision / Flash</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Scans handwritten Rx paper notes, blood diagnostic reports, and medical images into digital JSON data.</div>
+      </div>
+      <div class="card">
+        <div class="pill pill-blue" style="margin-bottom:10px;">Clinical RAG Engine</div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:4px;">OpenAI Embeddings + pgvector</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Vector similarity search (`text-embedding-3-small`) across clinical treatment SOPs and drug interaction databases.</div>
+      </div>
+      <div class="card">
+        <div class="pill pill-green" style="margin-bottom:10px;">Conversational Health AI</div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:4px;">GPT-4o-mini / Local NLP</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Answers patient health questions, conducts symptom triage, and assists doctor SOAP charting.</div>
+      </div>
+      <div class="card">
+        <div class="pill pill-blue" style="margin-bottom:10px;">Predictive Daemons</div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:4px;">No-Show & Traffic Predictors</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Custom predictive heuristics analyzing patient transport mode, distance, traffic delays, and age risk.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 5: Real-Time Performance Data ── -->
+  <section class="slide" id="s5">
+    <div class="tag">Real-Time Benchmarks</div>
+    <h2>Live Production Performance Metrics</h2>
+    <p class="subtitle" style="margin-bottom:24px;">Benchmarked directly on our live production application.</p>
     <div class="grid-4" style="max-width:1000px;">
       <div class="card" style="text-align:center;">
         <div class="stat-number">60%</div>
@@ -252,12 +291,12 @@
       </div>
       <div class="card" style="text-align:center;">
         <div class="stat-number">< 0.5s</div>
-        <div style="font-size:13px;font-weight:700;">Gemini OCR Extraction</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Stage-safety fail-proof fast response engine.</div>
+        <div style="font-size:13px;font-weight:700;">Gemini OCR Speed</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Sub-second extraction with stage-safety guarantee.</div>
       </div>
       <div class="card" style="text-align:center;">
         <div class="stat-number">25s</div>
-        <div style="font-size:13px;font-weight:700;">No-Show AI Daemon</div>
+        <div style="font-size:13px;font-weight:700;">No-Show Daemon Loop</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px;">Scans expired tokens and backfills empty slots.</div>
       </div>
       <div class="card" style="text-align:center;">
@@ -268,10 +307,10 @@
     </div>
   </section>
 
-  <!-- ── SLIDE 5: 5 Tailored User Dashboards ── -->
-  <section class="slide" id="s5">
+  <!-- ── SLIDE 6: 5 User Dashboards ── -->
+  <section class="slide" id="s6">
     <div class="tag">System Architecture</div>
-    <h2>5 Tailored Dashboards in One Platform</h2>
+    <h2>5 Integrated Workspaces in One Platform</h2>
     <p class="subtitle" style="margin-bottom:24px;">Connecting every stakeholder in healthcare on a unified database.</p>
     <div class="grid-3" style="max-width:980px;">
       <div class="card">
@@ -301,11 +340,11 @@
     </div>
   </section>
 
-  <!-- ── SLIDE 6: Why Choose Us ── -->
-  <section class="slide" id="s6">
+  <!-- ── SLIDE 7: Why Choose Us ── -->
+  <section class="slide" id="s7">
     <div class="tag">Why Choose Us?</div>
-    <h2>MedFlow AI vs Traditional Hospital Portals</h2>
-    <p class="subtitle" style="margin-bottom:24px;">Why hospitals upgrade to MedFlow AI over passive record portals.</p>
+    <h2>MedFlow AI vs Legacy Hospital Portals</h2>
+    <p class="subtitle" style="margin-bottom:24px;">Why clinics upgrade to MedFlow AI over passive EHR databases.</p>
     <div class="grid-2" style="max-width:920px;">
       <div class="card" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2);">
         <div style="font-weight:800;font-size:16px;color:#b91c1c;margin-bottom:10px;">❌ Legacy Hospital Portals</div>
@@ -328,8 +367,8 @@
     </div>
   </section>
 
-  <!-- ── SLIDE 7: Conclusion ── -->
-  <section class="slide" id="s7">
+  <!-- ── SLIDE 8: Conclusion ── -->
+  <section class="slide" id="s8">
     <div style="font-size:60px;margin-bottom:16px;">🚀</div>
     <div class="tag">Conclusion</div>
     <h1>Smarter Decisions. Faster Care.<br/>Better Outcomes.</h1>
@@ -347,7 +386,7 @@
   <button id="prevBtn" onclick="navigate(-1)" disabled>‹</button>
   <div class="dots" id="dots"></div>
   <button id="nextBtn" onclick="navigate(1)">›</button>
-  <span class="slide-counter" id="counter">1 / 7</span>
+  <span class="slide-counter" id="counter">1 / 8</span>
 </nav>
 
 <script>
