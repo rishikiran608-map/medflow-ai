@@ -654,7 +654,7 @@ function DoctorDashboard() {
                     🩺
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-sm leading-tight">{t("doctor.copilotTitle")}</h3>
+                    <h3 className="font-extrabold text-sm leading-tight">{t("doctor.copilotTitle") || "Clinical AI Copilot"}</h3>
                     <p className="text-[10px] text-teal-100 opacity-90">RAG Medical Intelligence Engine</p>
                   </div>
                 </div>
