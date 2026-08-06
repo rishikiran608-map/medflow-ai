@@ -46,7 +46,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 40px 60px;
+      padding: 40px 60px 110px 60px;
       opacity: 0;
       pointer-events: none;
       transform: translateX(60px);
@@ -55,6 +55,70 @@
     }
     .slide.active { opacity: 1; pointer-events: all; transform: translateX(0); }
     .slide.exit { opacity: 0; transform: translateX(-60px); }
+
+    /* ── Speaker Notes Bar ── */
+    .speaker-notes {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(6, 95, 70, 0.92);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(16,185,129,0.4);
+      padding: 10px 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      z-index: 10;
+      min-height: 64px;
+      max-height: 80px;
+      overflow: hidden;
+    }
+    .notes-label {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #34d399;
+      white-space: nowrap;
+      padding-top: 3px;
+      flex-shrink: 0;
+    }
+    .notes-text {
+      font-size: 12px;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.92);
+      font-weight: 400;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+    .notes-text em {
+      color: #6ee7b7;
+      font-style: italic;
+    }
+
+    /* Toggle notes button */
+    #toggleNotes {
+      position: fixed;
+      bottom: 56px;
+      right: 20px;
+      z-index: 200;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(16,185,129,0.4);
+      color: #047857;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 100px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: all .2s;
+    }
+    #toggleNotes:hover { background: #059669; color: white; }
+
+    .notes-hidden .speaker-notes { display: none; }
+    .notes-hidden .slide { padding-bottom: 40px; }
 
     .tag {
       font-size: 11px;
@@ -166,6 +230,18 @@
     .dot { width: 7px; height: 7px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: all .3s; }
     .dot.active { background: #059669; width: 20px; border-radius: 100px; }
     .slide-counter { font-size: 12px; font-weight: 700; color: #047857; min-width: 50px; text-align: center; }
+
+    /* Timer */
+    .timer {
+      position: fixed; top: 16px; right: 24px; z-index: 100;
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.9); border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 100px; padding: 5px 14px;
+      font-size: 13px; font-weight: 700; color: #047857;
+      backdrop-filter: blur(8px);
+    }
+    .timer-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
   </style>
 </head>
 <body>
@@ -180,19 +256,30 @@
   </a>
 </div>
 
+<div class="timer" id="timerEl">
+  <div class="timer-dot"></div>
+  <span id="timerText">0:00</span>
+</div>
+
+<button id="toggleNotes" onclick="toggleNotes()">🎙️ Notes</button>
+
 <div class="deck" id="deck">
 
   <!-- ── SLIDE 1: Introduction ── -->
   <section class="slide active" id="s1">
     <div style="font-size:45px;margin-bottom:12px;">🩺</div>
-    <div class="tag">Build to Ship Hackathon · Primary Track: Agentic AI & Intelligent Systems</div>
-    <h1>MedFlow AI — Smart Clinic Queue &<br/>Healthcare Operating System</h1>
+    <div class="tag">Build to Ship Hackathon · Primary Track: Agentic AI &amp; Intelligent Systems</div>
+    <h1>MedFlow AI — Smart Clinic Queue &amp;<br/>Healthcare Operating System</h1>
     <p class="subtitle">Smarter Decisions &nbsp;·&nbsp; Faster Care &nbsp;·&nbsp; Better Outcomes</p>
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <div class="pill pill-green">🏆 Track: Agentic AI & Intelligent Systems</div>
+      <div class="pill pill-green">🏆 Track: Agentic AI &amp; Intelligent Systems</div>
       <div class="pill pill-blue">⚡ Sub-Tracks: Multimodal AI · IDP · Smart Automation</div>
-      <div class="pill pill-green">✨ Gemini 1.5 Vision OCR (< 0.5s)</div>
-      <div class="pill pill-blue">🇮🇳 English & Telugu Multilingual</div>
+      <div class="pill pill-green">✨ Gemini 1.5 Vision OCR (&lt; 0.5s)</div>
+      <div class="pill pill-blue">🇮🇳 English &amp; Telugu Multilingual</div>
+    </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">Hello respected judges and audience! We are Team MedFlow AI, and we are presenting our project for the Build to Ship Hackathon, under the primary track — <em>Agentic AI and Intelligent Systems</em>. MedFlow AI is an AI-powered healthcare operating system — built to make clinics smarter, faster, and more human.</span>
     </div>
   </section>
 
@@ -210,7 +297,7 @@
       <div class="card" style="border-top:4px solid #f59e0b;">
         <div style="font-size:26px;margin-bottom:6px;">✍️</div>
         <div style="font-weight:800;font-size:14px;color:#92400e;margin-bottom:4px;">2. Unreadable Rx Notes</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Over 50% of prescriptions are handwritten, causing pharmacy delays & dispensing errors.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Over 50% of prescriptions are handwritten, causing pharmacy delays &amp; dispensing errors.</div>
       </div>
       <div class="card" style="border-top:4px solid #3b82f6;">
         <div style="font-size:26px;margin-bottom:6px;">📝</div>
@@ -223,13 +310,17 @@
         <div style="font-size:12px;color:var(--muted);line-height:1.5;">English-only portals isolate rural patients who cannot read English.</div>
       </div>
     </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">Let us look at a real problem that affects millions of families every day. In most Indian outpatient clinics: patients wait 2 to 3 hours just for a 5-minute checkup. Doctors waste 4 minutes per patient typing notes into slow portals. Over 50% of prescriptions are handwritten — causing dangerous reading errors. And rural patients who speak Telugu or Hindi are completely excluded from English-only portals. This is the broken reality we are solving.</span>
+    </div>
   </section>
 
   <!-- ── SLIDE 3: The Solution ── -->
   <section class="slide" id="s3">
     <div class="tag">Slide 3 / 10 · The Solution</div>
     <h2>Introducing MedFlow AI</h2>
-    <p class="subtitle">An active AI Operating System connecting Patients, Doctors, Admins, Pharmacists & Owners.</p>
+    <p class="subtitle">An active AI Operating System connecting Patients, Doctors, Admins, Pharmacists &amp; Owners.</p>
     <div class="grid-4" style="max-width:1050px;">
       <div class="card" style="border-top:4px solid #10b981;">
         <div style="font-size:26px;margin-bottom:6px;">🔮</div>
@@ -252,12 +343,16 @@
         <div style="font-size:12px;color:var(--muted);line-height:1.5;">1-click toggle between English and Telugu (తెలుగు) for complete inclusion.</div>
       </div>
     </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">MedFlow AI fixes this entire healthcare journey with 4 pillars: <em>Smart Queue AI</em> that predicts traffic and no-shows automatically. <em>Gemini Vision OCR</em> that reads handwritten prescriptions in under 0.5 seconds. A <em>Unified Platform</em> that connects all 5 healthcare roles on one shared database. And a <em>Multilingual Engine</em> with 1-click English to Telugu switch for complete accessibility.</span>
+    </div>
   </section>
 
   <!-- ── SLIDE 4: The 4 AI Models ── -->
   <section class="slide" id="s4">
     <div class="tag">Slide 4 / 10 · Hackathon Theme Alignment</div>
-    <h2>Primary Track: Agentic AI & Intelligent Systems</h2>
+    <h2>Primary Track: Agentic AI &amp; Intelligent Systems</h2>
     <p class="subtitle">Sub-Tracks: Multimodal AI · Intelligent Document Processing (IDP) · Smart Automation</p>
     <div class="grid-4" style="max-width:1050px;">
       <div class="card">
@@ -268,7 +363,7 @@
       <div class="card">
         <div class="pill pill-blue" style="margin-bottom:8px;">Clinical RAG</div>
         <div style="font-weight:800;font-size:14px;margin-bottom:4px;">OpenAI Embeddings + pgvector</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Vector similarity search (`text-embedding-3-small`) across clinical guidelines & drug databases.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Vector similarity search (`text-embedding-3-small`) across clinical guidelines &amp; drug databases.</div>
       </div>
       <div class="card">
         <div class="pill pill-green" style="margin-bottom:8px;">Conversational AI</div>
@@ -277,9 +372,13 @@
       </div>
       <div class="card">
         <div class="pill pill-blue" style="margin-bottom:8px;">Predictive Daemons</div>
-        <div style="font-weight:800;font-size:14px;margin-bottom:4px;">Traffic & No-Show AI</div>
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px;">Traffic &amp; No-Show AI</div>
         <div style="font-size:12px;color:var(--muted);line-height:1.5;">Scans queue tokens every 25s, predicting delays, transport ETA, and no-shows automatically.</div>
       </div>
+    </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">We use 4 powerful AI models to run our platform. <em>Google Gemini 1.5 Vision</em> for prescription OCR in under 0.5 seconds. <em>OpenAI Embeddings + pgvector</em> for clinical RAG — searching drug databases in real time. <em>GPT-4o-mini</em> for natural language symptom triage and auto-drafting SOAP notes. And our <em>Predictive Daemon</em> that scans queue tokens every 25 seconds and auto-shifts patient slots.</span>
     </div>
   </section>
 
@@ -302,13 +401,17 @@
       <div class="card" style="text-align:center;">
         <div style="font-size:28px;margin-bottom:6px;">👨‍⚕️</div>
         <div style="font-weight:800;font-size:14px;margin-bottom:4px;">3. Doctor Consultation</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Doctor uses Gemini OCR & 1-click Auto-Draft SOAP to generate prescription notes.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Doctor uses Gemini OCR &amp; 1-click Auto-Draft SOAP to generate prescription notes.</div>
       </div>
       <div class="card" style="text-align:center;">
         <div style="font-size:28px;margin-bottom:6px;">💊</div>
         <div style="font-weight:800;font-size:14px;margin-bottom:4px;">4. Pharmacy Dispatch</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Prescription sent to pharmacy dashboard & WhatsApp ticket sent to patient.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">Prescription sent to pharmacy dashboard &amp; WhatsApp ticket sent to patient.</div>
       </div>
+    </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">Our platform automates the clinic workflow in 4 simple steps. Step 1 — Patient describes symptoms in natural language, AI recommends the right specialist doctor. Step 2 — Patient clicks "On My Way", AI calculates their commute ETA and live wait time. Step 3 — Doctor sees the live queue, uses Gemini Vision OCR and 1-click SOAP to complete the consultation in seconds. Step 4 — Digital prescription goes to pharmacy and WhatsApp confirmation goes to the patient.</span>
     </div>
   </section>
 
@@ -334,12 +437,16 @@
         <div style="font-size:12px;color:var(--muted);line-height:1.5;">Native 1-click Telugu localization for prescription instructions and queue alerts.</div>
       </div>
     </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">Let us show you how MedFlow AI works in real life. Our live demo has 3 core features that impressed us the most. First — the <em>Gemini Vision OCR</em> reads any handwritten prescription note in 0.4 seconds. Second — the <em>Auto-Draft SOAP Engine</em> generates a full clinical note in just 1 click — saving 4 minutes per patient every single day. Third — the <em>Telugu Regional Engine</em> localizes everything — queue alerts, prescriptions, dosage instructions — all in Telugu with one click.</span>
+    </div>
   </section>
 
   <!-- ── SLIDE 7: Real-Time Performance Data ── -->
   <section class="slide" id="s7">
     <div class="tag">Slide 7 / 10 · Human Impact Data</div>
-    <h2>Real-Time Data & Human Impact</h2>
+    <h2>Real-Time Data &amp; Human Impact</h2>
     <p class="subtitle">Proven real-world metrics benchmarked on our production platform.</p>
     <div class="grid-4" style="max-width:1000px;">
       <div class="card" style="text-align:center;">
@@ -362,6 +469,10 @@
         <div style="font-size:13px;font-weight:700;">Rx Reading Errors</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px;">Digital OCR eliminates dangerous handwritten mistakes.</div>
       </div>
+    </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">MedFlow AI is benchmarked on our live production software. Here are the real numbers: <em>60% reduction</em> in average patient wait time — from 45 minutes down to just 11 minutes. Our AI daemon predicts no-shows with <em>84% accuracy</em> and automatically backfills empty slots. Every doctor saves <em>4 minutes per patient</em> — that is over 2 full hours of paperwork saved every single day. And with digital OCR, we achieve <em>zero prescription reading errors</em>.</span>
     </div>
   </section>
 
@@ -396,6 +507,10 @@
         <div style="font-size:12px;color:#047857;">Hosted on Vercel (Frontend) + Render (Backend) + Supabase (Database).</div>
       </div>
     </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">MedFlow AI provides 5 tailored workspaces on one shared database. The <em>Patient</em> can triage symptoms, track live tokens, and upload prescriptions. The <em>Doctor</em> gets a live queue, AI pre-consult briefings, and 1-click SOAP notes. The <em>Admin</em> handles walk-in registrations and queue status live. The <em>Pharmacist</em> receives digital prescriptions automatically with drug stock alerts. And the <em>Clinic Owner</em> sees revenue metrics, doctor utilization, and multi-branch analytics.</span>
+    </div>
   </section>
 
   <!-- ── SLIDE 9: Why Choose Us ── -->
@@ -407,9 +522,9 @@
       <div class="card" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2);">
         <div style="font-weight:800;font-size:15px;color:#b91c1c;margin-bottom:8px;">❌ Legacy Hospital Portals</div>
         <div style="font-size:12px;color:#7f1d1d;line-height:1.6;">
-          • Passive static PDF & record storage<br/>
+          • Passive static PDF &amp; record storage<br/>
           • Doctors waste 4-5 mins typing every prescription<br/>
-          • Ignorant of patient traffic delays & no-shows<br/>
+          • Ignorant of patient traffic delays &amp; no-shows<br/>
           • 100% English only — excludes rural patients
         </div>
       </div>
@@ -417,11 +532,15 @@
         <div style="font-weight:800;font-size:15px;color:#047857;margin-bottom:8px;">✨ MedFlow AI Operating System</div>
         <div style="font-size:12px;color:#047857;line-height:1.6;">
           • Active Agentic AI that automates queue workflow<br/>
-          • Gemini Vision OCR & Auto-Draft SOAP in < 0.5s<br/>
-          • Auto-predicts delays, no-shows & reschedules<br/>
-          • English & 🇮🇳 Telugu for complete accessibility
+          • Gemini Vision OCR &amp; Auto-Draft SOAP in &lt; 0.5s<br/>
+          • Auto-predicts delays, no-shows &amp; reschedules<br/>
+          • English &amp; 🇮🇳 Telugu for complete accessibility
         </div>
       </div>
+    </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">Judges might ask: <em>"Hospitals already have built-in portals — why will they choose MedFlow AI?"</em> Here is the key difference. Legacy portals are passive — they just store PDF records. MedFlow AI is an <em>active Agentic AI system</em> that auto-predicts delays, shifts tokens, and automates paperwork. Zero training needed. Zero prescription errors. And it speaks both English and Telugu. That is why MedFlow AI is not a feature — it is an upgrade to the entire clinic operating system.</span>
     </div>
   </section>
 
@@ -435,6 +554,10 @@
       <a href="/" style="background:#059669;color:white;text-decoration:none;padding:12px 30px;border-radius:100px;font-weight:700;font-size:14px;box-shadow:0 8px 24px rgba(16,185,129,0.3);">
         🌐 Launch Live App
       </a>
+    </div>
+    <div class="speaker-notes">
+      <span class="notes-label">🎙️ Script</span>
+      <span class="notes-text">MedFlow AI brings intelligence, speed, and dignity back to healthcare. We started with a real problem — overcrowded, chaotic clinics — and we built a complete Agentic AI Operating System that solves it end to end. Smarter decisions. Faster care. Better outcomes — for every patient, every doctor, every clinic. Thank you for your time, and we welcome your feedback!</span>
     </div>
   </section>
 
@@ -488,7 +611,38 @@
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
     }
+    if (e.key === 'n' || e.key === 'N') toggleNotes();
   });
+
+  // Toggle Speaker Notes
+  let notesVisible = true;
+  function toggleNotes() {
+    notesVisible = !notesVisible;
+    document.getElementById('deck').classList.toggle('notes-hidden', !notesVisible);
+    document.getElementById('toggleNotes').textContent = notesVisible ? '🎙️ Notes' : '👁️ Notes Off';
+  }
+
+  // Presentation Timer
+  const timerText = document.getElementById('timerText');
+  let seconds = 0;
+  let timerStarted = false;
+  function startTimer() {
+    if (!timerStarted) {
+      timerStarted = true;
+      setInterval(() => {
+        seconds++;
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        timerText.textContent = `${m}:${String(s).padStart(2,'0')}`;
+        if (seconds > 300) {
+          document.getElementById('timerEl').style.borderColor = 'rgba(239,68,68,0.5)';
+          document.querySelector('.timer-dot').style.background = '#ef4444';
+        }
+      }, 1000);
+    }
+  }
+  document.addEventListener('keydown', startTimer, { once: true });
+  document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', startTimer, { once: true }));
 </script>
 </body>
 </html>
