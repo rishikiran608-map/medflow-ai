@@ -114,6 +114,14 @@ function Navbar() {
           >
             🎨 Pitch Slides
           </a>
+          <a
+            href="https://drive.google.com/file/d/1H0FAKF9nTDhJqTZZlNgR94Z-dMBYbnLC/view"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-sm text-blue-600 hover:text-blue-700 transition flex items-center gap-1 font-bold"
+          >
+            📄 Pitch PDF
+          </a>
         </div>
 
         {/* Desktop Right Controls */}
